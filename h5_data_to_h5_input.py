@@ -11,7 +11,7 @@ import matplotlib as mpl
 mpl.use('Agg')
 from matplotlib.backends.backend_pdf import PdfPages
 
-import glob
+import globals
 from file_to_hits import *
 from histograms_to_files import *
 from hits_to_histograms import *
@@ -31,7 +31,7 @@ def parse_input(do2d, do2d_pdf):
     :return: str fname: Parsed filename.
     """
     if len(sys.argv) < 2 or str(sys.argv[1]) == "-h":
-        print "Usage: python " + str(sys.argv[0]) + " file.h5"
+        print("Usage: python " + str(sys.argv[0]) + " file.h5")
         sys.exit(1)
 
     if do2d==False and do2d_pdf==True:
@@ -62,16 +62,16 @@ def calculate_bin_edges_test(geo, y_bin_edge, z_bin_edge):
     hist_y = np.histogram(geo_y, bins=y_bin_edge)
     hist_z = np.histogram(geo_z, bins=z_bin_edge)
 
-    print '----------------------------------------------------------------------------------------------'
-    print 'Y-axis: Bin content: ' + str(hist_y[0])
-    print 'It should be:        ' + str(np.array(
-        [4 * 18, 7 * 18, 9 * 18, 10 * 18, 9 * 18, 10 * 18, 10 * 18, 10 * 18, 11 * 18, 10 * 18, 9 * 18, 8 * 18, 8 * 18]))
-    print 'Y-axis: Bin edges: ' + str(hist_y[1])
-    print '..............................................................................................'
-    print 'Z-axis: Bin content: ' + str(hist_z[0])
-    print 'It should have 115 entries everywhere'
-    print 'Z-axis: Bin edges: ' + str(hist_z[1])
-    print '----------------------------------------------------------------------------------------------'
+    print('----------------------------------------------------------------------------------------------')
+    print('Y-axis: Bin content: ' + str(hist_y[0]))
+    print('It should be:        ' + str(np.array(
+        [4 * 18, 7 * 18, 9 * 18, 10 * 18, 9 * 18, 10 * 18, 10 * 18, 10 * 18, 11 * 18, 10 * 18, 9 * 18, 8 * 18, 8 * 18])))
+    print('Y-axis: Bin edges: ' + str(hist_y[1]))
+    print('..............................................................................................')
+    print('Z-axis: Bin content: ' + str(hist_z[0]))
+    print('It should have 115 entries everywhere')
+    print('Z-axis: Bin edges: ' + str(hist_z[1]))
+    print('----------------------------------------------------------------------------------------------')
 
 
 def calculate_bin_edges(n_bins, geo_fix, fname_geo_limits, do4d):
@@ -84,12 +84,12 @@ def calculate_bin_edges(n_bins, geo_fix, fname_geo_limits, do4d):
     :param (bool, str) do4d: Tuple that declares if 4D histograms should be created [0] and if yes, what should be used as the 4th dim after xyz.
     :return: ndarray(ndim=1) x_bin_edges, y_bin_edges, z_bin_edges: contains the resulting bin edges for each dimension.
     """
-    print "Reading detector geometry in order to calculate the detector dimensions from file " + fname_geo_limits
+    print("Reading detector geometry in order to calculate the detector dimensions from file " + fname_geo_limits)
     geo = np.loadtxt(fname_geo_limits)
 
     # derive maximum and minimum x,y,z coordinates of the geometry input [[first_OM_id, xmin, ymin, zmin], [last_OM_id, xmax, ymax, zmax]]
     geo_limits = np.nanmin(geo, axis = 0), np.nanmax(geo, axis = 0)
-    print 'Detector dimensions [[first_OM_id, xmin, ymin, zmin], [last_OM_id, xmax, ymax, zmax]]: ' + str(geo_limits)
+    print('Detector dimensions [[first_OM_id, xmin, ymin, zmin], [last_OM_id, xmax, ymax, zmax]]: ' + str(geo_limits))
 
     x_bin_edges = np.linspace(geo_limits[0][1] - 9.95, geo_limits[1][1] + 9.95, num=n_bins[0] + 1) #try to get the lines in the bin center 9.95*2 = average x-separation of two lines
     y_bin_edges = np.linspace(geo_limits[0][2] - 9.75, geo_limits[1][2] + 9.75, num=n_bins[1] + 1) # Delta y = 19.483
@@ -159,14 +159,14 @@ def main(n_bins, geo_fix=True, do2d=False, do2d_pdf=(False, 10), do3d=False, do4
 
     all_4d_to_2d_hists, all_4d_to_3d_hists, all_4d_to_4d_hists, mc_infos = [], [], [], []
 
-    if do2d_pdf[0] is True: glob.pdf_2d_plots = PdfPages('Results/4dTo2d/' + filename_output + '_plots.pdf')
+    if do2d_pdf[0] is True: globals.pdf_2d_plots = PdfPages('Results/4dTo2d/' + filename_output + '_plots.pdf')
 
     # Initialize HDF5Pump of the input file
     event_pump = kp.io.hdf5.HDF5Pump(filename=filename_input)
-    print "Generating histograms from the hits in XYZT format for files based on " + filename_input
+    print("Generating histograms from the hits in XYZT format for files based on " + filename_input)
     for i, event_blob in enumerate(event_pump):
         if i % 10 == 0:
-            print 'Event No. ' + str(i)
+            print('Event No. ' + str(i))
 
         # filter out all hit and track information belonging that to this event
         event_hits, event_track = get_event_data(event_blob, geo, do_mc_hits, use_calibrated_file, data_cuts, do4d)
@@ -187,7 +187,7 @@ def main(n_bins, geo_fix=True, do2d=False, do2d_pdf=(False, 10), do3d=False, do4
             compute_4d_to_4d_histograms(event_hits, x_bin_edges, y_bin_edges, z_bin_edges, n_bins, all_4d_to_4d_hists, timecut, do4d)
 
         if do2d_pdf[0] is True and i >= do2d_pdf[1]:
-            glob.pdf_2d_plots.close()
+            globals.pdf_2d_plots.close()
             break
 
     if do2d:
@@ -218,7 +218,7 @@ def main(n_bins, geo_fix=True, do2d=False, do2d_pdf=(False, 10), do3d=False, do4
 
 
 if __name__ == '__main__':
-    main(n_bins=(11,13,18,60), geo_fix=True, do2d=True, do2d_pdf=(True, 20), do3d=False, do4d=(False, 'time'),
+    main(n_bins=(11,13,18,60), geo_fix=True, do2d=False, do2d_pdf=(False, 20), do3d=False, do4d=(True, 'time'),
          timecut = ('trigger_cluster', 'tight_1'), do_mc_hits=False, use_calibrated_file=True,
          data_cuts = {'triggered': False, 'energy_lower_limit': 0})
     # main(n_bins=(11,13,18,31), do2d=False, do2d_pdf=(False, 100), do3d=False, do4d=(True, 'channel_id'),

@@ -2,8 +2,6 @@
 # -*- coding: utf-8 -*-
 """This utility code contains functions that read the raw MC .h5 files"""
 
-import os
-import pandas as pd
 import numpy as np
 import km3pipe as kp
 #from memory_profiler import profile
@@ -34,8 +32,8 @@ def get_time_residual_nu_interaction_mean_triggered_hits(time_interaction, hits_
     t_mean_triggered = np.mean(hits_time_triggered, dtype=np.float64)
     time_residual_vertex = t_mean_triggered - time_interaction
 
-    print t_mean_triggered
-    print time_interaction
+    print(t_mean_triggered)
+    print(time_interaction)
 
     return time_residual_vertex
 

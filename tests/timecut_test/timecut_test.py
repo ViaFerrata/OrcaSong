@@ -13,7 +13,7 @@ def get_time_array(fname, savestr = ''):
     mean_triggered_time_list = []
     for i, event_blob in enumerate(event_pump):
         if i % 200 == 0:
-            print 'Event No. ' + str(i)
+            print('Event No. ' + str(i))
 
         time = event_blob['Hits'].time
         triggered = event_blob['Hits'].triggered
@@ -57,7 +57,7 @@ def get_time_array_mc_hits(fname, savestr='', mean=('', None)):
     mc_hits_time_mean_all_events = None
     for i, event_blob in enumerate(event_pump):
         if i % 200 == 0:
-            print 'Event No. ' + str(i)
+            print('Event No. ' + str(i))
 
         time = event_blob['McHits'].time
 

@@ -41,7 +41,7 @@ def generate_batches_from_hdf5_file():
 
     f = h5py.File(filepath, "r")
     filesize = len(f['y'])
-    print filesize
+    print(filesize)
 
     n_entries = 0
     while n_entries < (filesize - batchsize):
@@ -71,7 +71,7 @@ pr = cProfile.Profile()
 pr.enable()
 
 t = timeit.Timer(stmt="list(generate_batches_from_hdf5_file())", setup="from __main__ import generate_batches_from_hdf5_file")
-print str(number) + 'loops, on average ' + str(t.timeit(number) / number *1000) + 'ms'
+print(str(number) + 'loops, on average ' + str(t.timeit(number) / number *1000) + 'ms')
 
 pr.disable()
 

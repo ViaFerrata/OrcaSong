@@ -10,7 +10,7 @@ import numpy as np
 #from memory_profiler import profile
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 
-import glob
+import globals
 
 
 def get_time_parameters(event_hits, mode=('trigger_cluster', 'all'), t_start_margin=0.15, t_end_margin=0.15):
@@ -160,7 +160,7 @@ def convert_2d_numpy_hists_to_pdf_image(hists, t_start, t_end, event_track=None)
     plot_zt = fill_subplot(hists[5], axes_zt)
 
     fig.tight_layout(rect=[0, 0.02, 1, 0.95])
-    glob.pdf_2d_plots.savefig(fig) #TODO: remove global variable, but how? Need to close pdf object outside of this function (-> as last step of the 2D eventID loop)
+    globals.pdf_2d_plots.savefig(fig) #TODO: remove global variable, but how? Need to close pdf object outside of this function (-> as last step of the 2D eventID loop)
     plt.close()
 
 
