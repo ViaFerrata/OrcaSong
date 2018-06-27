@@ -61,7 +61,6 @@ def get_event_data(event_blob, geo, do_mc_hits, use_calibrated_file, data_cuts, 
     # parse tracks [event_id, particle_type, energy, isCC, bjorkeny, dir_x/y/z, time]
     event_id = event_blob['EventInfo'].event_id[0]
     run_id = event_blob['EventInfo'].run_id[0]
-    time_interaction = event_blob['EventInfo'].mc_t[0] # measured in JTE time
     particle_type = event_blob['McTracks'][p].type
     energy = event_blob['McTracks'][p].energy
     is_cc = event_blob['McTracks'][p].is_cc
