@@ -233,14 +233,6 @@ def compute_4d_to_4d_histograms(event_hits, x_bin_edges, y_bin_edges, z_bin_edge
                                    range=((min(x_bin_edges),max(x_bin_edges)),(min(y_bin_edges),max(y_bin_edges)),
                                           (min(z_bin_edges),max(z_bin_edges)),(np.amin(channel_id), np.amax(channel_id))))
 
-    elif do4d[1] == 'xzt-c':
-        time = event_hits[:, 3]
-        event_hits = event_hits[np.logical_and(time >= t_start, time <= t_end)]
-        x, z, t, channel_id = event_hits[:, 0:1], event_hits[:, 2:3], event_hits[:, 3:4], event_hits[:, 5:6]
-        hist_4d = np.histogramdd(np.concatenate([x, z, t, channel_id], axis=1), bins=(x_bin_edges, z_bin_edges, n_bins[2], 31),
-                                   range=((min(x_bin_edges),max(x_bin_edges)),(min(z_bin_edges),max(z_bin_edges)),
-                                          (t_start, t_end),(np.amin(channel_id), np.amax(channel_id))))
-
     else:
         raise ValueError('The parameter in do4d[1] ' + str(do4d[1]) + ' is not available. Currently, only time and channel_id are supported.')
 

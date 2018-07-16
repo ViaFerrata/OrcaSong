@@ -7,6 +7,7 @@ import sys
 import warnings
 #from memory_profiler import profile # for memory profiling, call with @profile; myfunc()
 #import line_profiler # call with kernprof -l -v file.py args
+import km3pipe as kp
 import matplotlib as mpl
 mpl.use('Agg')
 from matplotlib.backends.backend_pdf import PdfPages
@@ -99,7 +100,7 @@ def calculate_bin_edges(n_bins, geo_fix, fname_geo_limits, do4d):
         z_bin_edges = np.linspace(geo_limits[0][3] - 4.665, geo_limits[1][3] + 4.665, num=n_bins[2] + 1)  # Delta z = 9.329
 
     # ORCA denser detector study
-    z_bin_edges = np.linspace(37.84 - 7.5, 292.84 + 7.5, num=n_bins[2] + 1)  # 15m vertical, 18 DOMs
+    #z_bin_edges = np.linspace(37.84 - 7.5, 292.84 + 7.5, num=n_bins[2] + 1)  # 15m vertical, 18 DOMs # TODO change
     #z_bin_edges = np.linspace(37.84 - 6, 241.84 + 6, num=n_bins[2] + 1)  # 12m vertical, 18 DOMs
     #z_bin_edges = np.linspace(37.84 - 4.5, 190.84 + 4.5, num=n_bins[2] + 1)  # 9m vertical, 18 DOMs
     #z_bin_edges = np.linspace(37.84 - 3, 139.84 + 3, num=n_bins[2] + 1)  # 6m vertical, 18 DOMs
@@ -171,7 +172,8 @@ def main(n_bins, geo_fix=True, do2d=False, do2d_pdf=(False, 10), do3d=False, do4
         # filter out all hit and track information belonging that to this event
         event_hits, event_track = get_event_data(event_blob, geo, do_mc_hits, use_calibrated_file, data_cuts, do4d)
 
-        if event_track[2] < data_cuts['energy_lower_limit']: # Cutting events with energy < threshold (default=0)
+        if event_track[2] < data_cuts['energy_lower_limit'] or event_track[2] > data_cuts['energy_upper_limit']:
+            # Cutting events with energy < threshold (default=0) and with energy > threshold (default=200)
             continue
 
         # event_track: [event_id, particle_type, energy, isCC, bjorkeny, dir_x/y/z, time]
@@ -212,19 +214,21 @@ def main(n_bins, geo_fix=True, do2d=False, do2d_pdf=(False, 10), do3d=False, do4
         if folder != '': folder += '/'
 
         if do4d[1] == 'channel_id':
-            store_histograms_as_hdf5(np.array(all_4d_to_4d_hists), np.array(mc_infos), 'Results/4dTo4d/h5/xyzt/' + folder + filename_output + '_xyzc.h5', compression=('gzip', 1))
+            store_histograms_as_hdf5(np.array(all_4d_to_4d_hists), np.array(mc_infos), 'Results/4dTo4d/h5/xyzc/' + folder + filename_output + '_xyzc.h5', compression=('gzip', 1))
         else:
             store_histograms_as_hdf5(np.array(all_4d_to_4d_hists), np.array(mc_infos), 'Results/4dTo4d/h5/xyzt/' + folder + filename_output + '_xyzt.h5', compression=('gzip', 1))
 
 
 if __name__ == '__main__':
-    main(n_bins=(11,13,18,60), geo_fix=True, do2d=False, do2d_pdf=(False, 20), do3d=False, do4d=(True, 'time'),
-         timecut = ('trigger_cluster', 'tight_1'), do_mc_hits=False, use_calibrated_file=True,
-         data_cuts = {'triggered': False, 'energy_lower_limit': 0})
-    # main(n_bins=(11,13,18,31), do2d=False, do2d_pdf=(False, 100), do3d=False, do4d=(True, 'channel_id'),
-    #      do_mc_hits=False, use_calibrated_file=True, data_cuts = {'triggered': False, 'energy_lower_limit': 0})
-    # main(n_bins=(11,18,50,31), do2d=False, do2d_pdf=(False, 100), do3d=False, do4d=(True, 'xzt-c'),
-    #      do_mc_hits=False, use_calibrated_file=True, data_cuts = {'triggered': False, 'energy_lower_limit': 0})
+    # main(n_bins=(11,13,18,60), geo_fix=True, do2d=False, do2d_pdf=(False, 10), do3d=False, do4d=(True, 'time'),
+    #      timecut = ('trigger_cluster', 'all'), do_mc_hits=False, use_calibrated_file=True,
+    #      data_cuts = {'triggered': False, 'energy_lower_limit': 0, 'energy_upper_limit': 200})
+
+    main(n_bins=(11,13,18,60), geo_fix=True, do2d=False, do2d_pdf=(False, 10), do3d=False, do4d=(True, 'channel_id'),
+         timecut = ('trigger_cluster', 'all'), do_mc_hits=False, use_calibrated_file=True,
+         data_cuts = {'triggered': False, 'energy_lower_limit': 0, 'energy_upper_limit': 200})
+
+
 
 
 

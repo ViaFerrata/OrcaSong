@@ -3,7 +3,6 @@
 """This utility code contains functions that read the raw MC .h5 files"""
 
 import numpy as np
-import km3pipe as kp
 #from memory_profiler import profile
 #import line_profiler # call with kernprof -l -v file.py args
 
@@ -32,9 +31,6 @@ def get_time_residual_nu_interaction_mean_triggered_hits(time_interaction, hits_
     t_mean_triggered = np.mean(hits_time_triggered, dtype=np.float64)
     time_residual_vertex = t_mean_triggered - time_interaction
 
-    print(t_mean_triggered)
-    print(time_interaction)
-
     return time_residual_vertex
 
 
@@ -60,7 +56,7 @@ def get_event_data(event_blob, geo, do_mc_hits, use_calibrated_file, data_cuts, 
 
     # parse tracks [event_id, particle_type, energy, isCC, bjorkeny, dir_x/y/z, time]
     event_id = event_blob['EventInfo'].event_id[0]
-    run_id = event_blob['EventInfo'].run_id[0]
+    run_id = event_blob['RawHeader'][0][0].astype('float32')
     particle_type = event_blob['McTracks'][p].type
     energy = event_blob['McTracks'][p].energy
     is_cc = event_blob['McTracks'][p].is_cc
@@ -68,6 +64,7 @@ def get_event_data(event_blob, geo, do_mc_hits, use_calibrated_file, data_cuts, 
     dir_x, dir_y, dir_z = event_blob['McTracks'][p].dir_x, event_blob['McTracks'][p].dir_y, event_blob['McTracks'][p].dir_z
     time_track = event_blob['McTracks'][p].time # actually always 0 for primary neutrino, measured in MC time
     vertex_pos_x, vertex_pos_y, vertex_pos_z = event_blob['McTracks'][p].pos_x, event_blob['McTracks'][p].pos_y, event_blob['McTracks'][p].pos_z
+    time_interaction = event_blob['McTracks'][p].time
 
     # parse hits [x,y,z,time]
     if do_mc_hits is True:
@@ -83,18 +80,14 @@ def get_event_data(event_blob, geo, do_mc_hits, use_calibrated_file, data_cuts, 
         #hits = hits.triggered_hits # alternative, though it only works for the triggered condition!
 
     pos_x, pos_y, pos_z = hits.pos_x.astype('float32'), hits.pos_y.astype('float32'), hits.pos_z.astype('float32')
-    hits_time = hits.time.astype('float32')
+    hits_time = hits.time.astype('float32') # enough for the hit times in KM3NeT
     triggered = hits.triggered.astype('float32')
+
+    time_residual_vertex = get_time_residual_nu_interaction_mean_triggered_hits(time_interaction, hits_time, triggered)
 
     # save collected information to arrays event_track and event_hits
     event_track = np.array([event_id, particle_type, energy, is_cc, bjorkeny, dir_x, dir_y, dir_z, time_track,
-                            run_id, vertex_pos_x, vertex_pos_y, vertex_pos_z], dtype=np.float32)
-
-    # time_residual_vertex = get_time_residual_nu_interaction_mean_triggered_hits(time_interaction, hits_time, triggered)
-    #
-    # # save collected information to arrays event_track and event_hits
-    # event_track = np.array([event_id, particle_type, energy, is_cc, bjorkeny, dir_x, dir_y, dir_z, time_track,
-    #                         run_id, vertex_pos_x, vertex_pos_y, vertex_pos_z, time_residual_vertex], dtype=np.float32)
+                            run_id, vertex_pos_x, vertex_pos_y, vertex_pos_z, time_residual_vertex], dtype=np.float64)
 
     ax = np.newaxis
     event_hits = np.concatenate([pos_x[:, ax], pos_y[:, ax], pos_z[:, ax], hits_time[:, ax], triggered[:, ax]], axis=1)
