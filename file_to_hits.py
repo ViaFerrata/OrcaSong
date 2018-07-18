@@ -79,9 +79,9 @@ def get_event_data(event_blob, geo, do_mc_hits, use_calibrated_file, data_cuts, 
         hits = hits.__array__[hits.triggered.astype(bool)]
         #hits = hits.triggered_hits # alternative, though it only works for the triggered condition!
 
-    pos_x, pos_y, pos_z = hits.pos_x.astype('float32'), hits.pos_y.astype('float32'), hits.pos_z.astype('float32')
-    hits_time = hits.time.astype('float32') # enough for the hit times in KM3NeT
-    triggered = hits.triggered.astype('float32')
+    pos_x, pos_y, pos_z = hits.pos_x, hits.pos_y, hits.pos_z
+    hits_time = hits.time
+    triggered = hits.triggered
 
     time_residual_vertex = get_time_residual_nu_interaction_mean_triggered_hits(time_interaction, hits_time, triggered)
 
@@ -90,10 +90,10 @@ def get_event_data(event_blob, geo, do_mc_hits, use_calibrated_file, data_cuts, 
                             run_id, vertex_pos_x, vertex_pos_y, vertex_pos_z, time_residual_vertex], dtype=np.float64)
 
     ax = np.newaxis
-    event_hits = np.concatenate([pos_x[:, ax], pos_y[:, ax], pos_z[:, ax], hits_time[:, ax], triggered[:, ax]], axis=1)
+    event_hits = np.concatenate([pos_x[:, ax], pos_y[:, ax], pos_z[:, ax], hits_time[:, ax], triggered[:, ax]], axis=1) # dtype: np.float64
 
     if do4d[0] is True and do4d[1] == 'channel_id' or do4d[1] == 'xzt-c':
-        channel_id = hits.channel_id.astype('float32')
+        channel_id = hits.channel_id
         event_hits = np.concatenate([event_hits, channel_id[:, ax]], axis=1)
 
     return event_hits, event_track

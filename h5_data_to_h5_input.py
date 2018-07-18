@@ -176,6 +176,12 @@ def main(n_bins, geo_fix=True, do2d=False, do2d_pdf=(False, 10), do3d=False, do4
             # Cutting events with energy < threshold (default=0) and with energy > threshold (default=200)
             continue
 
+        if data_cuts['throw_away_prob'] > 0:
+            throw_away_prob = data_cuts['throw_away_prob']
+            throw_away = np.random.choice([False, True], p=[1-throw_away_prob, throw_away_prob])
+            if throw_away is True:
+                continue
+
         # event_track: [event_id, particle_type, energy, isCC, bjorkeny, dir_x/y/z, time]
         mc_infos.append(event_track)
 
@@ -220,13 +226,19 @@ def main(n_bins, geo_fix=True, do2d=False, do2d_pdf=(False, 10), do3d=False, do4
 
 
 if __name__ == '__main__':
-    # main(n_bins=(11,13,18,60), geo_fix=True, do2d=False, do2d_pdf=(False, 10), do3d=False, do4d=(True, 'time'),
-    #      timecut = ('trigger_cluster', 'all'), do_mc_hits=False, use_calibrated_file=True,
-    #      data_cuts = {'triggered': False, 'energy_lower_limit': 0, 'energy_upper_limit': 200})
-
-    main(n_bins=(11,13,18,60), geo_fix=True, do2d=False, do2d_pdf=(False, 10), do3d=False, do4d=(True, 'channel_id'),
+    # 3-100GeV
+    main(n_bins=(11,13,18,300), geo_fix=True, do2d=False, do2d_pdf=(False, 10), do3d=False, do4d=(True, 'time'),
          timecut = ('trigger_cluster', 'all'), do_mc_hits=False, use_calibrated_file=True,
-         data_cuts = {'triggered': False, 'energy_lower_limit': 0, 'energy_upper_limit': 200})
+         data_cuts = {'triggered': False, 'energy_lower_limit': 0, 'energy_upper_limit': 200, 'throw_away_prob': 0})
+
+    # 1-5GeV
+    # main(n_bins=(11,13,18,300), geo_fix=True, do2d=False, do2d_pdf=(False, 10), do3d=False, do4d=(True, 'time'),
+    #      timecut = ('trigger_cluster', 'all'), do_mc_hits=False, use_calibrated_file=True,
+    #      data_cuts = {'triggered': False, 'energy_lower_limit': 0, 'energy_upper_limit': 3, 'throw_away_prob': 0.25})
+
+    # main(n_bins=(11,13,18,60), geo_fix=True, do2d=False, do2d_pdf=(False, 10), do3d=False, do4d=(True, 'channel_id'),
+    #      timecut = ('trigger_cluster', 'all'), do_mc_hits=False, use_calibrated_file=True,
+    #      data_cuts = {'triggered': False, 'energy_lower_limit': 0, 'energy_upper_limit': 200, 'throw_away_prob': 0})
 
 
 
