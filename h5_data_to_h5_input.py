@@ -117,7 +117,7 @@ def calculate_bin_edges(n_bins, geo_fix, fname_geo_limits, do4d):
     return x_bin_edges, y_bin_edges, z_bin_edges
 
 
-def main(n_bins, geo_fix=True, do2d=False, do2d_pdf=(False, 10), do3d=False, do4d=(True, 'time'),
+def main(n_bins, geo_fix=True, do2d=False, do2d_pdf=(False, 10), do3d=False, do4d=(True, 'time'), prod_ident = None,
          timecut = ('trigger_cluster', 'tight_1'), do_mc_hits=False, use_calibrated_file=False, data_cuts=None):
     """
     Main code. Reads raw .hdf5 files and creates 2D/3D histogram projections that can be used for a CNN
@@ -129,6 +129,10 @@ def main(n_bins, geo_fix=True, do2d=False, do2d_pdf=(False, 10), do3d=False, do4
     :param bool do3d: Declares if 3D histograms should be created.
     :param (bool, str) do4d: Tuple that declares if 4D histograms should be created [0] and if yes, what should be used as the 4th dim after xyz.
                              Currently, only 'time' and 'channel_id' are available.
+    :param int prod_ident: optional int identifier for the used mc production.
+                           This is e.g. useful, if you use events from two different mc productions, e.g. the 1-5GeV & 3-100GeV Orca 2016 MC.
+                           In this case, the events are not fully distinguishable with only the run_id and the event_id!
+                           In order to keep a separation, an integer can be set in the event_track for all events, such that they stay distinguishable.
     :param (str, str/None) timecut: Tuple that defines what timecut should be used in hits_to_histograms.py.
                                     Currently available:
                                     ('timeslice_relative', None): Cuts out the central 30% of the snapshot.
@@ -141,6 +145,7 @@ def main(n_bins, geo_fix=True, do2d=False, do2d_pdf=(False, 10), do3d=False, do4
                            Supports the following cuts: 'triggered', 'energy_lower_limit'
     """
     if data_cuts is None: data_cuts={'triggered': False, 'energy_lower_limit': 0}
+    np.random.seed(42) # set random seed
 
     filename_input = parse_input(do2d, do2d_pdf)
     filename = os.path.basename(os.path.splitext(filename_input)[0])
@@ -170,7 +175,7 @@ def main(n_bins, geo_fix=True, do2d=False, do2d_pdf=(False, 10), do3d=False, do4
             print('Event No. ' + str(i))
 
         # filter out all hit and track information belonging that to this event
-        event_hits, event_track = get_event_data(event_blob, geo, do_mc_hits, use_calibrated_file, data_cuts, do4d)
+        event_hits, event_track = get_event_data(event_blob, geo, do_mc_hits, use_calibrated_file, data_cuts, do4d, prod_ident)
 
         if event_track[2] < data_cuts['energy_lower_limit'] or event_track[2] > data_cuts['energy_upper_limit']:
             # Cutting events with energy < threshold (default=0) and with energy > threshold (default=200)
@@ -181,6 +186,15 @@ def main(n_bins, geo_fix=True, do2d=False, do2d_pdf=(False, 10), do3d=False, do4
             throw_away = np.random.choice([False, True], p=[1-throw_away_prob, throw_away_prob])
             if throw_away is True:
                 continue
+
+        #     # TODO temporary, deprecated solution, we always need to throw away the same events if we have multiple inputs -> use fixed seed
+        #     arr = np.load('/home/woody/capn/mppi033h/Code/OrcaSong/utilities/low_e_prod_surviving_evts_elec-CC.npy')
+        #     arr_list = arr.tolist()
+        #     evt_id = event_track[0]
+        #     run_id = event_track[9]
+        #
+        #     if [run_id, evt_id] not in arr_list:
+        #         continue
 
         # event_track: [event_id, particle_type, energy, isCC, bjorkeny, dir_x/y/z, time]
         mc_infos.append(event_track)
@@ -227,14 +241,25 @@ def main(n_bins, geo_fix=True, do2d=False, do2d_pdf=(False, 10), do3d=False, do4
 
 if __name__ == '__main__':
     # 3-100GeV
-    main(n_bins=(11,13,18,300), geo_fix=True, do2d=False, do2d_pdf=(False, 10), do3d=False, do4d=(True, 'time'),
-         timecut = ('trigger_cluster', 'all'), do_mc_hits=False, use_calibrated_file=True,
-         data_cuts = {'triggered': False, 'energy_lower_limit': 0, 'energy_upper_limit': 200, 'throw_away_prob': 0})
+    # main(n_bins=(11,13,18,60), geo_fix=True, do2d=False, do2d_pdf=(False, 10), do3d=False, do4d=(True, 'time'),
+    #      timecut = ('trigger_cluster', 'tight_1'), do_mc_hits=False, use_calibrated_file=True,
+    #      data_cuts = {'triggered': False, 'energy_lower_limit': 0, 'energy_upper_limit': 200, 'throw_away_prob': 0})
 
-    # 1-5GeV
-    # main(n_bins=(11,13,18,300), geo_fix=True, do2d=False, do2d_pdf=(False, 10), do3d=False, do4d=(True, 'time'),
-    #      timecut = ('trigger_cluster', 'all'), do_mc_hits=False, use_calibrated_file=True,
-    #      data_cuts = {'triggered': False, 'energy_lower_limit': 0, 'energy_upper_limit': 3, 'throw_away_prob': 0.25})
+    # 1-5GeV , info throw away: elec-CC 0.25, muon-CC 0.25, elec-NC: 0.00
+    # main(n_bins=(11,13,18,60), geo_fix=True, do2d=False, do2d_pdf=(False, 10), do3d=False, do4d=(True, 'time'),
+    #      timecut = ('trigger_cluster', 'tight_1'), do_mc_hits=False, use_calibrated_file=True,
+    #      data_cuts = {'triggered': False, 'energy_lower_limit': 0, 'energy_upper_limit': 3, 'throw_away_prob': 0.00})
+
+    # xyz-c
+    # 3-100GeV
+    # main(n_bins=(11,13,18,31), geo_fix=True, do2d=False, do2d_pdf=(False, 10), do3d=False, do4d=(True, 'channel_id'),
+    #      timecut = ('trigger_cluster', 'tight_1'), do_mc_hits=False, use_calibrated_file=True,
+    #      data_cuts = {'triggered': False, 'energy_lower_limit': 0, 'energy_upper_limit': 200, 'throw_away_prob': 0})
+
+    # 1-5GeV , info throw away: elec-CC 0.25, muon-CC 0.25, elec-NC: 0.00
+    main(n_bins=(11,13,18,31), geo_fix=True, do2d=False, do2d_pdf=(False, 10), do3d=False, do4d=(True, 'channel_id'),
+         timecut = ('trigger_cluster', 'tight_1'), do_mc_hits=False, use_calibrated_file=True,
+         data_cuts = {'triggered': False, 'energy_lower_limit': 0, 'energy_upper_limit': 3, 'throw_away_prob': 0.00})
 
     # main(n_bins=(11,13,18,60), geo_fix=True, do2d=False, do2d_pdf=(False, 10), do3d=False, do4d=(True, 'channel_id'),
     #      timecut = ('trigger_cluster', 'all'), do_mc_hits=False, use_calibrated_file=True,

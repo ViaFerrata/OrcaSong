@@ -34,7 +34,7 @@ def get_time_residual_nu_interaction_mean_triggered_hits(time_interaction, hits_
     return time_residual_vertex
 
 
-def get_event_data(event_blob, geo, do_mc_hits, use_calibrated_file, data_cuts, do4d):
+def get_event_data(event_blob, geo, do_mc_hits, use_calibrated_file, data_cuts, do4d, prod_ident):
     """
     Reads a km3pipe blob which contains the information for one event.
     Returns a hit array and a track array that contains all relevant information of the event.
@@ -48,6 +48,7 @@ def get_event_data(event_blob, geo, do_mc_hits, use_calibrated_file, data_cuts, 
     :param dict data_cuts: specifies if cuts should be applied. Contains the keys 'triggered' and 'energy_lower_limit'.
     :param (bool, str) do4d: Tuple that declares if 4D histograms should be created [0] and if yes, what should be used as the 4th dim after xyz.
                              In the case of 'channel_id', this information needs to be included in the event_hits as well.
+    :param int prod_ident: optional int that identifies the used production, more documentation in the docs of the main function.
     :return: ndarray(ndim=2) event_hits: 2D array containing the hit information of the event [pos_xyz time (channel_id)].
     :return: ndarray(ndim=1) event_track: 1D array containing important MC information of the event.
                                           [event_id, particle_type, energy, isCC, bjorkeny, dir_x/y/z, time]
@@ -85,9 +86,13 @@ def get_event_data(event_blob, geo, do_mc_hits, use_calibrated_file, data_cuts, 
 
     time_residual_vertex = get_time_residual_nu_interaction_mean_triggered_hits(time_interaction, hits_time, triggered)
 
+
     # save collected information to arrays event_track and event_hits
-    event_track = np.array([event_id, particle_type, energy, is_cc, bjorkeny, dir_x, dir_y, dir_z, time_track,
-                            run_id, vertex_pos_x, vertex_pos_y, vertex_pos_z, time_residual_vertex], dtype=np.float64)
+    track = [event_id, particle_type, energy, is_cc, bjorkeny, dir_x, dir_y, dir_z, time_track, run_id,
+             vertex_pos_x, vertex_pos_y, vertex_pos_z, time_residual_vertex]
+    if prod_ident is not None: track.append(np.full(event_id.shape, prod_ident))
+
+    event_track = np.array(track, dtype=np.float64)
 
     ax = np.newaxis
     event_hits = np.concatenate([pos_x[:, ax], pos_y[:, ax], pos_z[:, ax], hits_time[:, ax], triggered[:, ax]], axis=1) # dtype: np.float64
