@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-#PBS -l nodes=1:ppn=4:sl32g,walltime=4:00:00
+#PBS -l nodes=1:ppn=4:sl32g,walltime=3:00:00
 #PBS -o /home/woody/capn/mppi033h/logs/submit_h5_to_histo_${PBS_JOBID}_${PBS_ARRAYID}.out -e /home/woody/capn/mppi033h/logs/submit_h5_to_histo_${PBS_JOBID}_${PBS_ARRAYID}.err
 # first non-empty non-comment line ends PBS options
 
@@ -17,9 +17,9 @@ n=${PBS_ARRAYID}
 CodeFolder=/home/woody/capn/mppi033h/Code/OrcaSong
 cd ${CodeFolder}
 
-ParticleType=muon-CC
+#ParticleType=muon-CC
 #ParticleType=elec-CC
-#ParticleType=elec-NC
+ParticleType=elec-NC
 #ParticleType=tau-CC
 # ----- 3-100GeV------
 #FileName=JTE.KM3Sim.gseagen.muon-CC.3-100GeV-9.1E7-1bin-3.0gspec.ORCA115_9m_2016 #muon-CC
@@ -29,9 +29,9 @@ ParticleType=muon-CC
 #HDFFOLDER=/home/woody/capn/mppi033h/Data/ORCA_JTE_NEMOWATER/raw_data/calibrated/with_jte_times/3-100GeV/${ParticleType}
 # ----- 3-100GeV------
 # ----- 1-5GeV------
-FileName=JTE.KM3Sim.gseagen.muon-CC.1-5GeV-9.2E5-1bin-1.0gspec.ORCA115_9m_2016 #muon-CC
-#FileName=JTE.KM3Sim.gseagen.elec-NC.1-5GeV-2.2E6-1bin-1.0gspec.ORCA115_9m_2016 #elec-NC
+#FileName=JTE.KM3Sim.gseagen.muon-CC.1-5GeV-9.2E5-1bin-1.0gspec.ORCA115_9m_2016 #muon-CC
 #FileName=JTE.KM3Sim.gseagen.elec-CC.1-5GeV-2.7E5-1bin-1.0gspec.ORCA115_9m_2016 #elec-CC
+FileName=JTE.KM3Sim.gseagen.elec-NC.1-5GeV-2.2E6-1bin-1.0gspec.ORCA115_9m_2016 #elec-NC
 HDFFOLDER=/home/woody/capn/mppi033h/Data/ORCA_JTE_NEMOWATER/raw_data/calibrated/with_jte_times/1-5GeV/${ParticleType}
 # ----- 1-5GeV------
 
