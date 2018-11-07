@@ -1,4 +1,4 @@
-## Generating DL images based on KM3NeT-ORCA neutrino simulation data 
+## Generating DL images based on KM3NeT neutrino simulation data 
 
 OrcaSong is a project that produces 2D/3D/4D histograms ('images') for deep neural networks based on raw MC h5 files.
 Currently, only ORCA detector simulations are supported, but ARCA geometries can be easily implemented as well.
