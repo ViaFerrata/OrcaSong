@@ -12,10 +12,9 @@ import matplotlib as mpl
 mpl.use('Agg')
 from matplotlib.backends.backend_pdf import PdfPages
 
-import globals
-from file_to_hits import *
-from histograms_to_files import *
-from hits_to_histograms import *
+from orcasong.file_to_hits import *
+from orcasong.histograms_to_files import *
+from orcasong.hits_to_histograms import *
 
 __author__ = 'Michael Moser'
 __license__ = 'AGPL'
@@ -75,12 +74,13 @@ def calculate_bin_edges_test(geo, y_bin_edge, z_bin_edge):
     print('----------------------------------------------------------------------------------------------')
 
 
-def calculate_bin_edges(n_bins, geo_fix, fname_geo_limits, do4d):
+def calculate_bin_edges(n_bins, det_geo, fname_geo_limits, do4d):
     """
-    Calculates the bin edges for the later np.histogramdd actions based on the number of specified bins. 
-    This is performed in order to get the same bin size for each event regardless of the fact if all bins have a hit or not.
+    Calculates the bin edges for the corresponding detector geometry (1 DOM/bin) based on the number of specified bins.
+    Used later on for making the event "images" with the in the np.histogramdd funcs in hits_to_histograms.py.
+    The bin edges are necessary in order to get the same bin size for each event regardless of the fact if all bins have a hit or not.
     :param tuple n_bins: contains the desired number of bins for each dimension. [n_bins_x, n_bins_y, n_bins_z]
-    :param bool geo_fix: declares if the fixed geometry by Stefan should be used (1 DOM / bin).
+    :param str det_geo: declares what detector geometry should be used for the binning.
     :param str fname_geo_limits: filepath of the .txt ORCA geometry file.
     :param (bool, str) do4d: Tuple that declares if 4D histograms should be created [0] and if yes, what should be used as the 4th dim after xyz.
     :return: ndarray(ndim=1) x_bin_edges, y_bin_edges, z_bin_edges: contains the resulting bin edges for each dimension.
@@ -92,37 +92,41 @@ def calculate_bin_edges(n_bins, geo_fix, fname_geo_limits, do4d):
     geo_limits = np.nanmin(geo, axis = 0), np.nanmax(geo, axis = 0)
     print('Detector dimensions [[first_OM_id, xmin, ymin, zmin], [last_OM_id, xmax, ymax, zmax]]: ' + str(geo_limits))
 
-    x_bin_edges = np.linspace(geo_limits[0][1] - 9.95, geo_limits[1][1] + 9.95, num=n_bins[0] + 1) #try to get the lines in the bin center 9.95*2 = average x-separation of two lines
-    y_bin_edges = np.linspace(geo_limits[0][2] - 9.75, geo_limits[1][2] + 9.75, num=n_bins[1] + 1) # Delta y = 19.483
-    if do4d[0] is True and do4d[1] == 'xzt-c': # n_bins = [xzt,c]
-        z_bin_edges = np.linspace(geo_limits[0][3] - 4.665, geo_limits[1][3] + 4.665, num=n_bins[1] + 1)  # Delta z = 9.329
-    else: # n_bins = [xyz,t/c]
-        z_bin_edges = np.linspace(geo_limits[0][3] - 4.665, geo_limits[1][3] + 4.665, num=n_bins[2] + 1)  # Delta z = 9.329
+    if det_geo == 'Orca_115l_23m_h_9m_v' or det_geo == 'Orca_115l_23m_h_?m_v':
+        x_bin_edges = np.linspace(geo_limits[0][1] - 9.95, geo_limits[1][1] + 9.95, num=n_bins[0] + 1) #try to get the lines in the bin center 9.95*2 = average x-separation of two lines
+        y_bin_edges = np.linspace(geo_limits[0][2] - 9.75, geo_limits[1][2] + 9.75, num=n_bins[1] + 1) # Delta y = 19.483
 
-    # ORCA denser detector study
-    #z_bin_edges = np.linspace(37.84 - 7.5, 292.84 + 7.5, num=n_bins[2] + 1)  # 15m vertical, 18 DOMs
-    #z_bin_edges = np.linspace(37.84 - 6, 241.84 + 6, num=n_bins[2] + 1)  # 12m vertical, 18 DOMs
-    #z_bin_edges = np.linspace(37.84 - 4.5, 190.84 + 4.5, num=n_bins[2] + 1)  # 9m vertical, 18 DOMs
-    #z_bin_edges = np.linspace(37.84 - 3, 139.84 + 3, num=n_bins[2] + 1)  # 6m vertical, 18 DOMs
-    #z_bin_edges = np.linspace(37.84 - 2.25, 114.34 + 2.25, num=n_bins[2] + 1)  # 4.5m vertical, 18 DOMs
-
-    if geo_fix is True:
-        # Gefittete offsets: x,y,factor: factor*(x+x_off), # Stefan's modifications:
+        # Fitted offsets: x,y,factor: factor*(x+x_off), # Stefan's modifications:
         offset_x, offset_y, scale = [6.19, 0.064, 1.0128]
         x_bin_edges = (x_bin_edges + offset_x) * scale
         y_bin_edges = (y_bin_edges + offset_y) * scale
 
-    #calculate_bin_edges_test(geo, y_bin_edges, z_bin_edges) # test disabled by default. Activate it, if you change the offsets in x/y/z-bin-edges
+        if det_geo == 'Orca_115l_23m_h_?m_v':
+            # ORCA denser detector study
+            z_bin_edges = np.linspace(37.84 - 7.5, 292.84 + 7.5, num=n_bins[2] + 1)  # 15m vertical, 18 DOMs
+            # z_bin_edges = np.linspace(37.84 - 6, 241.84 + 6, num=n_bins[2] + 1)  # 12m vertical, 18 DOMs
+            # z_bin_edges = np.linspace(37.84 - 4.5, 190.84 + 4.5, num=n_bins[2] + 1)  # 9m vertical, 18 DOMs
+            # z_bin_edges = np.linspace(37.84 - 3, 139.84 + 3, num=n_bins[2] + 1)  # 6m vertical, 18 DOMs
+            # z_bin_edges = np.linspace(37.84 - 2.25, 114.34 + 2.25, num=n_bins[2] + 1)  # 4.5m vertical, 18 DOMs
+
+        else:
+            n_bins_z = n_bins[2] if do4d[1] != 'xzt-c' else n_bins[1] # n_bins = [xyz,t/c] or n_bins = [xzt,c]
+            z_bin_edges = np.linspace(geo_limits[0][3] - 4.665, geo_limits[1][3] + 4.665, num=n_bins_z + 1)  # Delta z = 9.329
+
+        # calculate_bin_edges_test(geo, y_bin_edges, z_bin_edges) # test disabled by default. Activate it, if you change the offsets in x/y/z-bin-edges
+
+    else:
+        raise ValueError('The specified detector geometry "' + str(det_geo) + '" is not available.')
 
     return x_bin_edges, y_bin_edges, z_bin_edges
 
 
-def main(n_bins, geo_fix=True, do2d=False, do2d_pdf=(False, 10), do3d=False, do4d=(True, 'time'), prod_ident=None,
+def main(n_bins, det_geo, do2d=False, do2d_pdf=(False, 10), do3d=False, do4d=(True, 'time'), prod_ident=None,
          timecut=('trigger_cluster', 'tight_1'), do_mc_hits=False, use_calibrated_file=False, data_cuts=None):
     """
     Main code. Reads raw .hdf5 files and creates 2D/3D histogram projections that can be used for a CNN
     :param tuple(int) n_bins: Declares the number of bins that should be used for each dimension (x,y,z,t).
-    :param bool geo_fix: declares if the fixed geometry by Stefan should be used (1 DOM / bin).
+    :param str det_geo: declares what detector geometry should be used for the binning. E.g. 'Orca_115l_23m_h_9m_v'.
     :param bool do2d: Declares if 2D histograms should be created.
     :param (bool, int) do2d_pdf: Declares if pdf visualizations of the 2D histograms should be created. Cannot be called if do2d=False.
                                  The event loop will be stopped after the integer specified in the second argument.
@@ -149,7 +153,7 @@ def main(n_bins, geo_fix=True, do2d=False, do2d_pdf=(False, 10), do3d=False, do4
 
     filename_input = parse_input(do2d, do2d_pdf)
     filename = os.path.basename(os.path.splitext(filename_input)[0])
-    filename_output = filename.replace(".","_")
+    filename_output = filename.replace('.','_')
     filename_geo_limits = 'ORCA_Geo_115lines.txt' # used for calculating the dimensions of the ORCA can
 
     geo = None
@@ -161,15 +165,15 @@ def main(n_bins, geo_fix=True, do2d=False, do2d_pdf=(False, 10), do3d=False, do4
             raise IOError('The .detx file does not exist in the default path </home/woody/capn/mppi033h/misc/orca_detectors/fixed/>! '
                           'Change the path or add the .detx file to the default path.')
 
-    x_bin_edges, y_bin_edges, z_bin_edges = calculate_bin_edges(n_bins, geo_fix, filename_geo_limits, do4d)
+    x_bin_edges, y_bin_edges, z_bin_edges = calculate_bin_edges(n_bins, det_geo, filename_geo_limits, do4d)
 
     all_4d_to_2d_hists, all_4d_to_3d_hists, all_4d_to_4d_hists, mc_infos = [], [], [], []
 
-    if do2d_pdf[0] is True: globals.pdf_2d_plots = PdfPages('Results/4dTo2d/' + filename_output + '_plots.pdf')
+    pdf_2d_plots = PdfPages('Results/4dTo2d/' + filename_output + '_plots.pdf') if do2d_pdf[0] is True else None
 
     # Initialize HDF5Pump of the input file
     event_pump = kp.io.hdf5.HDF5Pump(filename=filename_input)
-    print("Generating histograms from the hits in XYZT format for files based on " + filename_input)
+    print('Generating histograms from the hits in XYZT format for files based on ' + filename_input)
     for i, event_blob in enumerate(event_pump):
         if i % 10 == 0:
             print('Event No. ' + str(i))
@@ -200,7 +204,7 @@ def main(n_bins, geo_fix=True, do2d=False, do2d_pdf=(False, 10), do3d=False, do4
         mc_infos.append(event_track)
 
         if do2d:
-            compute_4d_to_2d_histograms(event_hits, x_bin_edges, y_bin_edges, z_bin_edges, n_bins, all_4d_to_2d_hists, timecut, event_track, do2d_pdf[0])
+            compute_4d_to_2d_histograms(event_hits, x_bin_edges, y_bin_edges, z_bin_edges, n_bins, all_4d_to_2d_hists, timecut, event_track, do2d_pdf[0], pdf_2d_plots)
 
         if do3d:
             compute_4d_to_3d_histograms(event_hits, x_bin_edges, y_bin_edges, z_bin_edges, n_bins, all_4d_to_3d_hists, timecut)
@@ -209,7 +213,7 @@ def main(n_bins, geo_fix=True, do2d=False, do2d_pdf=(False, 10), do3d=False, do4
             compute_4d_to_4d_histograms(event_hits, x_bin_edges, y_bin_edges, z_bin_edges, n_bins, all_4d_to_4d_hists, timecut, do4d)
 
         if do2d_pdf[0] is True and i >= do2d_pdf[1]:
-            globals.pdf_2d_plots.close()
+            pdf_2d_plots.close()
             break
 
     if do2d:
@@ -241,27 +245,27 @@ def main(n_bins, geo_fix=True, do2d=False, do2d_pdf=(False, 10), do3d=False, do4
 
 if __name__ == '__main__':
     # 3-100GeV
-    # main(n_bins=(11,13,18,60), geo_fix=True, do2d=False, do2d_pdf=(False, 10), do3d=False, do4d=(True, 'time'),
+    # main(n_bins=(11,13,18,60), det_geo='Orca_115l_23m_h_9m_v', do2d=False, do2d_pdf=(False, 10), do3d=False, do4d=(True, 'time'),
     #      timecut = ('trigger_cluster', 'tight_1'), do_mc_hits=False, use_calibrated_file=True,
     #      data_cuts = {'triggered': False, 'energy_lower_limit': 0, 'energy_upper_limit': 200, 'throw_away_prob': 0})
 
     # 1-5GeV , info throw away: elec-CC 0.25, muon-CC 0.25, elec-NC: 0.00
-    # main(n_bins=(11,13,18,60), geo_fix=True, do2d=False, do2d_pdf=(False, 10), do3d=False, do4d=(True, 'time'),
+    # main(n_bins=(11,13,18,60), det_geo='Orca_115l_23m_h_9m_v', do2d=False, do2d_pdf=(False, 10), do3d=False, do4d=(True, 'time'),
     #      timecut = ('trigger_cluster', 'tight_1'), do_mc_hits=False, use_calibrated_file=True,
     #      data_cuts = {'triggered': False, 'energy_lower_limit': 0, 'energy_upper_limit': 3, 'throw_away_prob': 0.00})
 
     # xyz-c
     # 3-100GeV
-    # main(n_bins=(11,13,18,31), geo_fix=True, do2d=False, do2d_pdf=(False, 10), do3d=False, do4d=(True, 'channel_id'),
+    # main(n_bins=(11,13,18,31), det_geo='Orca_115l_23m_h_9m_v', do2d=False, do2d_pdf=(False, 10), do3d=False, do4d=(True, 'channel_id'),
     #      timecut = ('trigger_cluster', 'tight_1'), do_mc_hits=False, use_calibrated_file=True,
     #      data_cuts = {'triggered': False, 'energy_lower_limit': 0, 'energy_upper_limit': 200, 'throw_away_prob': 0})
 
     # 1-5GeV , info throw away: elec-CC 0.25, muon-CC 0.25, elec-NC: 0.00
-    main(n_bins=(11,13,18,31), geo_fix=True, do2d=False, do2d_pdf=(False, 10), do3d=False, do4d=(True, 'channel_id'),
+    main(n_bins=(11,13,18,31), det_geo='Orca_115l_23m_h_9m_v', do2d=False, do2d_pdf=(False, 10), do3d=False, do4d=(True, 'channel_id'),
          timecut = ('trigger_cluster', 'tight_1'), do_mc_hits=False, use_calibrated_file=True,
          data_cuts = {'triggered': False, 'energy_lower_limit': 0, 'energy_upper_limit': 3, 'throw_away_prob': 0.00})
 
-    # main(n_bins=(11,13,18,60), geo_fix=True, do2d=False, do2d_pdf=(False, 10), do3d=False, do4d=(True, 'channel_id'),
+    # main(n_bins=(11,13,18,60), det_geo='Orca_115l_23m_h_9m_v', do2d=False, do2d_pdf=(False, 10), do3d=False, do4d=(True, 'channel_id'),
     #      timecut = ('trigger_cluster', 'all'), do_mc_hits=False, use_calibrated_file=True,
     #      data_cuts = {'triggered': False, 'energy_lower_limit': 0, 'energy_upper_limit': 200, 'throw_away_prob': 0})
 

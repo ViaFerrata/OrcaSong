@@ -12,16 +12,15 @@ def store_histograms_as_hdf5(hists, mc_infos, filepath_output, compression=(None
     :param str filepath_output: complete filepath of the created h5 file.
     :param (None/str, None/int) compression: Tuple that specifies if a compression filter should be used. Either ('gzip', 1-9) or ('lzf', None).
     """
-
-    h5f = h5py.File(filepath_output, 'w')
+    f = h5py.File(filepath_output, 'w')
 
     chunks_hists = (32,) + hists.shape[1:] if compression[0] is not None else None
     chunks_mc_infos = (32,) + mc_infos.shape[1:] if compression[0] is not None else None
     fletcher32 = True if compression[0] is not None else False
 
-    dset_hists = h5f.create_dataset('x', data=hists, dtype='uint8', fletcher32=fletcher32, chunks=chunks_hists,
+    dset_hists = f.create_dataset('x', data=hists, dtype='uint8', fletcher32=fletcher32, chunks=chunks_hists,
                                     compression=compression[0], compression_opts=compression[1], shuffle=False)
-    dset_mc_infos = h5f.create_dataset('y', data=mc_infos, dtype='float32', fletcher32=fletcher32, chunks=chunks_mc_infos,
+    dset_mc_infos = f.create_dataset('y', data=mc_infos, dtype='float32', fletcher32=fletcher32, chunks=chunks_mc_infos,
                                        compression=compression[0], compression_opts=compression[1], shuffle=False)
 
-    h5f.close()
+    f.close()

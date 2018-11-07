@@ -57,7 +57,7 @@ def get_event_data(event_blob, geo, do_mc_hits, use_calibrated_file, data_cuts, 
 
     # parse tracks [event_id, particle_type, energy, isCC, bjorkeny, dir_x/y/z, time]
     event_id = event_blob['EventInfo'].event_id[0]
-    run_id = event_blob['RawHeader'][0][0].astype('float32')
+    run_id = event_blob['Header'].start_run.run_id.astype('float32') # todo check if already f32
     particle_type = event_blob['McTracks'][p].type
     energy = event_blob['McTracks'][p].energy
     is_cc = event_blob['McTracks'][p].is_cc
@@ -85,7 +85,6 @@ def get_event_data(event_blob, geo, do_mc_hits, use_calibrated_file, data_cuts, 
     triggered = hits.triggered
 
     time_residual_vertex = get_time_residual_nu_interaction_mean_triggered_hits(time_interaction, hits_time, triggered)
-
 
     # save collected information to arrays event_track and event_hits
     track = [event_id, particle_type, energy, is_cc, bjorkeny, dir_x, dir_y, dir_z, time_track, run_id,

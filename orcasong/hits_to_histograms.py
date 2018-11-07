@@ -10,8 +10,6 @@ import numpy as np
 #from memory_profiler import profile
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 
-import globals
-
 
 def get_time_parameters(event_hits, mode=('trigger_cluster', 'all'), t_start_margin=0.15, t_end_margin=0.15):
     """
@@ -61,7 +59,7 @@ def get_time_parameters(event_hits, mode=('trigger_cluster', 'all'), t_start_mar
     return t_start, t_end
 
 
-def compute_4d_to_2d_histograms(event_hits, x_bin_edges, y_bin_edges, z_bin_edges, n_bins, all_4d_to_2d_hists, timecut, event_track, do2d_pdf):
+def compute_4d_to_2d_histograms(event_hits, x_bin_edges, y_bin_edges, z_bin_edges, n_bins, all_4d_to_2d_hists, timecut, event_track, do2d_pdf, pdf_2d_plots):
     """
     Computes 2D numpy histogram 'images' from the 4D data.
     :param ndarray(ndim=2) event_hits: 2D array that contains the hits (_xyzt) data for a certain eventID. [positions_xyz, time, triggered]
@@ -73,6 +71,7 @@ def compute_4d_to_2d_histograms(event_hits, x_bin_edges, y_bin_edges, z_bin_edge
     :param (str, str/None) timecut: Tuple that defines what timecut should be used in hits_to_histograms.py.
     :param ndarray(ndim=2) event_track: contains the relevant mc_track info for the event in order to get a nice title for the pdf histos.
     :param bool do2d_pdf: if True, generate 2D matplotlib pdf histograms.
+    :param PdfPages/None pdf_2d_plots: either a mpl PdfPages instance or None.
     :return: appends the 2D histograms to the all_4d_to_2d_hists list.
     """
     x, y, z, t = event_hits[:, 0], event_hits[:, 1], event_hits[:, 2], event_hits[:, 3]
@@ -102,15 +101,16 @@ def compute_4d_to_2d_histograms(event_hits, x_bin_edges, y_bin_edges, z_bin_edge
         # Need to take that into account in convert_2d_numpy_hists_to_pdf_image()
         # transpose to get typical cartesian convention: y along first dim (vertical), x along second dim (horizontal)
         hists = [hist_xy, hist_xz, hist_yz, hist_xt, hist_yt, hist_zt]
-        convert_2d_numpy_hists_to_pdf_image(hists, t_start, t_end, event_track=event_track) # slow! takes about 1s per event
+        convert_2d_numpy_hists_to_pdf_image(hists, t_start, t_end, pdf_2d_plots, event_track=event_track) # slow! takes about 1s per event
 
 
-def convert_2d_numpy_hists_to_pdf_image(hists, t_start, t_end, event_track=None):
+def convert_2d_numpy_hists_to_pdf_image(hists, t_start, t_end, pdf_2d_plots, event_track=None):
     """
     Creates matplotlib 2D histos based on the numpy histogram2D objects and saves them to a pdf file.
     :param list(ndarray(ndim=2)) hists: Contains np.histogram2d objects of all projections [xy, xz, yz, xt, yt, zt].
     :param float t_start: absolute start time of the timespan cut.
     :param float t_end: absolute end time of the timespan cut.
+    :param PdfPages/None pdf_2d_plots: either a mpl PdfPages instance or None.
     :param ndarray(ndim=2) event_track: contains the relevant mc_track info for the event in order to get a nice title for the pdf histos.
                                         [event_id, particle_type, energy, isCC, bjorkeny, dir_x/y/z]
     """
@@ -160,7 +160,7 @@ def convert_2d_numpy_hists_to_pdf_image(hists, t_start, t_end, event_track=None)
     plot_zt = fill_subplot(hists[5], axes_zt)
 
     fig.tight_layout(rect=[0, 0.02, 1, 0.95])
-    globals.pdf_2d_plots.savefig(fig) #TODO: remove global variable, but how? Need to close pdf object outside of this function (-> as last step of the 2D eventID loop)
+    pdf_2d_plots.savefig(fig)
     plt.close()
 
 
