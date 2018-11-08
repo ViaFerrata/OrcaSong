@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-"""This main code takes raw simulated .hdf5 files as input in order to generate 2D/3D histograms ('images') that can be used for CNNs."""
+"""Main OrcaSong code which takes raw simulated .h5 files as input in order to generate 2D/3D/4D histograms ('images') that can be used for CNNs."""
 
 import os
 import sys
@@ -26,9 +26,12 @@ __status__ = 'Prototype'
 def parse_input(do2d, do2d_pdf):
     """
     Handles input exceptions, warnings and helps.
+
     :param bool do2d: Boolean flag for creation of 2D histograms.
-    :param (bool, int) do2d_pdf: Boolean flag for creation of 2D pdf images.
-    :return: str fname: Parsed filename.
+    :param do2d_pdf: Boolean flag for creation of 2D pdf images.
+    :type do2d_pdf: tuple(bool, int)
+    :rtype: str
+    :return: fname: Parsed filename.
     """
     if len(sys.argv) < 2 or str(sys.argv[1]) == "-h":
         print("Usage: python " + str(sys.argv[0]) + " file.h5")
@@ -79,6 +82,7 @@ def calculate_bin_edges(n_bins, det_geo, fname_geo_limits, do4d):
     Calculates the bin edges for the corresponding detector geometry (1 DOM/bin) based on the number of specified bins.
     Used later on for making the event "images" with the in the np.histogramdd funcs in hits_to_histograms.py.
     The bin edges are necessary in order to get the same bin size for each event regardless of the fact if all bins have a hit or not.
+
     :param tuple n_bins: contains the desired number of bins for each dimension. [n_bins_x, n_bins_y, n_bins_z]
     :param str det_geo: declares what detector geometry should be used for the binning.
     :param str fname_geo_limits: filepath of the .txt ORCA geometry file.
@@ -124,7 +128,8 @@ def calculate_bin_edges(n_bins, det_geo, fname_geo_limits, do4d):
 def main(n_bins, det_geo, do2d=False, do2d_pdf=(False, 10), do3d=False, do4d=(True, 'time'), prod_ident=None,
          timecut=('trigger_cluster', 'tight_1'), do_mc_hits=False, use_calibrated_file=False, data_cuts=None):
     """
-    Main code. Reads raw .hdf5 files and creates 2D/3D histogram projections that can be used for a CNN
+    Main code. Reads raw .hdf5 files and creates 2D/3D histogram projections that can be used for a CNN.
+
     :param tuple(int) n_bins: Declares the number of bins that should be used for each dimension (x,y,z,t).
     :param str det_geo: declares what detector geometry should be used for the binning. E.g. 'Orca_115l_23m_h_9m_v'.
     :param bool do2d: Declares if 2D histograms should be created.

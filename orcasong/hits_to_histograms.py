@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-"""This utility code contains functions that computes 2D/3D histograms based on the file_to_hits.py output"""
+"""Code for computeing 2D/3D/4D histograms ("images") based on the event_hits hit pattern of the file_to_hits.py output"""
 
 import matplotlib as mpl
 mpl.use('Agg')
@@ -15,6 +15,7 @@ def get_time_parameters(event_hits, mode=('trigger_cluster', 'all'), t_start_mar
     """
     Gets the fundamental time parameters in one place for cutting a time residual.
     Later on these parameters cut out a certain time span of events specified by t_start and t_end.
+
     :param ndarray(ndim=2) event_hits: 2D array that contains the hits (_xyzt) data for a certain eventID. [positions_xyz, time, triggered]
     :param tuple(str, str) mode: type of time cut that is used. Currently available: timeslice_relative and first_triggered.
     :param float t_start_margin: Used in timeslice_relative mode. Defines the start time of the selected timespan with t_mean - t_start * t_diff.
@@ -62,6 +63,7 @@ def get_time_parameters(event_hits, mode=('trigger_cluster', 'all'), t_start_mar
 def compute_4d_to_2d_histograms(event_hits, x_bin_edges, y_bin_edges, z_bin_edges, n_bins, all_4d_to_2d_hists, timecut, event_track, do2d_pdf, pdf_2d_plots):
     """
     Computes 2D numpy histogram 'images' from the 4D data.
+
     :param ndarray(ndim=2) event_hits: 2D array that contains the hits (_xyzt) data for a certain eventID. [positions_xyz, time, triggered]
     :param ndarray(ndim=1) x_bin_edges: bin edges for the X-direction.
     :param ndarray(ndim=1) y_bin_edges: bin edges for the Y-direction.
@@ -107,6 +109,7 @@ def compute_4d_to_2d_histograms(event_hits, x_bin_edges, y_bin_edges, z_bin_edge
 def convert_2d_numpy_hists_to_pdf_image(hists, t_start, t_end, pdf_2d_plots, event_track=None):
     """
     Creates matplotlib 2D histos based on the numpy histogram2D objects and saves them to a pdf file.
+
     :param list(ndarray(ndim=2)) hists: Contains np.histogram2d objects of all projections [xy, xz, yz, xt, yt, zt].
     :param float t_start: absolute start time of the timespan cut.
     :param float t_end: absolute end time of the timespan cut.
@@ -170,6 +173,7 @@ def compute_4d_to_3d_histograms(event_hits, x_bin_edges, y_bin_edges, z_bin_edge
     Careful: Currently, appending to all_4d_to_3d_hists takes quite a lot of memory (about 200MB for 3500 events).
     In the future, the list should be changed to a numpy ndarray.
     (Which unfortunately would make the code less readable, since an array is needed for each projection...)
+
     :param ndarray(ndim=2) event_hits: 2D array that contains the hits (_xyzt) data for a certain eventID. [positions_xyz, time, triggered]
     :param ndarray(ndim=1) x_bin_edges: bin edges for the X-direction. 
     :param ndarray(ndim=1) y_bin_edges: bin edges for the Y-direction.
@@ -207,6 +211,7 @@ def compute_4d_to_3d_histograms(event_hits, x_bin_edges, y_bin_edges, z_bin_edge
 def compute_4d_to_4d_histograms(event_hits, x_bin_edges, y_bin_edges, z_bin_edges, n_bins, all_4d_to_4d_hists, timecut, do4d):
     """
     Computes 4D numpy histogram 'images' from the 4D data.
+
     :param ndarray(ndim=2) event_hits: 2D array that contains the hits (_xyzt) data for a certain eventID. [positions_xyz, time, triggered, (channel_id)]
     :param ndarray(ndim=1) x_bin_edges: bin edges for the X-direction.
     :param ndarray(ndim=1) y_bin_edges: bin edges for the Y-direction.

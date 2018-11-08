@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-"""This utility code contains functions that read the raw MC .h5 files"""
+"""Code that reads the h5 simulation files and extracts the necessary information for making event images."""
 
 import numpy as np
 #from memory_profiler import profile
@@ -11,6 +11,7 @@ def get_primary_track_index(event_blob):
     """
     Gets the index of the primary (neutrino) track.
     Uses bjorkeny in order to get the primary track, since bjorkeny!=0 for the initial interacting neutrino.
+
     :param kp.io.HDF5Pump.blob event_blob: HDF5Pump event blob.
     :return: int primary index: Index of the primary track (=neutrino) in the 'McTracks' branch.
     """
@@ -21,10 +22,12 @@ def get_primary_track_index(event_blob):
 
 def get_time_residual_nu_interaction_mean_triggered_hits(time_interaction, hits_time, triggered):
     """
+    Gets the time_residual of the event with respect to mean time of the triggered hits.
+    This is required for vertex_time reconstruction, as the absolute time scale needs to be relative to the triggered hits.
 
-    :param time_interaction:
-    :param hits_time:
-    :param triggered:
+    :param float time_interaction: time of the neutrino interaction measured in JTE time.
+    :param ndarray(ndim=1) hits_time: time of the event_hits measured in JTE time.
+    :param ndarray(ndim=1) triggered: array with trigger flags that specifies if the hit is triggered or not.
     :return:
     """
     hits_time_triggered = hits_time[triggered == 1]
@@ -38,6 +41,7 @@ def get_event_data(event_blob, geo, do_mc_hits, use_calibrated_file, data_cuts, 
     """
     Reads a km3pipe blob which contains the information for one event.
     Returns a hit array and a track array that contains all relevant information of the event.
+
     :param kp.io.HDF5Pump.blob event_blob: Event blob of the HDF5Pump which contains all information for one event.
     :param kp.Geometry geo: km3pipe Geometry instance that contains the geometry information of the detector.
                             Only used if the event_blob is from a non-calibrated file!
