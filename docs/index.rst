@@ -5,7 +5,7 @@
 Welcome to the documentation of OrcaSong!
 =========================================
 
-OrcaSong is a part of the Deep Learning efforts of the neutrino telescope KM3NeT.
+OrcaSong is a part of the Deep Learning efforts for the neutrino telescope KM3NeT.
 Find more information about KM3NeT on http://www.km3net.org.
 
 In this context, OrcaSong is a project that produces KM3NeT event images based on the raw detector data.
