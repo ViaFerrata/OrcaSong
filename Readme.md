@@ -1,9 +1,11 @@
 ## Generating DL images based on KM3NeT neutrino simulation data 
 
-OrcaSong is a project that produces 2D/3D/4D histograms ('images') for deep neural networks based on raw MC h5 files.
-Currently, only ORCA detector simulations are supported, but ARCA geometries can be easily implemented as well.
+The WIP documentation for OrcaSong can be found at http://ml.pages.km3net.de/OrcaSong!
 
-The main code for generating the images is located in orcanet/h5_data_to_h5_input.py. <br>
-If the simulated .h5 files are not calibrated yet, you need to specify the directory of a .detx file in 'h5_data_to_h5_input.py'.
+OrcaSong is a part of the Deep Learning efforts of the neutrino telescope KM3NeT.
+Find more information about KM3NeT on http://www.km3net.org.
 
-Currently, a bin size of 11x13x18x60 (x/y/z/t) is used for the final ORCA detector layout. 
+In this context, OrcaSong is a project that produces KM3NeT event images based on the raw detector data.
+This means that OrcaSong takes a datafile with (neutrino-) events and based on this data, it produces 2D/3D/4D 'images' (histograms).
+Currently, only simulations with a hdf5 data format are supported as an input.
+These event 'images' are required for some Deep Learning machine learning algorithms, e.g. Convolutional Neural Networks.
