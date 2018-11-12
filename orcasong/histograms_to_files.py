@@ -8,10 +8,17 @@ def store_histograms_as_hdf5(hists, mc_infos, filepath_output, compression=(None
     """
     Takes numpy histograms ('images') for a certain projection as well as the mc_info ('tracks') and saves them to a h5 file.
 
-    :param ndarray(ndim=2) hists: array that contains all histograms for a certain projection.
-    :param ndarray(ndim=2) mc_infos: 2D array containing important MC information for each event_id. [event_id, particle_type, energy, isCC, categorical event types]
-    :param str filepath_output: complete filepath of the created h5 file.
-    :param (None/str, None/int) compression: Tuple that specifies if a compression filter should be used. Either ('gzip', 1-9) or ('lzf', None).
+    Parameters
+    ----------
+    hists : ndarray(ndim=2)
+        Array that contains all histograms for a certain projection.
+    mc_infos : ndarray(ndim=2)
+        2D array containing important MC information for each event_id, [event_id, particle_type, energy, isCC, categorical event types].
+    filepath_output : str
+        Complete filepath of the to be created h5 file.
+    compression : tuple(None/str, None/int)
+        Tuple that specifies if a compression filter should be used. Either ('gzip', 1-9) or ('lzf', None).
+
     """
     f = h5py.File(filepath_output, 'w')
 
@@ -19,9 +26,9 @@ def store_histograms_as_hdf5(hists, mc_infos, filepath_output, compression=(None
     chunks_mc_infos = (32,) + mc_infos.shape[1:] if compression[0] is not None else None
     fletcher32 = True if compression[0] is not None else False
 
-    dset_hists = f.create_dataset('x', data=hists, dtype='uint8', fletcher32=fletcher32, chunks=chunks_hists,
-                                    compression=compression[0], compression_opts=compression[1], shuffle=False)
-    dset_mc_infos = f.create_dataset('y', data=mc_infos, dtype='float32', fletcher32=fletcher32, chunks=chunks_mc_infos,
-                                       compression=compression[0], compression_opts=compression[1], shuffle=False)
+    f.create_dataset('x', data=hists, dtype='uint8', fletcher32=fletcher32, chunks=chunks_hists,
+                     compression=compression[0], compression_opts=compression[1], shuffle=False)
+    f.create_dataset('y', data=mc_infos, dtype='float32', fletcher32=fletcher32, chunks=chunks_mc_infos,
+                     compression=compression[0], compression_opts=compression[1], shuffle=False)
 
     f.close()

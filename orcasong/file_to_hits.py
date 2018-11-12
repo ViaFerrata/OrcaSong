@@ -10,10 +10,19 @@ import numpy as np
 def get_primary_track_index(event_blob):
     """
     Gets the index of the primary (neutrino) track.
+
     Uses bjorkeny in order to get the primary track, since bjorkeny!=0 for the initial interacting neutrino.
 
-    :param kp.io.HDF5Pump.blob event_blob: HDF5Pump event blob.
-    :return: int primary index: Index of the primary track (=neutrino) in the 'McTracks' branch.
+    Parameters
+    ----------
+    event_blob : kp.io.HDF5Pump.blob
+        HDF5Pump event blob.
+
+    Returns
+    -------
+    primary_index : int
+        Index of the primary track (=neutrino) in the 'McTracks' branch.
+
     """
     bjorken_y_array = event_blob['McTracks'].bjorkeny
     primary_index = np.where(bjorken_y_array != 0.0)[0][0]
@@ -23,13 +32,20 @@ def get_primary_track_index(event_blob):
 def get_time_residual_nu_interaction_mean_triggered_hits(time_interaction, hits_time, triggered):
     """
     Gets the time_residual of the event with respect to mean time of the triggered hits.
+
     This is required for vertex_time reconstruction, as the absolute time scale needs to be relative to the triggered hits.
 
-    :param float time_interaction: time of the neutrino interaction measured in JTE time.
-    :param ndarray(ndim=1) hits_time: time of the event_hits measured in JTE time.
-    :param ndarray(ndim=1) triggered: array with trigger flags that specifies if the hit is triggered or not.
-    :return:
+    Parameters
+    ----------
+    time_interaction : float
+        Time of the neutrino interaction measured in JTE time.
+    hits_time : ndarray(ndim=1)
+        Time of the event_hits measured in JTE time.
+    triggered : ndarray(ndim=1)
+        Array with trigger flags that specifies if the hit is triggered or not.
+
     """
+
     hits_time_triggered = hits_time[triggered == 1]
     t_mean_triggered = np.mean(hits_time_triggered, dtype=np.float64)
     time_residual_vertex = t_mean_triggered - time_interaction
@@ -39,23 +55,41 @@ def get_time_residual_nu_interaction_mean_triggered_hits(time_interaction, hits_
 
 def get_event_data(event_blob, geo, do_mc_hits, use_calibrated_file, data_cuts, do4d, prod_ident):
     """
-    Reads a km3pipe blob which contains the information for one event.
-    Returns a hit array and a track array that contains all relevant information of the event.
+    Reads a km3pipe blob which contains the information for one event and returns a hit array and a track array
+    that contains all relevant information of the event.
 
-    :param kp.io.HDF5Pump.blob event_blob: Event blob of the HDF5Pump which contains all information for one event.
-    :param kp.Geometry geo: km3pipe Geometry instance that contains the geometry information of the detector.
-                            Only used if the event_blob is from a non-calibrated file!
-    :param bool do_mc_hits: tells the function of the hits (mc_hits + BG) or the mc_hits only should be parsed.
-                            In the case of mc_hits, the dom_id needs to be calculated thanks to the jpp output.
-    :param bool use_calibrated_file: specifies if a calibrated file is used as an input for the event_blob.
-                                     If False, the hits of the event_blob are calibrated based on the geo parameter.
-    :param dict data_cuts: specifies if cuts should be applied. Contains the keys 'triggered' and 'energy_lower_limit'.
-    :param (bool, str) do4d: Tuple that declares if 4D histograms should be created [0] and if yes, what should be used as the 4th dim after xyz.
-                             In the case of 'channel_id', this information needs to be included in the event_hits as well.
-    :param int prod_ident: optional int that identifies the used production, more documentation in the docs of the main function.
-    :return: ndarray(ndim=2) event_hits: 2D array containing the hit information of the event [pos_xyz time (channel_id)].
-    :return: ndarray(ndim=1) event_track: 1D array containing important MC information of the event.
-                                          [event_id, particle_type, energy, isCC, bjorkeny, dir_x/y/z, time]
+    Parameters
+    ----------
+    event_blob : kp.io.HDF5Pump.blob
+        Event blob of the HDF5Pump which contains all information for one event.
+    geo : kp.Geometry
+        km3pipe Geometry instance that contains the geometry information of the detector.
+        Only used if the event_blob is from a non-calibrated file!
+    do_mc_hits : bool
+        Tells the function of the hits (mc_hits + BG) or the mc_hits only should be parsed.
+        In the case of mc_hits, the dom_id needs to be calculated thanks to the jpp output.
+    use_calibrated_file : bool
+        Specifies if a calibrated file is used as an input for the event_blob.
+        If False, the hits of the event_blob are calibrated based on the geo parameter.
+    data_cuts : dict
+        Specifies if cuts should be applied.
+        Contains the keys 'triggered' and 'energy_lower/upper_limit' and 'throw_away_prob'.
+    do4d : tuple(bool, str)
+        Tuple that declares if 4D histograms should be created [0] and if yes, what should be used as the 4th dim after xyz.
+        In the case of 'channel_id', this information needs to be included in the event_hits as well.
+    prod_ident : int
+        Optional int that identifies the used production, more documentation in the docs of the main function.
+
+    Returns
+    -------
+    event_hits : ndarray(ndim=2)
+        2D array containing the hit information of the event [pos_xyz, time, triggered, (channel_id)].
+
+    event_track : ndarray(ndim=1)
+        1D array containing important MC information of the event,
+        [event_id, particle_type, energy, is_cc, bjorkeny, dir_x, dir_y, dir_z, time_track, run_id,
+        vertex_pos_x, vertex_pos_y, vertex_pos_z, time_residual_vertex, (prod_ident)].
+
     """
     p = get_primary_track_index(event_blob)
 

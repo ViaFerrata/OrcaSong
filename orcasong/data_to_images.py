@@ -27,12 +27,17 @@ def parse_input(do2d, do2d_pdf):
     """
     Handles input exceptions, warnings and helps.
 
-    Args:
-        do2d (bool): Boolean flag for creation of 2D histograms.
-        do2d_pdf (tuple(bool, int)): Tuple with boolean flag for creation of 2D pdf images.
+    Parameters
+    ----------
+    do2d : bool
+        Boolean flag for creation of 2D histograms.
+    do2d_pdf : tuple(bool, int)
+        Tuple with boolean flag for creation of 2D pdf images.
 
-    Returns:
-        fname (str): Parsed filename.
+    Returns
+    -------
+    fname : str
+        A string containing the parsed filename.
 
     """
     if len(sys.argv) < 2 or str(sys.argv[1]) == "-h":
@@ -56,6 +61,7 @@ def parse_input(do2d, do2d_pdf):
 def calculate_bin_edges_test(geo, y_bin_edge, z_bin_edge):
     """
     Tests, if the bins in one direction don't accidentally have more than 'one' OM.
+
     For the x-direction, an overlapping can not be avoided in an orthogonal space.
     For y and z though, it can!
     For y, every bin should contain the number of lines per y-direction * 18 for 18 doms per line.
@@ -82,14 +88,26 @@ def calculate_bin_edges_test(geo, y_bin_edge, z_bin_edge):
 def calculate_bin_edges(n_bins, det_geo, fname_geo_limits, do4d):
     """
     Calculates the bin edges for the corresponding detector geometry (1 DOM/bin) based on the number of specified bins.
+
     Used later on for making the event "images" with the in the np.histogramdd funcs in hits_to_histograms.py.
     The bin edges are necessary in order to get the same bin size for each event regardless of the fact if all bins have a hit or not.
 
-    :param tuple n_bins: contains the desired number of bins for each dimension. [n_bins_x, n_bins_y, n_bins_z]
-    :param str det_geo: declares what detector geometry should be used for the binning.
-    :param str fname_geo_limits: filepath of the .txt ORCA geometry file.
-    :param (bool, str) do4d: Tuple that declares if 4D histograms should be created [0] and if yes, what should be used as the 4th dim after xyz.
-    :return: ndarray(ndim=1) x_bin_edges, y_bin_edges, z_bin_edges: contains the resulting bin edges for each dimension.
+    Parameters
+    ----------
+    n_bins : tuple
+        Contains the desired number of bins for each dimension, [n_bins_x, n_bins_y, n_bins_z].
+    det_geo : str
+        Declares what detector geometry should be used for the binning.
+    fname_geo_limits : str
+        Filepath of the .txt ORCA geometry file.
+    do4d : tuple(boo, str)
+        Tuple that declares if 4D histograms should be created [0] and if yes, what should be used as the 4th dim after xyz.
+
+    Returns
+    -------
+    x_bin_edges, y_bin_edges, z_bin_edges : ndarray(ndim=1)
+        The bin edges for the x,y,z direction.
+
     """
     print("Reading detector geometry in order to calculate the detector dimensions from file " + fname_geo_limits)
     geo = np.loadtxt(fname_geo_limits)
@@ -132,28 +150,42 @@ def main(n_bins, det_geo, do2d=False, do2d_pdf=(False, 10), do3d=False, do4d=(Tr
     """
     Main code. Reads raw .hdf5 files and creates 2D/3D histogram projections that can be used for a CNN.
 
-    :param tuple(int) n_bins: Declares the number of bins that should be used for each dimension (x,y,z,t).
-    :param str det_geo: declares what detector geometry should be used for the binning. E.g. 'Orca_115l_23m_h_9m_v'.
-    :param bool do2d: Declares if 2D histograms should be created.
-    :param (bool, int) do2d_pdf: Declares if pdf visualizations of the 2D histograms should be created. Cannot be called if do2d=False.
-                                 The event loop will be stopped after the integer specified in the second argument.
-    :param bool do3d: Declares if 3D histograms should be created.
-    :param (bool, str) do4d: Tuple that declares if 4D histograms should be created [0] and if yes, what should be used as the 4th dim after xyz.
-                             Currently, only 'time' and 'channel_id' are available.
-    :param int prod_ident: optional int identifier for the used mc production.
-                           This is e.g. useful, if you use events from two different mc productions, e.g. the 1-5GeV & 3-100GeV Orca 2016 MC.
-                           In this case, the events are not fully distinguishable with only the run_id and the event_id!
-                           In order to keep a separation, an integer can be set in the event_track for all events, such that they stay distinguishable.
-    :param (str, str/None) timecut: Tuple that defines what timecut should be used in hits_to_histograms.py.
-                                    Currently available:
-                                    ('timeslice_relative', None): Cuts out the central 30% of the snapshot.
-                                    ('trigger_cluster', 'all' / 'tight-1' / 'tight-2'): Cuts based on the mean of the triggered hits.
-                                    all: [-350ns, 850ns] -> 20ns / bin (60 bins)
-                                    tight-1: [-250ns, 500ns] -> 12.5ns / bin , tight-2: [-150ns, 200ns] -> 5.8ns / bin
-    :param bool do_mc_hits: Declares if hits (False, mc_hits + BG) or mc_hits (True) should be processed
-    :param bool use_calibrated_file: Declares if the input file is already calibrated (pos_x/y/z, time) or not.
-    :param dict data_cuts: Dictionary that contains information about any possible cuts that should be applied.
-                           Supports the following cuts: 'triggered', 'energy_lower_limit'
+    Parameters
+    ----------
+    n_bins : tuple of int
+        Declares the number of bins that should be used for each dimension, e.g. (x,y,z,t).
+    det_geo : str
+        Declares what detector geometry should be used for the binning. E.g. 'Orca_115l_23m_h_9m_v'.
+    do2d : bool
+        Declares if 2D histograms, 'images', should be created.
+    do2d_pdf : tuple(bool, int)
+        Declares if pdf visualizations of the 2D histograms should be created, cannot be called if do2d=False.
+        The event loop will be stopped after the integer specified in the second argument.
+    do3d : bool
+        Declares if 3D histograms should be created.
+    do4d : tuple(bool, str)
+        Tuple that declares if 4D histograms should be created [0] and if yes, what should be used as the 4th dim after xyz.
+        Currently, only 'time' and 'channel_id' are available.
+    prod_ident : int
+        Optional int identifier for the used mc production.
+        This is e.g. useful, if you use events from two different mc productions, e.g. the 1-5GeV & 3-100GeV Orca 2016 MC.
+        In this case, the events are not fully distinguishable with only the run_id and the event_id!
+        In order to keep a separation, an integer can be set in the event_track for all events, such that they stay distinguishable.
+    timecut : tuple(str, str/None)
+        Tuple that defines what timecut should be used in hits_to_histograms.py.
+        Currently available:
+        ('timeslice_relative', None): Cuts out the central 30% of the snapshot.
+        ('trigger_cluster', 'all' / 'tight-1' / 'tight-2'): Cuts based on the mean of the triggered hits.
+        all: [-350ns, 850ns] -> 20ns / bin (60 bins)
+        tight-1: [-250ns, 500ns] -> 12.5ns / bin , tight-2: [-150ns, 200ns] -> 5.8ns / bin
+    do_mc_hits : bool
+        Declares if hits (False, mc_hits + BG) or mc_hits (True) should be processed
+    use_calibrated_file : bool
+        Declares if the input file is already calibrated (pos_x/y/z, time) or not.
+    data_cuts : dict
+        Dictionary that contains information about any possible cuts that should be applied.
+        Supports the following cuts: 'triggered', 'energy_lower_limit'
+
     """
     if data_cuts is None: data_cuts={'triggered': False, 'energy_lower_limit': 0}
     np.random.seed(42) # set random seed

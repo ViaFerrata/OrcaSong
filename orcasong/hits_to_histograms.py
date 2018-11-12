@@ -14,14 +14,24 @@ from mpl_toolkits.axes_grid1 import make_axes_locatable
 def get_time_parameters(event_hits, mode=('trigger_cluster', 'all'), t_start_margin=0.15, t_end_margin=0.15):
     """
     Gets the fundamental time parameters in one place for cutting a time residual.
-    Later on these parameters cut out a certain time span of events specified by t_start and t_end.
 
-    :param ndarray(ndim=2) event_hits: 2D array that contains the hits (_xyzt) data for a certain eventID. [positions_xyz, time, triggered]
-    :param tuple(str, str) mode: type of time cut that is used. Currently available: timeslice_relative and first_triggered.
-    :param float t_start_margin: Used in timeslice_relative mode. Defines the start time of the selected timespan with t_mean - t_start * t_diff.
-    :param float t_end_margin: Used in timeslice_relative mode. Defines the end time of the selected timespan with t_mean + t_start * t_diff.
-    :return: float t_start, t_end: absolute start and end time that will be used for the later timespan cut.
-                                   Events in this timespan are accepted, others are rejected.
+    Later on, these parameters cut out a certain time span during an event specified by t_start and t_end.
+
+    Parameters
+    ----------
+    event_hits : ndarray(ndim=2)
+        2D array that contains the hits data for a certain event_id.
+    mode : tuple(str, str)
+        Type of time cut that is used. Currently available: timeslice_relative and trigger_cluster.
+    t_start_margin, t_end_margin : float
+        Used in timeslice_relative mode. Defines the start/end time of the selected timespan with t_mean -/+ t_start * t_diff.
+
+    Returns
+    -------
+    t_start, t_end : float
+        Absolute start and end time that will be used for the later timespan cut.
+        Events in this timespan are accepted, others are rejected.
+
     """
     t = event_hits[:, 3:4]
 
@@ -62,19 +72,28 @@ def get_time_parameters(event_hits, mode=('trigger_cluster', 'all'), t_start_mar
 
 def compute_4d_to_2d_histograms(event_hits, x_bin_edges, y_bin_edges, z_bin_edges, n_bins, all_4d_to_2d_hists, timecut, event_track, do2d_pdf, pdf_2d_plots):
     """
-    Computes 2D numpy histogram 'images' from the 4D data.
+    Computes 2D numpy histogram 'images' from the 4D data and appends the 2D histograms to the all_4d_to_2d_hists list,
+    [xy, xz, yz, xt, yt, zt].
 
-    :param ndarray(ndim=2) event_hits: 2D array that contains the hits (_xyzt) data for a certain eventID. [positions_xyz, time, triggered]
-    :param ndarray(ndim=1) x_bin_edges: bin edges for the X-direction.
-    :param ndarray(ndim=1) y_bin_edges: bin edges for the Y-direction.
-    :param ndarray(ndim=1) z_bin_edges: bin edges for the Z-direction.
-    :param tuple n_bins: Contains the number of bins that should be used for each dimension (x,y,z,t).
-    :param list all_4d_to_2d_hists: contains all 2D histogram projections.
-    :param (str, str/None) timecut: Tuple that defines what timecut should be used in hits_to_histograms.py.
-    :param ndarray(ndim=2) event_track: contains the relevant mc_track info for the event in order to get a nice title for the pdf histos.
-    :param bool do2d_pdf: if True, generate 2D matplotlib pdf histograms.
-    :param PdfPages/None pdf_2d_plots: either a mpl PdfPages instance or None.
-    :return: appends the 2D histograms to the all_4d_to_2d_hists list.
+    Parameters
+    ----------
+    event_hits : ndarray(ndim=2)
+        2D array that contains the hits data for a certain event_id.
+    x_bin_edges, y_bin_edges, z_bin_edges: ndarray(ndim=1)
+        Bin edges for the X/Y/Z-direction.
+    n_bins : tuple of int
+        Contains the number of bins that should be used for each dimension.
+    all_4d_to_2d_hists : list
+        List that contains all 2D histogram projections.
+    timecut : tuple(str, str/None)
+        Tuple that defines what timecut should be used in hits_to_histograms.
+    event_track : ndarray(ndim=2)
+        Contains the relevant mc_track info for the event in order to get a nice title for the pdf histos.
+    do2d_pdf : bool
+        If True, generate 2D matplotlib pdf histograms.
+    pdf_2d_plots : mpl.backends.backend_pdf.PdfPages/None
+        Either a mpl PdfPages instance or None.
+
     """
     x, y, z, t = event_hits[:, 0], event_hits[:, 1], event_hits[:, 2], event_hits[:, 3]
 
@@ -110,13 +129,19 @@ def convert_2d_numpy_hists_to_pdf_image(hists, t_start, t_end, pdf_2d_plots, eve
     """
     Creates matplotlib 2D histos based on the numpy histogram2D objects and saves them to a pdf file.
 
-    :param list(ndarray(ndim=2)) hists: Contains np.histogram2d objects of all projections [xy, xz, yz, xt, yt, zt].
-    :param float t_start: absolute start time of the timespan cut.
-    :param float t_end: absolute end time of the timespan cut.
-    :param PdfPages/None pdf_2d_plots: either a mpl PdfPages instance or None.
-    :param ndarray(ndim=2) event_track: contains the relevant mc_track info for the event in order to get a nice title for the pdf histos.
-                                        [event_id, particle_type, energy, isCC, bjorkeny, dir_x/y/z]
+    Parameters
+    ----------
+    hists : list(ndarray(ndim=2))
+        Contains np.histogram2d objects of all projections [xy, xz, yz, xt, yt, zt].
+    t_start, t_end : float
+        Absolute start/end time of the timespan cut.
+    pdf_2d_plots : mpl.backends.backend_pdf.PdfPages/None
+        Either a mpl PdfPages instance or None.
+    event_track : ndarray(ndim=2)
+        Contains the relevant mc_track info for the event in order to get a nice title for the pdf histos.
+
     """
+
     fig = plt.figure(figsize=(10, 13))
     if event_track is not None:
         particle_type = {16: 'Tau', -16: 'Anti-Tau', 14: 'Muon', -14: 'Anti-Muon', 12: 'Electron', -12: 'Anti-Electron', 'isCC': ['NC', 'CC']}
@@ -169,20 +194,28 @@ def convert_2d_numpy_hists_to_pdf_image(hists, t_start, t_end, pdf_2d_plots, eve
 
 def compute_4d_to_3d_histograms(event_hits, x_bin_edges, y_bin_edges, z_bin_edges, n_bins, all_4d_to_3d_hists, timecut):
     """
-    Computes 3D numpy histogram 'images' from the 4D data.
+    Computes 3D numpy histogram 'images' from the 4D data and appends the 3D histograms to the all_4d_to_3d_hists list,
+    [xyz, xyt, xzt, yzt, rzt].
+
     Careful: Currently, appending to all_4d_to_3d_hists takes quite a lot of memory (about 200MB for 3500 events).
     In the future, the list should be changed to a numpy ndarray.
     (Which unfortunately would make the code less readable, since an array is needed for each projection...)
 
-    :param ndarray(ndim=2) event_hits: 2D array that contains the hits (_xyzt) data for a certain eventID. [positions_xyz, time, triggered]
-    :param ndarray(ndim=1) x_bin_edges: bin edges for the X-direction. 
-    :param ndarray(ndim=1) y_bin_edges: bin edges for the Y-direction.
-    :param ndarray(ndim=1) z_bin_edges: bin edges for the Z-direction.
-    :param tuple n_bins: Declares the number of bins that should be used for each dimension (x,y,z,t).
-    :param list all_4d_to_3d_hists: contains all 3D histogram projections.
-    :param (str, str/None) timecut: Tuple that defines what timecut should be used in hits_to_histograms.py.
-    :return: appends the 3D histograms to the all_4d_to_3d_hists list. [xyz, xyt, xzt, yzt, rzt]
+    Parameters
+    ----------
+    event_hits : ndarray(ndim=2)
+        2D array that contains the hits data for a certain event_id.
+    x_bin_edges, y_bin_edges, z_bin_edges : ndarray(ndim=2)
+        Bin edges for the X/Y/Z-direction.
+    n_bins : tuple of int
+        Contains the number of bins that should be used for each dimension.
+    all_4d_to_3d_hists : list
+        List that contains all 3D histogram projections.
+    timecut : tuple(str, str/None)
+        Tuple that defines what timecut should be used in hits_to_histograms.
+
     """
+
     x, y, z, t = event_hits[:, 0:1], event_hits[:, 1:2], event_hits[:, 2:3], event_hits[:, 3:4]
 
     t_start, t_end = get_time_parameters(event_hits, mode=timecut)
@@ -210,18 +243,25 @@ def compute_4d_to_3d_histograms(event_hits, x_bin_edges, y_bin_edges, z_bin_edge
 
 def compute_4d_to_4d_histograms(event_hits, x_bin_edges, y_bin_edges, z_bin_edges, n_bins, all_4d_to_4d_hists, timecut, do4d):
     """
-    Computes 4D numpy histogram 'images' from the 4D data.
+    Computes 4D numpy histogram 'images' from the 4D data and appends the 4D histogram to the all_4d_to_4d_hists list,
+    [xyzt / xyzc]
 
-    :param ndarray(ndim=2) event_hits: 2D array that contains the hits (_xyzt) data for a certain eventID. [positions_xyz, time, triggered, (channel_id)]
-    :param ndarray(ndim=1) x_bin_edges: bin edges for the X-direction.
-    :param ndarray(ndim=1) y_bin_edges: bin edges for the Y-direction.
-    :param ndarray(ndim=1) z_bin_edges: bin edges for the Z-direction.
-    :param tuple n_bins: Declares the number of bins that should be used for each dimension (x,y,z,t).
-    :param list all_4d_to_4d_hists: contains all 4D histogram projections.
-    :param (str, str/None) timecut: Tuple that defines what timecut should be used in hits_to_histograms.py.
-    :param (bool, str) do4d: Tuple, where [1] declares what should be used as 4th dimension after xyz.
-                             Currently, only 'time' and 'channel_id' are available.
-    :return: appends the 4D histogram to the all_4d_to_4d_hists list. [xyzt]
+    Parameters
+    ----------
+    event_hits : ndarray(ndim=2)
+        2D array that contains the hits data for a certain event_id.
+    x_bin_edges, y_bin_edges, z_bin_edges : ndarray(ndim=2)
+        Bin edges for the X/Y/Z-direction.
+    n_bins : tuple of int
+        Contains the number of bins that should be used for each dimension.
+    all_4d_to_4d_hists : list
+        List that contains all 4D histogram projections.
+    timecut : tuple(str, str/None)
+        Tuple that defines what timecut should be used in hits_to_histograms.
+    do4d : tuple(bool, str)
+        Tuple, where [1] declares what should be used as 4th dimension after xyz.
+        Currently, only 'time' and 'channel_id' are available.
+
     """
     t_start, t_end = get_time_parameters(event_hits, mode=timecut)
 
