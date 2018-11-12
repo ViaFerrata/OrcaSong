@@ -27,11 +27,13 @@ def parse_input(do2d, do2d_pdf):
     """
     Handles input exceptions, warnings and helps.
 
-    :param bool do2d: Boolean flag for creation of 2D histograms.
-    :param do2d_pdf: Boolean flag for creation of 2D pdf images.
-    :type do2d_pdf: tuple(bool, int)
-    :rtype: str
-    :return: fname: Parsed filename.
+    Args:
+        do2d (bool): Boolean flag for creation of 2D histograms.
+        do2d_pdf (tuple(bool, int)): Tuple with boolean flag for creation of 2D pdf images.
+
+    Returns:
+        fname (str): Parsed filename.
+
     """
     if len(sys.argv) < 2 or str(sys.argv[1]) == "-h":
         print("Usage: python " + str(sys.argv[0]) + " file.h5")
