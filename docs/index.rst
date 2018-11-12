@@ -3,7 +3,7 @@
    contain the root `toctree` directive.
 
 Welcome to the documentation of OrcaSong!
-===================================
+=========================================
 
 OrcaSong is a part of the Deep Learning efforts of the neutrino telescope KM3NeT.
 Find more information about KM3NeT on http://www.km3net.org.
