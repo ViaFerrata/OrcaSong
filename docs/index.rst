@@ -2,8 +2,17 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Welcome to the documentation of OrcaSong!
-=========================================
+.. |vspace| raw:: latex
+
+   \vspace{1cm}
+
+.. image:: _static/orcasong_wide_transparent.png
+   :height: 142px
+
+|vspace|
+
+Welcome to OrcaSong's documentation!
+====================================
 
 | OrcaSong is a part of the Deep Learning efforts for the neutrino telescope KM3NeT.
 | Find more information about KM3NeT on http://www.km3net.org.
