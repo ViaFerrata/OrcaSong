@@ -148,7 +148,8 @@ def calculate_bin_edges(n_bins, det_geo, fname_geo_limits, do4d):
 def main(n_bins, det_geo, do2d=False, do2d_pdf=(False, 10), do3d=False, do4d=(True, 'time'), prod_ident=None,
          timecut=('trigger_cluster', 'tight_1'), do_mc_hits=False, use_calibrated_file=False, data_cuts=None):
     """
-    Main code. Reads raw .hdf5 files and creates 2D/3D histogram projections that can be used for a CNN.
+    Main code with config parameters. Reads raw .hdf5 files and creates 2D/3D histogram projections that can be used
+    for a CNN.
 
     Parameters
     ----------
