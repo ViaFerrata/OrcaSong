@@ -28,7 +28,7 @@ In order to use :code:`tohdf5`, you need to have loaded a jpp version first. A r
 
     /sps/km3net/users/mmoser/setenvAA_jpp9_cent_os7.sh
 
-
+Additionally, you need to have a python environment on Lyon, where you have installed km3pipe (e.g. use a pyenv).
 Then, the usage of :code:`tohdf5` is quite easy::
 
     ~$: tohdf5 -o testfile.h5 /sps/km3net/users/kmcprod/JTE_NEMOWATER/withMX/muon-CC/3-100GeV/JTE.KM3Sim.gseagen.muon-CC.3-100GeV-9.1E7-1bin-3.0gspec.ORCA115_9m_2016.99.root
@@ -138,41 +138,106 @@ After pulling the OrcaSong repo to your local harddisk you first need to install
 
     ~/orcasong$: pip install .
 
-Before you can start to use OrcaSong, you need to provide a file that contains the XYZ positions of the DOMs to OrcaSong.
+Before you can start to use OrcaSong, you need a .detx detector geometry file that corresponds to your input files.
 OrcaSong is currently producing event "images" based on a 1 DOM / XYZ-bin assumption. This image generation is done
 automatically, based on the number of bins (n_bins) for each dimension XYZ that you supply as an input and based on the
-DOM XYZ position file. An examplary file for the DOM positions can be found in the folder /orcasong of the OrcaSong
-repo, "ORCA_Geo_115lines.txt". Currently, this file is hardcoded as an input for OrcaSong, so if you want to use another
-detector geometry, you should include your .txt file in the main() function in "data_to_images.py".
-You can generate this .txt file by taking the .det (not .detx!) file, e.g.::
+.detx file which contains the DOM positions.
 
-    /afs/in2p3.fr/throng/km3net/detectors/orca_115strings_av23min20mhorizontal_18OMs_alt9mvertical_v1.det
-
-Then, you need to look for the :code:`OM_cluster_data` lines::
-
-    OM_cluster_data: 1  -86.171 116.880 196.500 -1.57080 0.00000 1.57080
-    OM_cluster_data: 2  -86.171 116.880 187.100 -1.57080 0.00000 1.57080
-    ...
-
-Here, the first column is the dom_id and the second, third and fourth column is the XYZ position.
-You need to copy this information into a .txt file, such that it can be read by OrcaSong. One could automate this such
-that OrcaSong looks for the correct lines in the .det file automatically, however, multiple (old) conventions exist for
-the .det file structure, so it may be a bit tedious. Nevertheless, contributions are very welcome! :)
+If your .detx file is not contained in the OrcaSong/detx_files folder, please add it to the repository!
+Currently, only the 115l ORCA 2016 detx file is available.
 
 At this point, you're finally ready to use OrcaSong, it can be executed as follows::
 
-    python data_to_images.py testfile.h5
+    ~/orcasong$: python data_to_images.py testfile.h5 geofile.detx
 
 OrcaSong will then generate a hdf5 file with images into the Results folder, e.g. Results/4dTo4d/h5/xyzt.
 
-The configuration options of OrcaSong can be found in the :code:`main()` function.
+The configuration options of OrcaSong can be found by calling the help::
+
+    ~/orcasong$: python data_to_images.py -h
+    Main OrcaSong code which takes raw simulated .h5 files and the corresponding .detx detector file as input in
+    order to generate 2D/3D/4D histograms ('images') that can be used for CNNs.
+    The input file can be calibrated or not (e.g. contains pos_xyz of the hits).
+    Makes only 4D histograms ('images') by default.
+
+    Usage:
+        data_to_images.py [options] FILENAME DETXFILE
+        data_to_images.py (-h | --help)
+
+    Options:
+        -h --help                       Show this screen.
+
+        -c CONFIGFILE                   Load all options from a config file (.toml format).
+
+        --n_bins N_BINS                 Number of bins that are used in the image making for each dimension, e.g. (x,y,z,t).
+                                        [default: 11,13,18,60]
+
+        --det_geo DET_GEO               Which detector geometry to use for the binning, e.g. 'Orca_115l_23m_h_9m_v'.
+                                        [default: Orca_115l_23m_h_9m_v]
+
+        --do2d                          If 2D histograms, 'images', should be created.
+
+        --do2d_plots                    If 2D pdf plot visualizations of the 2D histograms should be created, cannot be called if do2d=False.
+
+        --do2d_plots_n N                For how many events the 2D plot visualizations should be made.
+                                        OrcaSong will exit after reaching N events. [default: 10]
+
+        --do3d                          If 3D histograms, 'images', should be created.
+
+        --dont_do4d                     If 4D histograms, 'images', should NOT be created.
+
+        --do4d_mode MODE                What dimension should be used in the 4D histograms as the 4th dim.
+                                        Available: 'time', 'channel_id'. [default: time]
+
+        --timecut_mode MODE             Defines what timecut mode should be used in hits_to_histograms.py.
+                                        At the moment, these cuts are only optimized for ORCA 115l neutrino events!
+                                        Currently available:
+                                        'timeslice_relative': Cuts out the central 30% of the snapshot.
+                                        'trigger_cluster': Cuts based on the mean of the triggered hits.
+                                        The timespan for this cut can be chosen in --timecut_timespan.
+                                        'None': No timecut.
+                                        [default: trigger_cluster]
+
+        --timecut_timespan TIMESPAN     Only used with timecut_mode 'trigger_cluster'.
+                                        Defines the timespan of the trigger_cluster cut.
+                                        Currently available:
+                                        'all': [-350ns, 850ns] -> 20ns / bin (60 bins)
+                                        'tight-1': [-250ns, 500ns] -> 12.5ns / bin
+                                        'tight-2': [-150ns, 200ns] -> 5.8ns / bin
+                                        [default: tight-1]
+
+        --do_mc_hits                    If only the mc_hits (no BG hits!) should be used for the image processing.
+
+        --data_cut_triggered            If non-triggered hits should be thrown away for the images.
+
+        --data_cut_e_low E_LOW          Cut events that are lower than the specified threshold value in GeV.
+
+        --data_cut_e_high E_HIGH        Cut events that are higher than the specified threshold value in GeV.
+
+        --data_cut_throw_away FRACTION  Throw away a random fraction (percentage) of events. [default: 0.00]
+
+        --prod_ident PROD_IDENT         Optional int identifier for the used mc production.
+                                        This is useful, if you use events from two different mc productions,
+                                        e.g. the 1-5GeV & 3-100GeV Orca 2016 MC. The prod_ident int will be saved in
+                                        the 'y' dataset of the output file of OrcaSong. [default: 1]
+
+
+
+OrcaSong will then generate a hdf5 file with images into the Results folder, e.g. Results/4dTo4d/h5/xyzt.
+
+Alternatively, they can also be found in the docs of the :code:`main()` function:
 
 .. currentmodule:: orcasong.data_to_images
 .. autosummary::
     main
 
-In the future, these configurations should probably be relocated to a dedicated .config file. Again, contributions and
-thoughts are very welcome!
+Other than parsing every information to orcasong via the console, you can also load a .toml config file::
+
+    ~/orcasong$: python data_to_images.py -c config.toml testfile.h5 geofile.detx
+
+Please checkout the config.toml file in the main folder of the OrcaSong repo in order to get an idea about
+the structure of the config file.
+
 If anything is still unclear after this introduction just tell me in the deep_learning channel on chat.km3net.de or
 write me an email at michael.m.moser@fau.de, such that I can improve this guide!
 

@@ -18,10 +18,13 @@ OrcaSong: Main Framework
 .. autosummary::
   :toctree: api
 
+  parse_input
+  parser_check_input
   calculate_bin_edges
   calculate_bin_edges_test
+  skip_event
+  data_to_images
   main
-  parse_input
 
 
 ``orcasong.file_to_hits``: Extracting event information

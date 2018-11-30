@@ -45,7 +45,6 @@ def get_time_residual_nu_interaction_mean_triggered_hits(time_interaction, hits_
         Array with trigger flags that specifies if the hit is triggered or not.
 
     """
-
     hits_time_triggered = hits_time[triggered == 1]
     t_mean_triggered = np.mean(hits_time_triggered, dtype=np.float64)
     time_residual_vertex = t_mean_triggered - time_interaction
@@ -53,7 +52,7 @@ def get_time_residual_nu_interaction_mean_triggered_hits(time_interaction, hits_
     return time_residual_vertex
 
 
-def get_event_data(event_blob, geo, do_mc_hits, use_calibrated_file, data_cuts, do4d, prod_ident):
+def get_event_data(event_blob, geo, do_mc_hits, data_cuts, do4d, prod_ident):
     """
     Reads a km3pipe blob which contains the information for one event and returns a hit array and a track array
     that contains all relevant information of the event.
@@ -68,9 +67,6 @@ def get_event_data(event_blob, geo, do_mc_hits, use_calibrated_file, data_cuts, 
     do_mc_hits : bool
         Tells the function of the hits (mc_hits + BG) or the mc_hits only should be parsed.
         In the case of mc_hits, the dom_id needs to be calculated thanks to the jpp output.
-    use_calibrated_file : bool
-        Specifies if a calibrated file is used as an input for the event_blob.
-        If False, the hits of the event_blob are calibrated based on the geo parameter.
     data_cuts : dict
         Specifies if cuts should be applied.
         Contains the keys 'triggered' and 'energy_lower/upper_limit' and 'throw_away_prob'.
@@ -79,6 +75,9 @@ def get_event_data(event_blob, geo, do_mc_hits, use_calibrated_file, data_cuts, 
         In the case of 'channel_id', this information needs to be included in the event_hits as well.
     prod_ident : int
         Optional int that identifies the used production, more documentation in the docs of the main function.
+    geo : None/kp.Geometry
+        If none, the event_blob should already contain the calibrated hit information (e.g. pos_xyz).
+        Else, a km3pipe Geometry instance that contains the geometry information of the detector.
 
     Returns
     -------
@@ -91,11 +90,16 @@ def get_event_data(event_blob, geo, do_mc_hits, use_calibrated_file, data_cuts, 
         vertex_pos_x, vertex_pos_y, vertex_pos_z, time_residual_vertex, (prod_ident)].
 
     """
-    p = get_primary_track_index(event_blob)
+    p = get_primary_track_index(event_blob) # TODO fix for mupage/random_noise
 
-    # parse tracks [event_id, particle_type, energy, isCC, bjorkeny, dir_x/y/z, time]
+    # parse track, contains event information like mc_energy
+
+    if 'Header' in event_blob: # if Header exists in file, take run_id from it. Else take it from RawHeader.
+        run_id = event_blob['Header'].start_run.run_id.astype('float32')
+    else:
+        run_id = event_blob['RawHeader'][0][0].astype('float32')
+
     event_id = event_blob['EventInfo'].event_id[0]
-    run_id = event_blob['Header'].start_run.run_id.astype('float32') # todo check if already f32
     particle_type = event_blob['McTracks'][p].type
     energy = event_blob['McTracks'][p].energy
     is_cc = event_blob['McTracks'][p].is_cc
@@ -106,12 +110,9 @@ def get_event_data(event_blob, geo, do_mc_hits, use_calibrated_file, data_cuts, 
     time_interaction = event_blob['McTracks'][p].time
 
     # parse hits [x,y,z,time]
-    if do_mc_hits is True:
-        hits = event_blob["McHits"]
-    else:
-        hits = event_blob["Hits"]
+    hits = event_blob['Hits'] if do_mc_hits is False else event_blob['McHits']
 
-    if use_calibrated_file is False:
+    if 'pos_x' not in event_blob['Hits'].dtype.names: # check if blob already calibrated
         hits = geo.apply(hits)
 
     if data_cuts['triggered'] is True:
@@ -127,7 +128,7 @@ def get_event_data(event_blob, geo, do_mc_hits, use_calibrated_file, data_cuts, 
     # save collected information to arrays event_track and event_hits
     track = [event_id, particle_type, energy, is_cc, bjorkeny, dir_x, dir_y, dir_z, time_track, run_id,
              vertex_pos_x, vertex_pos_y, vertex_pos_z, time_residual_vertex]
-    if prod_ident is not None: track.append(np.full(event_id.shape, prod_ident))
+    if prod_ident is not None: track.append(prod_ident)
 
     event_track = np.array(track, dtype=np.float64)
 

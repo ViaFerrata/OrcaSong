@@ -65,12 +65,16 @@ def get_time_parameters(event_hits, mode=('trigger_cluster', 'all'), t_start_mar
         t_start = t_mean - t_start_margin * t_diff
         t_end = t_mean + t_end_margin * t_diff
 
+    elif mode[0] is None:
+        t_start = np.amin(t)
+        t_end = np.amax(t)
+
     else: raise ValueError('Time cut modes other than "first_triggered" or "timeslice_relative" are currently not supported.')
 
     return t_start, t_end
 
 
-def compute_4d_to_2d_histograms(event_hits, x_bin_edges, y_bin_edges, z_bin_edges, n_bins, all_4d_to_2d_hists, timecut, event_track, do2d_pdf, pdf_2d_plots):
+def compute_4d_to_2d_histograms(event_hits, x_bin_edges, y_bin_edges, z_bin_edges, n_bins, all_4d_to_2d_hists, timecut, event_track, do2d_plots, pdf_2d_plots):
     """
     Computes 2D numpy histogram 'images' from the 4D data and appends the 2D histograms to the all_4d_to_2d_hists list,
     [xy, xz, yz, xt, yt, zt].
@@ -89,7 +93,7 @@ def compute_4d_to_2d_histograms(event_hits, x_bin_edges, y_bin_edges, z_bin_edge
         Tuple that defines what timecut should be used in hits_to_histograms.
     event_track : ndarray(ndim=2)
         Contains the relevant mc_track info for the event in order to get a nice title for the pdf histos.
-    do2d_pdf : bool
+    do2d_plots : bool
         If True, generate 2D matplotlib pdf histograms.
     pdf_2d_plots : mpl.backends.backend_pdf.PdfPages/None
         Either a mpl PdfPages instance or None.
@@ -117,7 +121,7 @@ def compute_4d_to_2d_histograms(event_hits, x_bin_edges, y_bin_edges, z_bin_edge
                                np.array(hist_yt[0], dtype=np.uint8),
                                np.array(hist_zt[0], dtype=np.uint8)))
 
-    if do2d_pdf:
+    if do2d_plots:
         # Format in classical numpy convention: x along first dim (vertical), y along second dim (horizontal)
         # Need to take that into account in convert_2d_numpy_hists_to_pdf_image()
         # transpose to get typical cartesian convention: y along first dim (vertical), x along second dim (horizontal)

@@ -2,3 +2,5 @@ numpy
 h5py
 matplotlib
 km3pipe
+docopt
+toml
