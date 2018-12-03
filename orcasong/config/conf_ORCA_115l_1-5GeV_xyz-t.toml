@@ -1,0 +1,39 @@
+# A config file for OrcaSong with multiple configurations.
+# Outcomment the config that you want to use!
+# More info about the .toml format at https://github.com/toml-lang/toml
+
+### All available options with some dummy values
+# --n_bins = '11,13,18,60'
+# --det_geo = 'Orca_115l_23m_h_9m_v'
+# --do2d = false
+# --do2d_plots = false
+# --do2d_plots_n = 10
+# --do3d = false
+# --do4d = true
+# --do4d_mode = 'time'
+# --timecut_mode = 'trigger_cluster'
+# --timecut_timespan = 'tight_1'
+# --do_mc_hits = false
+# --data_cut_triggered = false
+# --data_cut_e_low = 3
+# --data_cut_e_high = 100
+# --data_cut_throw_away = 0.00
+# --prod_ident = 1
+
+
+####----- Configuration for ORCA 115l -----####
+
+###--- 1-5GeV ---###
+
+### only take < 3GeV events, info throw away: elec-CC 0.25, muon-CC 0.25, elec-NC: 0.00
+
+## XYZ-T
+
+--n_bins = '11,13,18,60'
+--det_geo = 'Orca_115l_23m_h_9m_v'
+--do4d_mode = 'time'
+--timecut_mode = 'trigger_cluster'
+--timecut_timespan = 'tight_1'
+--data_cut_e_high = 3
+--data_cut_throw_away = 0.25 # elec-CC 0.25, muon-CC 0.25, elec-NC: 0.00
+--prod_ident = 2
