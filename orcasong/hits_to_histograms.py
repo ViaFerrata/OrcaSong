@@ -40,19 +40,24 @@ def get_time_parameters(event_hits, mode=('trigger_cluster', 'all'), t_start_mar
         t = t[triggered == 1]
         t_mean = np.mean(t, dtype=np.float64)
 
-        if mode[1] == 'tight_1':
-            # make a tighter cut, 12.5ns / bin
+        if mode[1] == 'tight_0':
+            # make a tighter cut, 9.5ns / bin with 100 bins, useful for ORCA 115l mupage events
+            t_start = t_mean - 450  # trigger-cluster - 350ns
+            t_end = t_mean + 500  # trigger-cluster + 850ns
+
+        elif mode[1] == 'tight_1':
+            # make a tighter cut, 12.5ns / bin with 60 bins
             t_start = t_mean - 250  # trigger-cluster - 350ns
             t_end = t_mean + 500  # trigger-cluster + 850ns
 
         elif mode[1] == 'tight_2':
-            # make an even tighter cut, 5.8ns / bin
+            # make an even tighter cut, 5.8ns / bin with 60 bins
             t_start = t_mean - 150  # trigger-cluster - 150ns
             t_end = t_mean + 200  # trigger-cluster + 200ns
 
         else:
-            assert mode[1] == 'all'
-            # include nearly all mc_hits from muon-CC and elec-CC, 20ns / bin
+            assert mode[1] == 'all' # 'all' refers to the common time range of neutrino events in 115l ORCA
+            # include nearly all mc_hits from muon-CC and elec-CC, 20ns / bin with 60 bins
             t_start = t_mean - 350 # trigger-cluster - 350ns
             t_end = t_mean + 850 # trigger-cluster + 850ns
 

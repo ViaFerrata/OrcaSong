@@ -3,6 +3,8 @@
 
 import numpy as np
 import km3pipe as kp
+import matplotlib as mpl
+mpl.use('Agg')
 import matplotlib.pyplot as plt
 
 
@@ -141,7 +143,7 @@ def plot_mc_hits(savestr='', mean=''):
 
     plt.xlabel('MC-Hit time minus mean time of all triggered hits [ns]')
     plt.ylabel('Number of hits [#]')
-    title = plt.title('MC-Hit time pattern for tau-neutrino-CC events')
+    title = plt.title('MC-Hit time pattern for ', savestr, ' events')
     title.set_position([.5, 1.04])
     plt.axvline(x=-250, color='black', linestyle='--', label='Timecut 1')
     plt.axvline(x=500, color='black', linestyle='--')
@@ -156,27 +158,34 @@ def plot_mc_hits(savestr='', mean=''):
 
 
 if __name__ == '__main__':
-    ptype = 'tau-CC'
+    ptype = 'mupage'
 
-    #path = '/home/woody/capn/mppi033h/Data/ORCA_JTE_NEMOWATER/raw_data/h5/calibrated/without_run_id/' + ptype + '/3-100GeV/'
-    path = '/home/woody/capn/mppi033h/Data/ORCA_JTE_NEMOWATER/raw_data/h5/calibrated/with_run_id/' + ptype + '/3-100GeV/'
+    if ptype == 'mupage':
+        path = '/home/saturn/capn/mppi033h/Data/raw_data/mupage/'
+    elif ptype == 'random_noise':
+        path = '/home/saturn/capn/mppi033h/Data/raw_data/random_noise/'
+    else:
+        path = '/home/woody/capn/mppi033h/Data/ORCA_JTE_NEMOWATER/raw_data/h5/calibrated/with_run_id/' + ptype + '/3-100GeV/'
+
     filenames = {'muon-CC': 'JTE.KM3Sim.gseagen.muon-CC.3-100GeV-9.1E7-1bin-3.0gspec.ORCA115_9m_2016.99.h5',
                  'elec-CC': 'JTE.KM3Sim.gseagen.elec-CC.3-100GeV-1.1E6-1bin-3.0gspec.ORCA115_9m_2016.99.h5',
-                 'tau-CC': 'tau-CC_sample.h5'}
+                 'tau-CC': 'tau-CC_sample.h5',
+                 'mupage': 'JTE.ph.ph.mupage.ph.ph.ph.ORCA115_9m_2016.99.h5',
+                 'random_noise': ''}
     filename_input = path + filenames[ptype]
 
-    # # centered with trigg hits mean
-    # get_time_array(filename_input, savestr=ptype)
-    # plot(savestr=ptype)
-    #
-    # # centered with mc_hits mean
-    # get_time_array_mc_hits(filename_input, savestr=ptype)
-    # plot_mc_hits(savestr=ptype)
+    # centered with trigg hits mean
+    get_time_array(filename_input, savestr=ptype)
+    plot(savestr=ptype)
+
+    # centered with mc_hits mean
+    get_time_array_mc_hits(filename_input, savestr=ptype)
+    plot_mc_hits(savestr=ptype)
 
     # centered mc_hits with trigg hits mean for each event
-    #mean_triggered_time = np.load(ptype + '_mean_triggered_time_arr_each_event.npy')
-    #print mean_triggered_time
-    #get_time_array_mc_hits(filename_input, savestr=ptype, mean=('trigger', mean_triggered_time))
+    mean_triggered_time = np.load(ptype + '_mean_triggered_time_arr_each_event.npy')
+    print(mean_triggered_time)
+    get_time_array_mc_hits(filename_input, savestr=ptype, mean=('trigger', mean_triggered_time))
     plot_mc_hits(savestr=ptype, mean='triggered')
 
 
