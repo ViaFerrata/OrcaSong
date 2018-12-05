@@ -1,13 +1,19 @@
 #!/bin/bash
 #
-#PBS -l nodes=1:ppn=4:sl32g,walltime=3:00:00
-#PBS -o /home/woody/capn/mppi033h/logs/submit_h5_to_histo_${PBS_JOBID}_${PBS_ARRAYID}.out -e /home/woody/capn/mppi033h/logs/submit_h5_to_histo_${PBS_JOBID}_${PBS_ARRAYID}.err
+#PBS -l nodes=1:ppn=4:sl32g,walltime=1:30:00
+#PBS -o /home/woody/capn/mppi033h/logs/submit_data_to_images_${PBS_JOBID}_${PBS_ARRAYID}.out -e /home/woody/capn/mppi033h/logs/submit_data_to_images_${PBS_JOBID}_${PBS_ARRAYID}.err
 # first non-empty non-comment line ends PBS options
 
-# Submit with 'qsub -t 1-10 submit_h5_data_to_h5_input.sh'
-# This script uses the h5_data_to_h5_input.py file in order to convert all 600 (muon/elec/tau) .h5 raw files to .h5 2D/3D projection files (CNN input).
-# The total amount of simulated files for each event type in ORCA is 600 -> file 1-600
-# The files should be converted in batches of files_per_job=60 files per job
+# Submit with 'qsub -t 1-10 submit_data_to_images.sh'
+# This script uses the data_to_images.py file in order to convert all .h5 raw MC files to .h5 event "images" (CNN input).
+# Currently available ORCA 115l sim files:
+# neutrinos: 600 files each for 1-5 GeV prod, else
+#            muon-CC = 2400 files, number of jobs needed = 40,
+#            elec-CC = 1200 files, number of jobs needed = 20,
+#            elec-NC = 1200 files, number of jobs needed = 20,
+#            tau-CC = 1800 files (half the size of other interaction channels), number of jobs needed = 30 (half walltime)
+# mupage: 20000 files, TODO
+
 
 #--- USER INPUT ---##
 
@@ -16,10 +22,10 @@ python_env_folder=/home/hpc/capn/mppi033h/.virtualenv/python_3_env/
 code_folder=/home/woody/capn/mppi033h/Code/OrcaSong/orcasong
 
 detx_filepath=${code_folder}/detx_files/orca_115strings_av23min20mhorizontal_18OMs_alt9mvertical_v1.detx
-config_file=${code_folder}/config/orca_115l_regression/conf_ORCA_115l_3-100GeV_xyz-t.toml
+config_file=${code_folder}/config/orca_115l_mupage_rn_neutr_classifier/conf_ORCA_115l_1-5GeV_xyz-c.toml
 
-particle_type=muon-CC
-mc_prod=neutr_3-100GeV
+particle_type=elec-NC
+mc_prod=neutr_1-5GeV
 
 files_per_job=60 # total number of files per job, e.g. 10 jobs for 600: 600/10 = 60
 
@@ -32,11 +38,20 @@ cd ${code_folder}
 declare -A filename_arr
 declare -A folder_ip_files_arr
 
+if [ ${mc_prod} == "neutr_3-100GeV" ]
+then
 filename_arr=( ["muon-CC"]="JTE.KM3Sim.gseagen.muon-CC.3-100GeV-9.1E7-1bin-3.0gspec.ORCA115_9m_2016"
                ["elec-CC"]="JTE.KM3Sim.gseagen.elec-CC.3-100GeV-1.1E6-1bin-3.0gspec.ORCA115_9m_2016"
                ["elec-NC"]="JTE.KM3Sim.gseagen.elec-NC.3-100GeV-3.4E6-1bin-3.0gspec.ORCA115_9m_2016"
-               ["tau-CC"]="JTE.KM3Sim.gseagen.tau-CC.3.4-100GeV-2.0E8-1bin-3.0gspec.ORCA115_9m_2016"
-               ["mupage"]="JTE.ph.ph.mupage.ph.ph.ph.ORCA115_9m_2016")
+               ["tau-CC"]="JTE.KM3Sim.gseagen.tau-CC.3.4-100GeV-2.0E8-1bin-3.0gspec.ORCA115_9m_2016")
+elif [ ${mc_prod} == "neutr_1-5GeV" ]
+then
+filename_arr=( ["muon-CC"]="JTE.KM3Sim.gseagen.muon-CC.1-5GeV-9.2E5-1bin-1.0gspec.ORCA115_9m_2016"
+               ["elec-CC"]="JTE.KM3Sim.gseagen.elec-CC.1-5GeV-2.7E5-1bin-1.0gspec.ORCA115_9m_2016"
+               ["elec-NC"]="JTE.KM3Sim.gseagen.elec-NC.1-5GeV-2.2E6-1bin-1.0gspec.ORCA115_9m_2016")
+else
+filename_arr=( ["mupage"]="JTE.ph.ph.mupage.ph.ph.ph.ORCA115_9m_2016")
+fi
 
 folder_ip_files_arr=( ["neutr_3-100GeV"]="/home/saturn/capn/mppi033h/Data/raw_data/ORCA_JTE_NEMOWATER/calibrated/with_jte_times/3-100GeV/${particle_type}"
                       ["neutr_1-5GeV"]="/home/saturn/capn/mppi033h/Data/raw_data/ORCA_JTE_NEMOWATER/calibrated/with_jte_times/1-5GeV/${particle_type}"

@@ -25,8 +25,6 @@
 
 ###--- 1-5GeV ---###
 
-### only take < 3GeV events, info throw away: elec-CC 0.25, muon-CC 0.25, elec-NC: 0.00
-
 ## XYZ-C
 
 --n_bins = '11,13,18,31'
