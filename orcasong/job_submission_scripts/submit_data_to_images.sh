@@ -22,7 +22,7 @@ python_env_folder=/home/hpc/capn/mppi033h/.virtualenv/python_3_env/
 code_folder=/home/woody/capn/mppi033h/Code/OrcaSong/orcasong
 
 detx_filepath=${code_folder}/detx_files/orca_115strings_av23min20mhorizontal_18OMs_alt9mvertical_v1.detx
-config_file=${code_folder}/config/orca_115l_mupage_rn_neutr_classifier/conf_ORCA_115l_1-5GeV_xyz-c.toml
+config_file=${code_folder}/config/orca_115l_mupage_rn_neutr_classifier/conf_ORCA_115l_1-5GeV_xyz-t.toml
 
 particle_type=elec-NC
 mc_prod=neutr_1-5GeV
@@ -50,12 +50,14 @@ filename_arr=( ["muon-CC"]="JTE.KM3Sim.gseagen.muon-CC.1-5GeV-9.2E5-1bin-1.0gspe
                ["elec-CC"]="JTE.KM3Sim.gseagen.elec-CC.1-5GeV-2.7E5-1bin-1.0gspec.ORCA115_9m_2016"
                ["elec-NC"]="JTE.KM3Sim.gseagen.elec-NC.1-5GeV-2.2E6-1bin-1.0gspec.ORCA115_9m_2016")
 else
-filename_arr=( ["mupage"]="JTE.ph.ph.mupage.ph.ph.ph.ORCA115_9m_2016")
+filename_arr=( ["mupage"]="JTE.ph.ph.mupage.ph.ph.ph.ORCA115_9m_2016"
+               ["random_noise"]="JTE.ph.ph.random_noise.ph.ph.ph.ORCA115_9m_2016")
 fi
 
 folder_ip_files_arr=( ["neutr_3-100GeV"]="/home/saturn/capn/mppi033h/Data/raw_data/ORCA_JTE_NEMOWATER/calibrated/with_jte_times/3-100GeV/${particle_type}"
                       ["neutr_1-5GeV"]="/home/saturn/capn/mppi033h/Data/raw_data/ORCA_JTE_NEMOWATER/calibrated/with_jte_times/1-5GeV/${particle_type}"
-                      ["mupage"]="/home/saturn/capn/mppi033h/Data/raw_data/mupage")
+                      ["mupage"]="/home/saturn/capn/mppi033h/Data/raw_data/mupage"
+                      ["random_noise"]="/home/saturn/capn/mppi033h/Data/raw_data/random_noise")
 
 filename="${filename_arr[${particle_type}]}"
 folder="${folder_ip_files_arr[${mc_prod}]}"
