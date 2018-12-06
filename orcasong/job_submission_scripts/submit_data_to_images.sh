@@ -31,6 +31,8 @@ files_per_job=60 # total number of files per job, e.g. 10 jobs for 600: 600/10 =
 
 #--- USER INPUT ---##
 
+# setup
+
 n=${PBS_ARRAYID}
 source activate ${python_env_folder}
 cd ${code_folder}
@@ -62,25 +64,8 @@ folder_ip_files_arr=( ["neutr_3-100GeV"]="/home/saturn/capn/mppi033h/Data/raw_da
 filename="${filename_arr[${particle_type}]}"
 folder="${folder_ip_files_arr[${mc_prod}]}"
 
-#ParticleType=muon-CC
-#ParticleType=elec-CC
-#ParticleType=elec-NC
-#ParticleType=tau-CC
-# ----- 3-100GeV------
-#FileName=JTE.KM3Sim.gseagen.muon-CC.3-100GeV-9.1E7-1bin-3.0gspec.ORCA115_9m_2016 #muon-CC
-#FileName=JTE.KM3Sim.gseagen.elec-CC.3-100GeV-1.1E6-1bin-3.0gspec.ORCA115_9m_2016 #elec-CC
-#FileName=JTE.KM3Sim.gseagen.elec-NC.3-100GeV-3.4E6-1bin-3.0gspec.ORCA115_9m_2016 #elec-NC
-#FileName=JTE.KM3Sim.gseagen.tau-CC.3.4-100GeV-2.0E8-1bin-3.0gspec.ORCA115_9m_2016 #tau-CC
-#HDFFOLDER=/home/woody/capn/mppi033h/Data/ORCA_JTE_NEMOWATER/raw_data/calibrated/with_jte_times/3-100GeV/${ParticleType}
-# ----- 3-100GeV------
-# ----- 1-5GeV------
-#FileName=JTE.KM3Sim.gseagen.muon-CC.1-5GeV-9.2E5-1bin-1.0gspec.ORCA115_9m_2016 #muon-CC
-#FileName=JTE.KM3Sim.gseagen.elec-CC.1-5GeV-2.7E5-1bin-1.0gspec.ORCA115_9m_2016 #elec-CC
-#FileName=JTE.KM3Sim.gseagen.elec-NC.1-5GeV-2.2E6-1bin-1.0gspec.ORCA115_9m_2016 #elec-NC
-#HDFFOLDER=/home/woody/capn/mppi033h/Data/ORCA_JTE_NEMOWATER/raw_data/calibrated/with_jte_times/1-5GeV/${ParticleType}
-# ----- 1-5GeV------
-
 # run
+
 no_of_loops=$((${files_per_job}/4)) # divide by 4 cores -> e.g, 15 4-core loops needed for files_per_job=60
 file_no_start=$((1+((${n}-1) * ${files_per_job}))) # filenumber of the first file that is being processed by this script (depends on JobArray variable 'n')
 

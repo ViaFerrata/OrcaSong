@@ -275,6 +275,35 @@ def calculate_bin_edges_test(geo, y_bin_edges, z_bin_edges):
     print('----------------------------------------------------------------------------------------------')
 
 
+def get_file_particle_type(event_pump):
+    """
+    Returns a string that specifies the type of the particles that are contained in the input file.
+
+    Parameters
+    ----------
+    event_pump : kp.io.hdf5.HDF5Pump
+        Km3pipe HDF5Pump instance which is linked to the input file.
+
+    Returns
+    -------
+    file_particle_type : str
+        String that specifies the type of particles that are contained in the file: ['undefined', 'muon', 'neutrino'].
+
+    """
+    if 'McTracks' not in event_pump[0]:
+        file_particle_type = 'undefined'
+    else:
+        particle_type = event_pump[0]['McTracks'].type
+        if np.abs(particle_type) == 13:
+            file_particle_type = 'muon'
+        elif np.abs(particle_type) in [12, 14, 16]:
+            file_particle_type = 'neutrino'
+        else:
+            raise ValueError('The type of the particles in the "McTracks" folder, <', str(particle_type), '> is not known.')
+
+    return file_particle_type
+
+
 def skip_event(event_track, data_cuts):
     """
     Function that checks if an event should be skipped, depending on the data_cuts input.
@@ -379,13 +408,15 @@ def data_to_images(fname, detx_filepath, n_bins, det_geo, do2d, do2d_plots, do3d
 
     # Initialize HDF5Pump of the input file
     event_pump = kp.io.hdf5.HDF5Pump(filename=fname)
+    file_particle_type = get_file_particle_type(event_pump)
+
     print('Generating histograms from the hits in XYZT format for files based on ' + fname)
     for i, event_blob in enumerate(event_pump):
         if i % 10 == 0:
             print('Event No. ' + str(i))
 
         # filter out all hit and track information belonging that to this event
-        event_hits, event_track = get_event_data(event_blob, geo, do_mc_hits, data_cuts, do4d, prod_ident)
+        event_hits, event_track = get_event_data(event_blob, file_particle_type, geo, do_mc_hits, data_cuts, do4d, prod_ident)
 
         continue_bool = skip_event(event_track, data_cuts)
         if continue_bool: continue
