@@ -132,10 +132,19 @@ def get_tracks(event_blob, file_particle_type, event_hits, prod_ident):
     """
     # parse EventInfo and Header information
     event_id = event_blob['EventInfo'].event_id[0]
-    if 'Header' in event_blob: # if Header exists in file, take run_id from it. Else take it from RawHeader.
+
+    # the run_id info in the EventInfo group is broken for ORCA neutrino and mupage files
+    # The Header run_id is the most reliable one.
+
+    if 'Header' in event_blob: # if Header exists in file, take run_id from it.
         run_id = event_blob['Header'].start_run.run_id.astype('float32')
     else:
-        run_id = event_blob['RawHeader'][0][0].astype('float32')
+        if file_particle_type == 'muon':
+            run_id = event_blob['RawHeader'][1][0].astype('float32')
+        elif file_particle_type == 'undefined': # currently used with random_noise files
+            run_id = event_blob['EventInfo'].run_id
+        else:
+            run_id = event_blob['RawHeader'][0][0].astype('float32')
 
     # collect all event_track information, dependent on file_particle_type
 

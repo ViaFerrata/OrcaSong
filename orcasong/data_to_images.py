@@ -294,9 +294,13 @@ def get_file_particle_type(event_pump):
         file_particle_type = 'undefined'
     else:
         particle_type = event_pump[0]['McTracks'].type
-        if np.abs(particle_type) == 13:
+
+        # if mupage file: first mc_track is an empty neutrino track, second track is the first muon
+        if particle_type[0] == 0 and np.abs(particle_type[1]) == 13:
             file_particle_type = 'muon'
-        elif np.abs(particle_type) in [12, 14, 16]:
+
+        # the first mc_track is the primary neutrino if the input file is containing neutrino events
+        elif np.abs(particle_type[0]) in [12, 14, 16]:
             file_particle_type = 'neutrino'
         else:
             raise ValueError('The type of the particles in the "McTracks" folder, <', str(particle_type), '> is not known.')
