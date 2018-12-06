@@ -167,9 +167,9 @@ def get_tracks(event_blob, file_particle_type, event_hits, prod_ident):
         dir_x, dir_y, dir_z = event_blob['McTracks'][1].dir_x, event_blob['McTracks'][1].dir_y, event_blob['McTracks'][1].dir_z
 
         # vertex is the weighted (energy) mean of the individual vertices
-        vertex_pos_x = np.average(event_blob['McTracks'][1:].pos_x, weights=event_blob[4]['McTracks'][1:].energy)
-        vertex_pos_y = np.average(event_blob['McTracks'][1:].pos_y, weights=event_blob[4]['McTracks'][1:].energy)
-        vertex_pos_z = np.average(event_blob['McTracks'][1:].pos_z, weights=event_blob[4]['McTracks'][1:].energy)
+        vertex_pos_x = np.average(event_blob['McTracks'][1:].pos_x, weights=event_blob['McTracks'][1:].energy)
+        vertex_pos_y = np.average(event_blob['McTracks'][1:].pos_y, weights=event_blob['McTracks'][1:].energy)
+        vertex_pos_z = np.average(event_blob['McTracks'][1:].pos_z, weights=event_blob['McTracks'][1:].energy)
 
         track = [event_id, particle_type, energy, is_cc, bjorkeny, dir_x, dir_y, dir_z, time_interaction, run_id,
                  vertex_pos_x, vertex_pos_y, vertex_pos_z, n_muons]
