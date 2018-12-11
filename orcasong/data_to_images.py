@@ -422,6 +422,29 @@ def data_to_images(fname, detx_filepath, n_bins, det_geo, do2d, do2d_plots, do3d
         # filter out all hit and track information belonging that to this event
         event_hits, event_track = get_event_data(event_blob, file_particle_type, geo, do_mc_hits, data_cuts, do4d, prod_ident)
 
+        class EventSkipper(kp.Module):
+            def configure(self):
+                self.data_cuts = self.require('data_cuts')
+
+            def process(self, blob):
+                if self._skip_event(blob['EventData']):
+                    return
+                else:
+                    return blob
+
+            def _skip_event(self, blob):
+                ... should i skip?
+                return True/False
+
+        import km3modules as km
+        pipe = kp.Pipeline()
+        pipe.attach(km.common.StatusBar, every=10)
+        pipe.attach(EventDataExtractor, file_particle_type='...')
+        pipe.attach(EventSkipper, data_cuts=...)
+        pipe.attach(km.common.Keep, keys=['FinalTrack', 'Foo'])
+        pipe.attach(kp.io.HDF5Sink, filename='dump.h5')
+
+
         continue_bool = skip_event(event_track, data_cuts)
         if continue_bool: continue
 

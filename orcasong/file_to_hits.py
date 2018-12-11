@@ -3,6 +3,7 @@
 """Code that reads the h5 simulation files and extracts the necessary information for making event images."""
 
 import numpy as np
+import km3pipe as kp
 #from memory_profiler import profile
 #import line_profiler # call with kernprof -l -v file.py args
 
@@ -130,7 +131,7 @@ def get_tracks(event_blob, file_particle_type, event_hits, prod_ident):
         vertex_pos_x, vertex_pos_y, vertex_pos_z, time_residual_vertex/n_muons, (prod_ident)].
 
     """
-    # parse EventInfo and Header information
+    # parse EventInfo and Header information # TODO always read from header
     event_id = event_blob['EventInfo'].event_id[0]
 
     # the run_id info in the EventInfo group is broken for ORCA neutrino and mupage files
@@ -245,3 +246,167 @@ def get_event_data(event_blob, file_particle_type, geo, do_mc_hits, data_cuts, d
     event_track = get_tracks(event_blob, file_particle_type, event_hits, prod_ident)
 
     return event_hits, event_track
+
+
+class EventDataExtractor(kp.Module):
+    def configure(self):
+        self.file_particle_type = self.require('file_particle_type')
+        self.geo = self.require('geo')
+        self.do_mc_hits = self.require('do_mc_hits')
+        self.data_cuts = self.require('data_cuts')
+        self.do4d = self.require('do4d')
+        self.prod_ident = self.require('prod_ident')
+        self.event_hits = self.get('event_hits', default='event_hits')
+        self.event_track = self.get('event_track', default='event_track')
+
+    def process(self, blob):
+        blob[self.event_hits] = self.get_hits(blob, self.geo, self.do_mc_hits, self.data_cuts, self.do4d)
+        blob[self.event_track] = self.get_tracks(blob, self.file_particle_type, self.event_hits, self.prod_ident)
+        return blob
+
+    def finish(self):
+        return
+
+    def get_hits(self, blob, geo, do_mc_hits, data_cuts, do4d):
+        """
+        Returns a hits array that contains [pos_x, pos_y, pos_z, time, triggered, channel_id (optional)].
+
+        Parameters
+        ----------
+        blob : kp.io.HDF5Pump.blob
+            Event blob of the HDF5Pump which contains all information for one event.
+        geo : kp.Geometry
+            km3pipe Geometry instance that contains the geometry information of the detector.
+            Only used if the event_blob is from a non-calibrated file!
+        do_mc_hits : bool
+            Tells the function of the hits (mc_hits + BG) or the mc_hits only should be parsed.
+            In the case of mc_hits, the dom_id needs to be calculated thanks to the jpp output.
+        data_cuts : dict
+            Specifies if cuts should be applied.
+            Contains the keys 'triggered' and 'energy_lower/upper_limit' and 'throw_away_prob'.
+        do4d : tuple(bool, str)
+            Tuple that declares if 4D histograms should be created [0] and if yes, what should be used as the 4th dim after xyz.
+            In the case of 'channel_id', this information needs to be included in the event_hits as well.
+
+        Returns
+        -------
+        event_hits : ndarray(ndim=2)
+            2D array that contains the hits data for the input event [pos_x, pos_y, pos_z, time, triggered, (channel_id)].
+
+        """
+        # parse hits [x,y,z,time]
+        hits = blob['Hits'] if do_mc_hits is False else blob['McHits']
+
+        if 'pos_x' not in blob['Hits'].dtype.names:  # check if blob already calibrated
+            hits = geo.apply(hits)
+
+        if data_cuts['triggered'] is True:
+            hits = hits.__array__[hits.triggered.astype(bool)]
+            # hits = hits.triggered_hits # alternative, though it only works for the triggered condition!
+
+        pos_x, pos_y, pos_z = hits.pos_x, hits.pos_y, hits.pos_z
+        hits_time = hits.time
+        triggered = hits.triggered
+
+        ax = np.newaxis
+        event_hits = np.concatenate([pos_x[:, ax], pos_y[:, ax], pos_z[:, ax], hits_time[:, ax], triggered[:, ax]],
+                                    axis=1)  # dtype: np.float64
+
+        if do4d[0] is True and do4d[1] == 'channel_id' or do4d[1] == 'xzt-c':
+            event_hits = np.concatenate([event_hits, hits.channel_id[:, ax]], axis=1)
+
+        return event_hits
+
+
+    def get_tracks(self, blob, file_particle_type, event_hits, prod_ident):
+        """
+        Returns the event_track, which contains important event_info and mc_tracks data for the input event.
+
+        Parameters
+        ----------
+        blob : kp.io.HDF5Pump.blob
+            Event blob of the HDF5Pump which contains all information for one event.
+        file_particle_type : str
+            String that specifies the type of particles that are contained in the file: ['undefined', 'muon', 'neutrino'].
+        event_hits : ndarray(ndim=2)
+            2D array that contains the hits data for the input event.
+        prod_ident : int
+            Optional int that identifies the used production, more documentation in the docs of the main function.
+
+        Returns
+        -------
+        event_track : ndarray(ndim=1)
+            1D array that contains important event_info and mc_tracks data for the input event.
+
+            If file_particle_type = 'undefined':
+            [event_id, run_id, (prod_ident)].
+
+            If file_particle_type = 'neutrino'/'muon':
+            [event_id, particle_type, energy, is_cc, bjorkeny, dir_x, dir_y, dir_z, time_track, run_id,
+            vertex_pos_x, vertex_pos_y, vertex_pos_z, time_residual_vertex/n_muons, (prod_ident)].
+
+        """
+        # parse EventInfo and Header information # TODO always read from header
+        event_id = blob['EventInfo'].event_id[0]
+
+        # the run_id info in the EventInfo group is broken for ORCA neutrino and mupage files
+        # The Header run_id is the most reliable one.
+
+        if 'Header' in blob: # if Header exists in file, take run_id from it.
+            run_id = blob['Header'].start_run.run_id.astype('float32')
+        else:
+            raise ValueError('There is no "Header" folder in your h5 file, something must be wrong!')
+
+        # collect all event_track information, dependent on file_particle_type
+
+        if file_particle_type == 'undefined':
+            particle_type = 0
+            track = [event_id, run_id, particle_type]
+
+        elif file_particle_type == 'muon':
+            # take index 1, index 0 is the empty neutrino mc_track
+            particle_type = blob['McTracks'][1].type # assumed that this is the same for all muons in a bundle
+            is_cc = blob['McTracks'][1].is_cc # always 1 actually
+            bjorkeny = blob['McTracks'][1].bjorkeny # always 0 actually
+            time_interaction = blob['McTracks'][1].time  # same for all muons in a bundle
+            n_muons = blob['McTracks'].shape[0] - 1 # takes position of time_residual_vertex in 'neutrino' case
+
+            # sum up the energy of all muons
+            energy = np.sum(blob['McTracks'].energy)
+
+            # all muons in a bundle are parallel, so just take dir of first muon
+            dir_x, dir_y, dir_z = blob['McTracks'][1].dir_x, blob['McTracks'][1].dir_y, blob['McTracks'][1].dir_z
+
+            # vertex is the weighted (energy) mean of the individual vertices
+            vertex_pos_x = np.average(blob['McTracks'][1:].pos_x, weights=blob['McTracks'][1:].energy)
+            vertex_pos_y = np.average(blob['McTracks'][1:].pos_y, weights=blob['McTracks'][1:].energy)
+            vertex_pos_z = np.average(blob['McTracks'][1:].pos_z, weights=blob['McTracks'][1:].energy)
+
+            track = [event_id, particle_type, energy, is_cc, bjorkeny, dir_x, dir_y, dir_z, time_interaction, run_id,
+                     vertex_pos_x, vertex_pos_y, vertex_pos_z, n_muons]
+
+        elif file_particle_type == 'neutrino':
+            p = get_primary_track_index(blob)
+            particle_type = blob['McTracks'][p].type
+            energy = blob['McTracks'][p].energy
+            is_cc = blob['McTracks'][p].is_cc
+            bjorkeny = blob['McTracks'][p].bjorkeny
+            dir_x, dir_y, dir_z = blob['McTracks'][p].dir_x, blob['McTracks'][p].dir_y, blob['McTracks'][p].dir_z
+            time_interaction = blob['McTracks'][p].time  # actually always 0 for primary neutrino, measured in MC time
+            vertex_pos_x, vertex_pos_y, vertex_pos_z = blob['McTracks'][p].pos_x, blob['McTracks'][p].pos_y, \
+                                                       blob['McTracks'][p].pos_z
+
+            hits_time, triggered = event_hits[:, 3], event_hits[:, 4]
+            time_residual_vertex = get_time_residual_nu_interaction_mean_triggered_hits(time_interaction, hits_time, triggered)
+
+            track = [event_id, particle_type, energy, is_cc, bjorkeny, dir_x, dir_y, dir_z, time_interaction, run_id,
+                     vertex_pos_x, vertex_pos_y, vertex_pos_z, time_residual_vertex]
+
+        else:
+            raise ValueError('The file_particle_type "', str(file_particle_type), '" is not known.')
+
+        if prod_ident is not None: track.append(prod_ident)
+
+        event_track = np.array(track, dtype=np.float64)
+
+        return event_track
