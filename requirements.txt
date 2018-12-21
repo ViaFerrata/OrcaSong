@@ -4,3 +4,4 @@ matplotlib
 km3pipe
 docopt
 toml
+setuptools_scm
