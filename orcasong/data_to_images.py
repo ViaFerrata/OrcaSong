@@ -4,7 +4,12 @@
 """
 Main OrcaSong code which takes raw simulated .h5 files and the corresponding .detx detector file as input in
 order to generate 2D/3D/4D histograms ('images') that can be used for CNNs.
-The input file can be calibrated or not (e.g. contains pos_xyz of the hits).
+
+First argument: KM3NeT hdf5 simfile at JTE level.
+Second argument: a .detx file that is associated with the hdf5 file.
+
+The input file can be calibrated or not (e.g. contains pos_xyz of the hits) and the OrcaSong output is written
+to the current folder by default (otherwise use --o option).
 Makes only 4D histograms ('images') by default.
 
 Usage:
@@ -15,6 +20,15 @@ Options:
     -h --help                       Show this screen.
 
     -c CONFIGFILE                   Load all options from a config file (.toml format).
+
+    --o OUTPUTPATH                  Path for the directory, where the OrcaSong output should be stored. [default: ./]
+
+    --chunksize CHUNKSIZE           Chunksize (axis_0) that should be used for the hdf5 output of OrcaSong. [default: 32]
+
+    --complib COMPLIB               Compression library that should be used for the OrcaSong output.
+                                    All PyTables compression filters are available. [default: zlib]
+
+    --complevel COMPLEVEL           Compression level that should be used for the OrcaSong output. [default: 1]
 
     --n_bins N_BINS                 Number of bins that are used in the image making for each dimension, e.g. (x,y,z,t).
                                     [default: 11,13,18,60]
@@ -84,13 +98,13 @@ from docopt import docopt
 #from memory_profiler import profile # for memory profiling, call with @profile; myfunc()
 #import line_profiler # call with kernprof -l -v file.py args
 import km3pipe as kp
+import km3modules as km
 import matplotlib as mpl
 mpl.use('Agg')
 from matplotlib.backends.backend_pdf import PdfPages
 
-from orcasong.file_to_hits import *
-from orcasong.histograms_to_files import *
-from orcasong.hits_to_histograms import *
+from orcasong.file_to_hits import EventDataExtractor
+from orcasong.hits_to_histograms import HistogramMaker
 
 
 def parse_input():
@@ -108,6 +122,10 @@ def parse_input():
     fname = args['FILENAME']
     detx_filepath = args['DETXFILE']
 
+    output_dirpath = args['--o']
+    chunksize = int(args['--chunksize'])
+    complib = args['--complib']
+    complevel = int(args['--complevel'])
     n_bins = tuple(map(int, args['--n_bins'].split(',')))
     det_geo = args['--det_geo']
     do2d = args['--do2d']
@@ -123,8 +141,8 @@ def parse_input():
     data_cuts['throw_away_prob'] = float(args['--data_cut_throw_away'])
     prod_ident = int(args['--prod_ident'])
 
-    return fname, detx_filepath, n_bins, det_geo, do2d, do2d_plots, do3d, do4d, prod_ident, timecut,\
-           do_mc_hits, data_cuts
+    return fname, detx_filepath, output_dirpath, chunksize, complib, complevel, n_bins, det_geo, do2d,\
+           do2d_plots, do3d, do4d, prod_ident, timecut, do_mc_hits, data_cuts
 
 
 def parser_check_input(args):
@@ -181,6 +199,39 @@ def parser_check_input(args):
     if bool(args['--do2d_plots']) == True and int(args['--do2d_plots_n']) > 100:
         warnings.warn('You declared do2d_pdf=(True, int) with int > 100. This will take more than two minutes.'
                       'Do you really want to create pdfs images for so many events?')
+
+
+def make_output_dirs(output_dirpath, do2d, do3d, do4d):
+    """
+    Function that creates all output directories if they don't exist already.
+
+    Parameters
+    ----------
+    output_dirpath : str
+        Full path to the directory, where the orcasong output should be stored.
+    do2d : bool
+        Declares if 2D histograms, are to be created.
+    do3d : bool
+        Declares if 3D histograms are to be created.
+    do4d : tuple(bool, str)
+        Tuple that declares if 4D histograms should be created [0] and if yes, what should be used as the 4th dim after xyz.
+        Currently, only 'time' and 'channel_id' are available.
+
+    """
+    if do2d:
+        projections = ['xy', 'xz', 'yz', 'xt', 'yt', 'zt']
+        for proj in projections:
+            if not os.path.exists(output_dirpath + '/orcasong_output/4dTo2d/' + proj):
+                os.makedirs(output_dirpath + '/orcasong_output/4dTo2d/' + proj)
+    if do3d:
+        projections = ['xyz', 'xyt', 'xzt', 'yzt', 'rzt']
+        for proj in projections:
+            if not os.path.exists(output_dirpath + '/orcasong_output/4dTo3d/' + proj):
+                os.makedirs(output_dirpath + '/orcasong_output/4dTo3d/' + proj)
+    if do4d[0]:
+        proj = 'xyzt' if not do4d[1] == 'channel_id' else 'xyzc'
+        if not os.path.exists(output_dirpath + '/orcasong_output/4dTo4d/' + proj):
+            os.makedirs(output_dirpath + '/orcasong_output/4dTo4d/' + proj)
 
 
 def calculate_bin_edges(n_bins, det_geo, detx_filepath, do4d):
@@ -275,14 +326,14 @@ def calculate_bin_edges_test(geo, y_bin_edges, z_bin_edges):
     print('----------------------------------------------------------------------------------------------')
 
 
-def get_file_particle_type(event_pump):
+def get_file_particle_type(fname):
     """
     Returns a string that specifies the type of the particles that are contained in the input file.
 
     Parameters
     ----------
-    event_pump : kp.io.hdf5.HDF5Pump
-        Km3pipe HDF5Pump instance which is linked to the input file.
+    fname : str
+        Filename (full path!) of the input file.
 
     Returns
     -------
@@ -290,6 +341,8 @@ def get_file_particle_type(event_pump):
         String that specifies the type of particles that are contained in the file: ['undefined', 'muon', 'neutrino'].
 
     """
+    event_pump = kp.io.hdf5.HDF5Pump(filename=fname) # TODO suppress print of hdf5pump and close pump afterwards
+
     if 'McTracks' not in event_pump[0]:
         file_particle_type = 'undefined'
     else:
@@ -305,7 +358,24 @@ def get_file_particle_type(event_pump):
         else:
             raise ValueError('The type of the particles in the "McTracks" folder, <', str(particle_type), '> is not known.')
 
+    event_pump.close_file()
+
     return file_particle_type
+
+
+class EventSkipper(kp.Module):
+    """
+    KM3Pipe module that skips events based on some data_cuts.
+    """
+    def configure(self):
+        self.data_cuts = self.require('data_cuts')
+
+    def process(self, blob):
+        continue_bool = skip_event(blob['event_track'], self.data_cuts)
+        if continue_bool:
+            return
+        else:
+            return blob
 
 
 def skip_event(event_track, data_cuts):
@@ -329,15 +399,15 @@ def skip_event(event_track, data_cuts):
     continue_bool = False
 
     if data_cuts['energy_lower_limit'] is not None:
-        continue_bool = event_track[2] < data_cuts['energy_lower_limit'] # True if E < lower limit
+        continue_bool = event_track.energy[0] < data_cuts['energy_lower_limit'] # True if E < lower limit
 
-    if data_cuts['energy_upper_limit'] is not None:
-        continue_bool = event_track[2] > data_cuts['energy_upper_limit'] # True if E > upper limit
+    if data_cuts['energy_upper_limit'] is not None and continue_bool == False:
+        continue_bool = event_track.energy[0] > data_cuts['energy_upper_limit'] # True if E > upper limit
 
-    if data_cuts['throw_away_prob'] > 0:
+    if data_cuts['throw_away_prob'] > 0 and continue_bool == False:
         throw_away_prob = data_cuts['throw_away_prob']
         throw_away = np.random.choice([False, True], p=[1 - throw_away_prob, throw_away_prob])
-        if throw_away == True: continue_bool = True
+        if throw_away: continue_bool = True
 
     #     # TODO temporary, deprecated solution, we always need to throw away the same events if we have multiple inputs -> use fixed seed
     #     arr = np.load('/home/woody/capn/mppi033h/Code/OrcaSong/utilities/low_e_prod_surviving_evts_elec-CC.npy')
@@ -351,7 +421,7 @@ def skip_event(event_track, data_cuts):
     return continue_bool
 
 
-def data_to_images(fname, detx_filepath, n_bins, det_geo, do2d, do2d_plots, do3d, do4d, prod_ident, timecut,
+def data_to_images(fname, detx_filepath, output_dirpath, chunksize, complib, complevel, n_bins, det_geo, do2d, do2d_plots, do3d, do4d, prod_ident, timecut,
                    do_mc_hits, data_cuts):
     """
     Main code with config parameters. Reads raw .hdf5 files and creates 2D/3D histogram projections that can be used
@@ -365,6 +435,15 @@ def data_to_images(fname, detx_filepath, n_bins, det_geo, do2d, do2d_plots, do3d
         String with the full filepath to the corresponding .detx file of the input file.
         Used for the binning and for the hits calibration if the input file is not calibrated yet
         (e.g. hits do not contain pos_x/y/z, time, ...).
+    output_dirpath : str
+        Full path to the directory, where the orcasong output should be stored.
+    chunksize : int
+        Chunksize (along axis_0) that is used for saving the OrcaSong output to a .h5 file.
+    complib : str
+        Compression library that is used for saving the OrcaSong output to a .h5 file.
+        All PyTables compression filters are available, e.g. 'zlib', 'lzf', 'blosc', ... .
+    complevel : int
+        Compression level for the compression filter that is used for saving the OrcaSong output to a .h5 file.
     n_bins : tuple of int
         Declares the number of bins that should be used for each dimension, e.g. (x,y,z,t).
     det_geo : str
@@ -399,82 +478,64 @@ def data_to_images(fname, detx_filepath, n_bins, det_geo, do2d, do2d_plots, do3d
         Supports the following cuts: 'triggered', 'energy_lower_limit', 'energy_upper_limit', 'throw_away_prob'.
 
     """
-    np.random.seed(42) # set random seed
+    make_output_dirs(output_dirpath, do2d, do3d, do4d)
 
     filename = os.path.basename(os.path.splitext(fname)[0])
     filename_output = filename.replace('.','_')
+    km.GlobalRandomState(seed=42)  # set random km3pipe (=numpy) seed
 
     geo, x_bin_edges, y_bin_edges, z_bin_edges = calculate_bin_edges(n_bins, det_geo, detx_filepath, do4d)
+    pdf_2d_plots = PdfPages(output_dirpath + '/orcasong_output/4dTo2d/' + filename_output + '_plots.pdf') if do2d_plots[0] is True else None
 
-    all_4d_to_2d_hists, all_4d_to_3d_hists, all_4d_to_4d_hists, mc_infos = [], [], [], []
+    file_particle_type = get_file_particle_type(fname)
 
-    pdf_2d_plots = PdfPages('Results/4dTo2d/' + filename_output + '_plots.pdf') if do2d_plots[0] is True else None
+    print('Generating histograms from the hits for files based on ' + fname)
 
-    # Initialize HDF5Pump of the input file
-    event_pump = kp.io.hdf5.HDF5Pump(filename=fname)
-    file_particle_type = get_file_particle_type(event_pump)
+    # Initialize OrcaSong Event Pipeline
 
-    print('Generating histograms from the hits in XYZT format for files based on ' + fname)
-    for i, event_blob in enumerate(event_pump):
-        if i % 10 == 0:
-            print('Event No. ' + str(i))
-
-        # filter out all hit and track information belonging that to this event
-        event_hits, event_track = get_event_data(event_blob, file_particle_type, geo, do_mc_hits, data_cuts, do4d, prod_ident)
-
-        continue_bool = skip_event(event_track, data_cuts)
-        if continue_bool: continue
-
-        # event_track: [event_id, particle_type, energy, isCC, bjorkeny, dir_x/y/z, time]
-        mc_infos.append(event_track)
-
-        if do2d:
-            compute_4d_to_2d_histograms(event_hits, x_bin_edges, y_bin_edges, z_bin_edges, n_bins, all_4d_to_2d_hists, timecut, event_track, do2d_plots[0], pdf_2d_plots)
-
-        if do3d:
-            compute_4d_to_3d_histograms(event_hits, x_bin_edges, y_bin_edges, z_bin_edges, n_bins, all_4d_to_3d_hists, timecut)
-
-        if do4d[0]:
-            compute_4d_to_4d_histograms(event_hits, x_bin_edges, y_bin_edges, z_bin_edges, n_bins, all_4d_to_4d_hists, timecut, do4d)
-
-        if do2d_plots[0] is True and i >= do2d_plots[1]:
-            pdf_2d_plots.close()
-            break
+    pipe = kp.Pipeline()
+    pipe.attach(km.common.StatusBar, every=50)
+    pipe.attach(kp.io.hdf5.HDF5Pump, filename=fname)
+    pipe.attach(km.common.Keep, keys=['EventInfo', 'Header', 'RawHeader', 'McTracks', 'Hits', 'McHits'])
+    pipe.attach(EventDataExtractor,
+                file_particle_type=file_particle_type, geo=geo, do_mc_hits=do_mc_hits,
+                data_cuts=data_cuts, do4d=do4d, prod_ident=prod_ident)
+    pipe.attach(km.common.Keep, keys=['event_hits', 'event_track'])
+    pipe.attach(EventSkipper, data_cuts=data_cuts)
+    pipe.attach(HistogramMaker,
+                x_bin_edges=x_bin_edges, y_bin_edges=y_bin_edges, z_bin_edges=z_bin_edges,
+                n_bins=n_bins, timecut=timecut, do2d=do2d, do2d_plots=do2d_plots, pdf_2d_plots=pdf_2d_plots,
+                do3d=do3d, do4d=do4d)
+    pipe.attach(km.common.Delete, keys=['event_hits'])
 
     if do2d:
-        store_histograms_as_hdf5(np.stack([hist_tuple[0] for hist_tuple in all_4d_to_2d_hists]), np.array(mc_infos), 'Results/4dTo2d/h5/xy/' + filename_output + '_xy.h5')
-        store_histograms_as_hdf5(np.stack([hist_tuple[1] for hist_tuple in all_4d_to_2d_hists]), np.array(mc_infos), 'Results/4dTo2d/h5/xz/' + filename_output + '_xz.h5')
-        store_histograms_as_hdf5(np.stack([hist_tuple[2] for hist_tuple in all_4d_to_2d_hists]), np.array(mc_infos), 'Results/4dTo2d/h5/yz/' + filename_output + '_yz.h5')
-        store_histograms_as_hdf5(np.stack([hist_tuple[3] for hist_tuple in all_4d_to_2d_hists]), np.array(mc_infos), 'Results/4dTo2d/h5/xt/' + filename_output + '_xt.h5')
-        store_histograms_as_hdf5(np.stack([hist_tuple[4] for hist_tuple in all_4d_to_2d_hists]), np.array(mc_infos), 'Results/4dTo2d/h5/yt/' + filename_output + '_yt.h5')
-        store_histograms_as_hdf5(np.stack([hist_tuple[5] for hist_tuple in all_4d_to_2d_hists]), np.array(mc_infos), 'Results/4dTo2d/h5/zt/' + filename_output + '_zt.h5')
+        for proj in ['xy', 'xz', 'yz', 'xt', 'yt', 'zt']:
+            savestr = output_dirpath + '/orcasong_output/4dTo2d/' + proj + '/' + filename_output + '_' + proj + '.h5'
+            pipe.attach(kp.io.HDF5Sink, filename=savestr, blob_keys=[proj, 'event_track'], complib=complib, complevel=complevel, chunksize=chunksize)
+
 
     if do3d:
-        store_histograms_as_hdf5(np.stack([hist_tuple[0] for hist_tuple in all_4d_to_3d_hists]), np.array(mc_infos), 'Results/4dTo3d/h5/xyz/' + filename_output + '_xyz.h5', compression=('gzip', 1))
-        store_histograms_as_hdf5(np.stack([hist_tuple[1] for hist_tuple in all_4d_to_3d_hists]), np.array(mc_infos), 'Results/4dTo3d/h5/xyt/' + filename_output + '_xyt.h5', compression=('gzip', 1))
-        store_histograms_as_hdf5(np.stack([hist_tuple[2] for hist_tuple in all_4d_to_3d_hists]), np.array(mc_infos), 'Results/4dTo3d/h5/xzt/' + filename_output + '_xzt.h5', compression=('gzip', 1))
-        store_histograms_as_hdf5(np.stack([hist_tuple[3] for hist_tuple in all_4d_to_3d_hists]), np.array(mc_infos), 'Results/4dTo3d/h5/yzt/' + filename_output + '_yzt.h5', compression=('gzip', 1))
-        store_histograms_as_hdf5(np.stack([hist_tuple[4] for hist_tuple in all_4d_to_3d_hists]), np.array(mc_infos), 'Results/4dTo3d/h5/rzt/' + filename_output + '_rzt.h5', compression=('gzip', 1))
+        for proj in ['xyz', 'xyt', 'xzt', 'yzt', 'rzt']:
+            savestr = output_dirpath + '/orcasong_output/4dTo3d/' + proj + '/' + filename_output + '_' + proj + '.h5'
+            pipe.attach(kp.io.HDF5Sink, filename=savestr, blob_keys=[proj, 'event_track'], complib=complib, complevel=complevel, chunksize=chunksize)
 
     if do4d[0]:
-        folder = ''
-        if not os.path.exists('Results/4dTo4d/h5/xyzt/' + folder):
-            os.makedirs('Results/4dTo4d/h5/xyzt/' + folder)
-        if folder != '': folder += '/'
+        proj = 'xyzt' if not do4d[1] == 'channel_id' else 'xyzc'
+        savestr = output_dirpath + '/orcasong_output/4dTo4d/' + proj + '/' + filename_output + '_' + proj + '.h5'
+        pipe.attach(kp.io.HDF5Sink, filename=savestr, blob_keys=[proj, 'event_track'], complib=complib, complevel=complevel, chunksize=chunksize)
 
-        if do4d[1] == 'channel_id':
-            store_histograms_as_hdf5(np.array(all_4d_to_4d_hists), np.array(mc_infos), 'Results/4dTo4d/h5/xyzc/' + folder + filename_output + '_xyzc.h5', compression=('gzip', 1))
-        else:
-            store_histograms_as_hdf5(np.array(all_4d_to_4d_hists), np.array(mc_infos), 'Results/4dTo4d/h5/xyzt/' + folder + filename_output + '_xyzt.h5', compression=('gzip', 1))
+    # Execute Pipeline
+    pipe.drain()
 
 
 def main():
     """
     Parses the input to the main data_to_images function.
     """
-    fname, detx_filepath, n_bins, det_geo, do2d, do2d_plots, do3d, do4d, prod_ident, timecut, do_mc_hits, data_cuts = parse_input()
-    data_to_images(fname, detx_filepath, n_bins, det_geo, do2d, do2d_plots, do3d, do4d, prod_ident, timecut,
-                   do_mc_hits, data_cuts)
+    fname, detx_filepath, output_dirpath, chunksize, complib, complevel, n_bins, det_geo, do2d, do2d_plots, do3d,\
+    do4d, prod_ident, timecut, do_mc_hits, data_cuts = parse_input()
+    data_to_images(fname, detx_filepath, output_dirpath, chunksize, complib, complevel, n_bins, det_geo, do2d,
+                   do2d_plots, do3d, do4d, prod_ident, timecut, do_mc_hits, data_cuts)
 
 
 if __name__ == '__main__':

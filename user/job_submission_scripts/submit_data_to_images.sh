@@ -16,14 +16,14 @@
 # random_noise: 500 files, with files_per_job=
 
 
-#--- USER INPUT ---##
+#--- USER INPUT ---#
 
 # load env, only working for conda env as of now
 python_env_folder=/home/hpc/capn/mppi033h/.virtualenv/python_3_env/
-code_folder=/home/woody/capn/mppi033h/Code/OrcaSong/orcasong
+code_folder=/home/woody/capn/mppi033h/Code/OrcaSong
 
-detx_filepath=${code_folder}/detx_files/orca_115strings_av23min20mhorizontal_18OMs_alt9mvertical_v1.detx
-config_file=${code_folder}/config/orca_115l_mupage_rn_neutr_classifier/conf_ORCA_115l_random_noise_xyz-c.toml
+detx_filepath=${code_folder}/orcasong/detx_files/orca_115strings_av23min20mhorizontal_18OMs_alt9mvertical_v1.detx
+config_file=${code_folder}/user/config/orca_115l_mupage_rn_neutr_classifier/conf_ORCA_115l_random_noise_xyz-c.toml
 
 particle_type=random_noise
 mc_prod=random_noise
@@ -33,9 +33,7 @@ mc_prod=random_noise
 # For mupage: n=1000 with PBS -l nodes=1:ppn=4:sl32g,walltime=15:00:00
 files_per_job=50
 
-n_cores=2 # number of available CPU cores, be careful about memory as well! Currently only working for 4 cores!
-
-#--- USER INPUT ---##
+#--- USER INPUT ---#
 
 # setup
 
@@ -72,34 +70,25 @@ folder="${folder_ip_files_arr[${mc_prod}]}"
 
 # run
 
-no_of_loops=$((${files_per_job}/${n_cores})) # divide by 4 cores -> e.g, 15 4-core loops needed for files_per_job=60
+no_of_loops=$((${files_per_job}/${4})) # divide by 4 cores -> e.g, 15 4-core loops needed for files_per_job=60
 file_no_start=$((1+((${n}-1) * ${files_per_job}))) # filenumber of the first file that is being processed by this script (depends on JobArray variable 'n')
 
 # currently only working for 4 cores
 
-#for (( k=1; k<=${no_of_loops}; k++ ))
-#do
-#    file_no_loop_start=$((${file_no_start}+(k-1)*${n_cores}))
-#    thread1=${file_no_loop_start}
-#    thread2=$((${file_no_loop_start} + 1))
-#    thread3=$((${file_no_loop_start} + 2))
-#    thread4=$((${file_no_loop_start} + 3))
-#
-#    (time taskset -c 0  python ${code_folder}/data_to_images.py -c ${config_file} ${folder}/${filename}.${thread1}.h5 ${detx_filepath} > ./job_logs/cout/${filename}.${thread1}.txt) &
-#    (time taskset -c 1  python ${code_folder}/data_to_images.py -c ${config_file} ${folder}/${filename}.${thread2}.h5 ${detx_filepath} > ./job_logs/cout/${filename}.${thread2}.txt) &
-#    (time taskset -c 2  python ${code_folder}/data_to_images.py -c ${config_file} ${folder}/${filename}.${thread3}.h5 ${detx_filepath} > ./job_logs/cout/${filename}.${thread3}.txt) &
-#    (time taskset -c 3  python ${code_folder}/data_to_images.py -c ${config_file} ${folder}/${filename}.${thread4}.h5 ${detx_filepath} > ./job_logs/cout/${filename}.${thread4}.txt) &
-#    wait
-#done
-
 for (( k=1; k<=${no_of_loops}; k++ ))
 do
-    file_no_loop_start=$((${file_no_start}+(k-1)*${n_cores}))
+    file_no_loop_start=$((${file_no_start}+(k-1)*${4}))
     thread1=${file_no_loop_start}
     thread2=$((${file_no_loop_start} + 1))
+    thread3=$((${file_no_loop_start} + 2))
+    thread4=$((${file_no_loop_start} + 3))
 
-    (time taskset -c 0  python ${code_folder}/data_to_images.py -c ${config_file} ${folder}/${filename}.${thread1}.h5 ${detx_filepath} > ./job_logs/cout/${filename}.${thread1}.txt) &
-    (time taskset -c 1  python ${code_folder}/data_to_images.py -c ${config_file} ${folder}/${filename}.${thread2}.h5 ${detx_filepath} > ./job_logs/cout/${filename}.${thread2}.txt) &
+    (time taskset -c 0  python ${code_folder}/orcasong/data_to_images.py -c ${config_file} ${folder}/${filename}.${thread1}.h5 ${detx_filepath} > ${code_folder}/user/job_logs/cout/${filename}.${thread1}.txt) &
+    (time taskset -c 1  python ${code_folder}/orcasong/data_to_images.py -c ${config_file} ${folder}/${filename}.${thread2}.h5 ${detx_filepath} > ${code_folder}/user/job_logs/cout/${filename}.${thread2}.txt) &
+    (time taskset -c 2  python ${code_folder}/orcasong/data_to_images.py -c ${config_file} ${folder}/${filename}.${thread3}.h5 ${detx_filepath} > ${code_folder}/user/job_logs/cout/${filename}.${thread3}.txt) &
+    (time taskset -c 3  python ${code_folder}/orcasong/data_to_images.py -c ${config_file} ${folder}/${filename}.${thread4}.h5 ${detx_filepath} > ${code_folder}/user/job_logs/cout/${filename}.${thread4}.txt) &
     wait
 done
+
+
 

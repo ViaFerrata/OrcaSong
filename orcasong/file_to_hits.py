@@ -3,8 +3,7 @@
 """Code that reads the h5 simulation files and extracts the necessary information for making event images."""
 
 import numpy as np
-#from memory_profiler import profile
-#import line_profiler # call with kernprof -l -v file.py args
+import km3pipe as kp
 
 
 def get_primary_track_index(event_blob):
@@ -34,6 +33,10 @@ def get_time_residual_nu_interaction_mean_triggered_hits(time_interaction, hits_
     Gets the time_residual of the event with respect to mean time of the triggered hits.
 
     This is required for vertex_time reconstruction, as the absolute time scale needs to be relative to the triggered hits.
+
+    Careful: sometimes, not the neutrino event is triggered, but just some random noise!
+    This means that in very rare cases, the time_residual_vertex can be very large (Mio. of ns), which might throw off
+    a NN with vertex_time reconstruction.
 
     Parameters
     ----------
@@ -132,25 +135,23 @@ def get_tracks(event_blob, file_particle_type, event_hits, prod_ident):
     """
     # parse EventInfo and Header information
     event_id = event_blob['EventInfo'].event_id[0]
+    run_id = event_blob['Header'].start_run.run_id.astype('float32')
 
-    # the run_id info in the EventInfo group is broken for ORCA neutrino and mupage files
-    # The Header run_id is the most reliable one.
-
-    if 'Header' in event_blob: # if Header exists in file, take run_id from it.
-        run_id = event_blob['Header'].start_run.run_id.astype('float32')
-    else:
-        if file_particle_type == 'muon':
-            run_id = event_blob['RawHeader'][1][0].astype('float32')
-        elif file_particle_type == 'undefined': # currently used with random_noise files
-            run_id = event_blob['EventInfo'].run_id
-        else:
-            run_id = event_blob['RawHeader'][0][0].astype('float32')
+    # if 'Header' in event_blob: # if Header exists in file, take run_id from it.
+    #     run_id = event_blob['Header'].start_run.run_id.astype('float32')
+    # else:
+    #     if file_particle_type == 'muon':
+    #         run_id = event_blob['RawHeader'][1][0].astype('float32')
+    #     elif file_particle_type == 'undefined': # currently used with random_noise files
+    #         run_id = event_blob['EventInfo'].run_id
+    #     else:
+    #         run_id = event_blob['RawHeader'][0][0].astype('float32')
 
     # collect all event_track information, dependent on file_particle_type
 
     if file_particle_type == 'undefined':
         particle_type = 0
-        track = [event_id, run_id, particle_type]
+        track = {'event_id': event_id, 'run_id': run_id, 'particle_type': particle_type}
 
     elif file_particle_type == 'muon':
         # take index 1, index 0 is the empty neutrino mc_track
@@ -171,8 +172,10 @@ def get_tracks(event_blob, file_particle_type, event_hits, prod_ident):
         vertex_pos_y = np.average(event_blob['McTracks'][1:].pos_y, weights=event_blob['McTracks'][1:].energy)
         vertex_pos_z = np.average(event_blob['McTracks'][1:].pos_z, weights=event_blob['McTracks'][1:].energy)
 
-        track = [event_id, particle_type, energy, is_cc, bjorkeny, dir_x, dir_y, dir_z, time_interaction, run_id,
-                 vertex_pos_x, vertex_pos_y, vertex_pos_z, n_muons]
+        track = {'event_id': event_id, 'particle_type': particle_type, 'energy': energy, 'is_cc': is_cc,
+                 'bjorkeny': bjorkeny, 'dir_x': dir_x, 'dir_y': dir_y, 'dir_z': dir_z,
+                 'time_interaction': time_interaction,  'run_id': run_id, 'vertex_pos_x': vertex_pos_x,
+                 'vertex_pos_y': vertex_pos_y, 'vertex_pos_z': vertex_pos_z, 'n_muons': n_muons}
 
     elif file_particle_type == 'neutrino':
         p = get_primary_track_index(event_blob)
@@ -188,15 +191,28 @@ def get_tracks(event_blob, file_particle_type, event_hits, prod_ident):
         hits_time, triggered = event_hits[:, 3], event_hits[:, 4]
         time_residual_vertex = get_time_residual_nu_interaction_mean_triggered_hits(time_interaction, hits_time, triggered)
 
-        track = [event_id, particle_type, energy, is_cc, bjorkeny, dir_x, dir_y, dir_z, time_interaction, run_id,
-                 vertex_pos_x, vertex_pos_y, vertex_pos_z, time_residual_vertex]
+        if event_id == 12627:
+            print(time_interaction)
+            hits_time_triggered = hits_time[triggered == 1]
+            print(hits_time_triggered)
+            t_mean_triggered = np.mean(hits_time_triggered, dtype=np.float64)
+            print(t_mean_triggered)
+            time_residual_vertex = t_mean_triggered - time_interaction
+            print(time_residual_vertex)
+
+        track = {'event_id': event_id, 'particle_type': particle_type, 'energy': energy, 'is_cc': is_cc,
+                 'bjorkeny': bjorkeny, 'dir_x': dir_x, 'dir_y': dir_y, 'dir_z': dir_z,
+                 'time_interaction': time_interaction,  'run_id': run_id, 'vertex_pos_x': vertex_pos_x,
+                 'vertex_pos_y': vertex_pos_y, 'vertex_pos_z': vertex_pos_z,
+                 'time_residual_vertex': time_residual_vertex}
 
     else:
         raise ValueError('The file_particle_type "', str(file_particle_type), '" is not known.')
 
-    if prod_ident is not None: track.append(prod_ident)
+    if prod_ident is not None: track['prod_ident'] = prod_ident
 
-    event_track = np.array(track, dtype=np.float64)
+    dtypes = [(key, np.float64) for key in track.keys()]
+    event_track = kp.dataclasses.Table(track, dtype=dtypes, h5loc='y', name='Event_Information')
 
     return event_track
 
@@ -245,3 +261,43 @@ def get_event_data(event_blob, file_particle_type, geo, do_mc_hits, data_cuts, d
     event_track = get_tracks(event_blob, file_particle_type, event_hits, prod_ident)
 
     return event_hits, event_track
+
+
+class EventDataExtractor(kp.Module):
+    """
+    Class that takes a km3pipe blob which contains the information for one event and returns
+    a blob with a hit array and a track array that contains all relevant information of the event.
+    """
+    def configure(self):
+        """
+        Sets up the input arguments of the EventDataExtractor class.
+        """
+        self.file_particle_type = self.require('file_particle_type')
+        self.geo = self.require('geo')
+        self.do_mc_hits = self.require('do_mc_hits')
+        self.data_cuts = self.require('data_cuts')
+        self.do4d = self.require('do4d')
+        self.prod_ident = self.require('prod_ident')
+        self.event_hits_key = self.get('event_hits', default='event_hits')
+        self.event_track_key = self.get('event_track', default='event_track')
+
+    def process(self, blob):
+        """
+        Returns a blob (dict), which contains the event_hits array and the event_track array.
+
+        Parameters
+        ----------
+        blob : dict
+            Km3pipe blob which contains all the data from the input file.
+
+        Returns
+        -------
+        blob : dict
+            Dictionary that contains the event_hits array and the event_track array.
+
+        """
+        blob[self.event_hits_key] = get_hits(blob, self.geo, self.do_mc_hits, self.data_cuts, self.do4d)
+        blob[self.event_track_key] = get_tracks(blob, self.file_particle_type, blob[self.event_hits_key], self.prod_ident)
+        return blob
+
+

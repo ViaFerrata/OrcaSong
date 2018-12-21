@@ -25,11 +25,11 @@
 
 ###--- 3-100GeV ---###
 
-## XYZ-C
+## XYZ-T
 
---n_bins = '11,13,18,31'
+--n_bins = '11,13,18,60'
 --det_geo = 'Orca_115l_23m_h_9m_v'
---do4d_mode = 'channel_id'
+--do4d_mode = 'time'
 --timecut_mode = 'trigger_cluster'
---timecut_timespan = 'tight_1'
+--timecut_timespan = 'tight-1'
 --prod_ident = 1
