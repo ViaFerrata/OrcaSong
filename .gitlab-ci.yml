@@ -1,5 +1,5 @@
 stages:
-  - test
+  - install
   - doc
   - release
 
@@ -8,11 +8,11 @@ before_script:
   - pip install -U pip setuptools wheel numpy
   - pip install .
 
-test:
+install-os:
     image: docker.km3net.de/base/python:3
-    stage: test
+    stage: install
     script:
-        - echo narf
+        - pip install .
 
 pages:
     image: docker.km3net.de/base/python:3
@@ -23,6 +23,9 @@ pages:
     artifacts:
         paths:
             - public
+    only:
+        - tags
+        - master
 
 pypi:
     image: docker.km3net.de/base/python:3
