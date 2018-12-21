@@ -17,7 +17,7 @@ pages:
         paths:
             - public
 
-  pypi:
+pypi:
     image: docker.km3net.de/base/python:3
     stage: release
     cache: {}
