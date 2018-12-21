@@ -25,11 +25,11 @@
 
 ###--- 3-100GeV ---###
 
-## XYZ-T
+## XYZ-C
 
---n_bins = '11,13,18,100'
+--n_bins = '11,13,18,31'
 --det_geo = 'Orca_115l_23m_h_9m_v'
---do4d_mode = 'time'
+--do4d_mode = 'channel_id'
 --timecut_mode = 'trigger_cluster'
---timecut_timespan = 'tight_0'
---prod_ident = 3 # for neutrinos: 1: 3-100 GeV prod, 2: 1-5 GeV prod ; mupage: 3 ; random_noise: 4
+--timecut_timespan = 'tight-0'
+--prod_ident = 1 # only for neutrinos: 1: 3-100 GeV prod, 2: 1-5 GeV prod.

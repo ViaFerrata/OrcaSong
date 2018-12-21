@@ -1,18 +1,27 @@
 #!/usr/bin/env python
 from setuptools import setup, find_packages
+from pkg_resources import get_distribution, DistributionNotFound
 
 with open('requirements.txt') as fobj:
     requirements = [l.strip() for l in fobj.readlines()]
 
 setup(
     name='orcasong',
-    version='1.0',
-    description='Makes images for a NN based on the hit information of neutrino events in the neutrino telescope KM3NeT-ORCA',
-    url='https://github.com/ViaFerrata/OrcaSong',
+    description='Makes images for a NN based on the hit information of neutrino events in the neutrino telescope KM3NeT',
+    url='https://git.km3net.de/ml/OrcaSong',
     author='Michael Moser',
     author_email='mmoser@km3net.de, michael.m.moser@fau.de',
     license='AGPL',
     install_requires=requirements,
     packages=find_packages(),
     include_package_data=True,
+    entry_points={'console_scripts': ['make_nn_images=orcasong.data_to_images:main']},
+    setup_requires=['setuptools_scm'],
+    use_scm_version={
+        'write_to': 'km3pipe/version.txt',
+        'tag_regex': r'^(?P<prefix>v)?(?P<version>[^\+]+)(?P<suffix>.*)?$',
+    },
+
 )
+
+__author__ = 'Michael Moser'

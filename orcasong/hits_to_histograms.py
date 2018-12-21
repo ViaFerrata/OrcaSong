@@ -2,12 +2,11 @@
 # -*- coding: utf-8 -*-
 """Code for computeing 2D/3D/4D histograms ("images") based on the event_hits hit pattern of the file_to_hits.py output"""
 
+import km3pipe as kp
 import matplotlib as mpl
 mpl.use('Agg')
 import matplotlib.pyplot as plt
 import numpy as np
-#import line_profiler # call with kernprof -l -v file.py args
-#from memory_profiler import profile
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 
 
@@ -40,17 +39,17 @@ def get_time_parameters(event_hits, mode=('trigger_cluster', 'all'), t_start_mar
         t = t[triggered == 1]
         t_mean = np.mean(t, dtype=np.float64)
 
-        if mode[1] == 'tight_0':
+        if mode[1] == 'tight-0':
             # make a tighter cut, 9.5ns / bin with 100 bins, useful for ORCA 115l mupage events
             t_start = t_mean - 450  # trigger-cluster - 350ns
             t_end = t_mean + 500  # trigger-cluster + 850ns
 
-        elif mode[1] == 'tight_1':
+        elif mode[1] == 'tight-1':
             # make a tighter cut, 12.5ns / bin with 60 bins
             t_start = t_mean - 250  # trigger-cluster - 350ns
             t_end = t_mean + 500  # trigger-cluster + 850ns
 
-        elif mode[1] == 'tight_2':
+        elif mode[1] == 'tight-2':
             # make an even tighter cut, 5.8ns / bin with 60 bins
             t_start = t_mean - 150  # trigger-cluster - 150ns
             t_end = t_mean + 200  # trigger-cluster + 200ns
@@ -79,7 +78,7 @@ def get_time_parameters(event_hits, mode=('trigger_cluster', 'all'), t_start_mar
     return t_start, t_end
 
 
-def compute_4d_to_2d_histograms(event_hits, x_bin_edges, y_bin_edges, z_bin_edges, n_bins, all_4d_to_2d_hists, timecut, event_track, do2d_plots, pdf_2d_plots):
+def compute_4d_to_2d_histograms(event_hits, event_track, x_bin_edges, y_bin_edges, z_bin_edges, n_bins, timecut, do2d_plots, pdf_2d_plots):
     """
     Computes 2D numpy histogram 'images' from the 4D data and appends the 2D histograms to the all_4d_to_2d_hists list,
     [xy, xz, yz, xt, yt, zt].
@@ -88,16 +87,14 @@ def compute_4d_to_2d_histograms(event_hits, x_bin_edges, y_bin_edges, z_bin_edge
     ----------
     event_hits : ndarray(ndim=2)
         2D array that contains the hits data for a certain event_id.
+    event_track : ndarray(ndim=2)
+        Contains the relevant mc_track info for the event in order to get a nice title for the pdf histos.
     x_bin_edges, y_bin_edges, z_bin_edges: ndarray(ndim=1)
         Bin edges for the X/Y/Z-direction.
     n_bins : tuple of int
         Contains the number of bins that should be used for each dimension.
-    all_4d_to_2d_hists : list
-        List that contains all 2D histogram projections.
     timecut : tuple(str, str/None)
         Tuple that defines what timecut should be used in hits_to_histograms.
-    event_track : ndarray(ndim=2)
-        Contains the relevant mc_track info for the event in order to get a nice title for the pdf histos.
     do2d_plots : bool
         If True, generate 2D matplotlib pdf histograms.
     pdf_2d_plots : mpl.backends.backend_pdf.PdfPages/None
@@ -118,20 +115,18 @@ def compute_4d_to_2d_histograms(event_hits, x_bin_edges, y_bin_edges, z_bin_edge
     hist_yt = np.histogram2d(y, t, bins=(y_bin_edges, n_bins[3]), range=((min(y_bin_edges), max(y_bin_edges)), (t_start, t_end)))
     hist_zt = np.histogram2d(z, t, bins=(z_bin_edges, n_bins[3]), range=((min(z_bin_edges), max(z_bin_edges)), (t_start, t_end)))
 
-    # Format in classical numpy convention: x along first dim (vertical), y along second dim (horizontal)
-    all_4d_to_2d_hists.append((np.array(hist_xy[0], dtype=np.uint8),
-                               np.array(hist_xz[0], dtype=np.uint8),
-                               np.array(hist_yz[0], dtype=np.uint8),
-                               np.array(hist_xt[0], dtype=np.uint8),
-                               np.array(hist_yt[0], dtype=np.uint8),
-                               np.array(hist_zt[0], dtype=np.uint8)))
-
     if do2d_plots:
-        # Format in classical numpy convention: x along first dim (vertical), y along second dim (horizontal)
-        # Need to take that into account in convert_2d_numpy_hists_to_pdf_image()
-        # transpose to get typical cartesian convention: y along first dim (vertical), x along second dim (horizontal)
         hists = [hist_xy, hist_xz, hist_yz, hist_xt, hist_yt, hist_zt]
         convert_2d_numpy_hists_to_pdf_image(hists, t_start, t_end, pdf_2d_plots, event_track=event_track) # slow! takes about 1s per event
+
+    hist_xy = kp.dataclasses.NDArray(hist_xy[0][np.newaxis, ...].astype(np.uint8), h5loc='x', title='XY_Event_Images')
+    hist_xz = kp.dataclasses.NDArray(hist_xz[0][np.newaxis, ...].astype(np.uint8), h5loc='x', title='XZ_Event_Images')
+    hist_yz = kp.dataclasses.NDArray(hist_yz[0][np.newaxis, ...].astype(np.uint8), h5loc='x', title='YZ_Event_Images')
+    hist_xt = kp.dataclasses.NDArray(hist_xt[0][np.newaxis, ...].astype(np.uint8), h5loc='x', title='XT_Event_Images')
+    hist_yt = kp.dataclasses.NDArray(hist_yt[0][np.newaxis, ...].astype(np.uint8), h5loc='x', title='YT_Event_Images')
+    hist_zt = kp.dataclasses.NDArray(hist_zt[0][np.newaxis, ...].astype(np.uint8), h5loc='x', title='ZT_Event_Images')
+
+    return hist_xy, hist_xz, hist_yz, hist_xt, hist_yt, hist_zt
 
 
 def convert_2d_numpy_hists_to_pdf_image(hists, t_start, t_end, pdf_2d_plots, event_track=None):
@@ -154,8 +149,9 @@ def convert_2d_numpy_hists_to_pdf_image(hists, t_start, t_end, pdf_2d_plots, eve
     fig = plt.figure(figsize=(10, 13))
     if event_track is not None:
         particle_type = {16: 'Tau', -16: 'Anti-Tau', 14: 'Muon', -14: 'Anti-Muon', 12: 'Electron', -12: 'Anti-Electron', 'isCC': ['NC', 'CC']}
-        event_info = {'event_id': str(int(event_track[0])), 'energy': str(event_track[2]),
-                      'particle_type': particle_type[int(event_track[1])], 'interaction_type': particle_type['isCC'][int(event_track[3])]}
+        event_info = {'event_id': str(int(event_track.event_id[0])), 'energy': str(event_track.energy[0]),
+                      'particle_type': particle_type[int(event_track.particle_type[0])],
+                      'interaction_type': particle_type['isCC'][int(event_track.is_cc[0])]}
         title = event_info['particle_type'] + '-' + event_info['interaction_type'] + ', Event ID: ' + event_info['event_id'] + ', Energy: ' + event_info['energy'] + ' GeV'
         props = dict(boxstyle='round', facecolor='wheat', alpha=0.5)
         fig.suptitle(title, usetex=False, horizontalalignment='center', size='xx-large', bbox=props)
@@ -163,7 +159,7 @@ def convert_2d_numpy_hists_to_pdf_image(hists, t_start, t_end, pdf_2d_plots, eve
     t_diff = t_end - t_start
 
     axes_xy = plt.subplot2grid((3, 2), (0, 0), title='XY - projection', xlabel='X Position [m]', ylabel='Y Position [m]', aspect='equal', xlim=(-175, 175), ylim=(-175, 175))
-    axes_xz = plt.subplot2grid((3, 2), (0, 1), title='XZ - projection', xlabel='X Position [m]', ylabel='Z Position [m]', aspect='equal', xlim=(-175, 175), ylim=(-57.8, 400))
+    axes_xz = plt.subplot2grid((3, 2), (0, 1), title='XZ - projection', xlabel='X Position [m]', ylabel='Z Position [m]', aspect='equal', xlim=(-175, 175), ylim=(-57.8, 292.2))
     axes_yz = plt.subplot2grid((3, 2), (1, 0), title='YZ - projection', xlabel='Y Position [m]', ylabel='Z Position [m]', aspect='equal', xlim=(-175, 175), ylim=(-57.8, 292.2))
 
     axes_xt = plt.subplot2grid((3, 2), (1, 1), title='XT - projection', xlabel='X Position [m]', ylabel='Time [ns]', aspect='auto',
@@ -178,6 +174,10 @@ def convert_2d_numpy_hists_to_pdf_image(hists, t_start, t_end, pdf_2d_plots, eve
         h_ab_masked = np.ma.masked_where(hist_ab[0] == 0, hist_ab[0])
 
         a, b = np.meshgrid(hist_ab[1], hist_ab[2]) #2,1
+
+        # Format in classical numpy convention: x along first dim (vertical), y along second dim (horizontal)
+        # Need to take that into account in convert_2d_numpy_hists_to_pdf_image()
+        # transpose to get typical cartesian convention: y along first dim (vertical), x along second dim (horizontal)
         plot_ab = axes_ab.pcolormesh(a, b, h_ab_masked.T)
 
         the_divider = make_axes_locatable(axes_ab)
@@ -187,21 +187,19 @@ def convert_2d_numpy_hists_to_pdf_image(hists, t_start, t_end, pdf_2d_plots, eve
         cbar_ab = plt.colorbar(plot_ab, cax=color_axis, ax=axes_ab)
         cbar_ab.ax.set_ylabel('Hits [#]')
 
-        return plot_ab
-
-    plot_xy = fill_subplot(hists[0], axes_xy)
-    plot_xz = fill_subplot(hists[1], axes_xz)
-    plot_yz = fill_subplot(hists[2], axes_yz)
-    plot_xt = fill_subplot(hists[3], axes_xt)
-    plot_yt = fill_subplot(hists[4], axes_yt)
-    plot_zt = fill_subplot(hists[5], axes_zt)
+    fill_subplot(hists[0], axes_xy)
+    fill_subplot(hists[1], axes_xz)
+    fill_subplot(hists[2], axes_yz)
+    fill_subplot(hists[3], axes_xt)
+    fill_subplot(hists[4], axes_yt)
+    fill_subplot(hists[5], axes_zt)
 
     fig.tight_layout(rect=[0, 0.02, 1, 0.95])
     pdf_2d_plots.savefig(fig)
     plt.close()
 
 
-def compute_4d_to_3d_histograms(event_hits, x_bin_edges, y_bin_edges, z_bin_edges, n_bins, all_4d_to_3d_hists, timecut):
+def compute_4d_to_3d_histograms(event_hits, x_bin_edges, y_bin_edges, z_bin_edges, n_bins, timecut):
     """
     Computes 3D numpy histogram 'images' from the 4D data and appends the 3D histograms to the all_4d_to_3d_hists list,
     [xyz, xyt, xzt, yzt, rzt].
@@ -218,8 +216,6 @@ def compute_4d_to_3d_histograms(event_hits, x_bin_edges, y_bin_edges, z_bin_edge
         Bin edges for the X/Y/Z-direction.
     n_bins : tuple of int
         Contains the number of bins that should be used for each dimension.
-    all_4d_to_3d_hists : list
-        List that contains all 3D histogram projections.
     timecut : tuple(str, str/None)
         Tuple that defines what timecut should be used in hits_to_histograms.
 
@@ -243,14 +239,16 @@ def compute_4d_to_3d_histograms(event_hits, x_bin_edges, y_bin_edges, z_bin_edge
     rzt = np.concatenate([r, z, t], axis=1)
     hist_rzt = np.histogramdd(rzt, bins=(n_bins[0], n_bins[2], n_bins[3]), range=((np.amin(r), np.amax(r)), (np.amin(z), np.amax(z)), (t_start, t_end)))
 
-    all_4d_to_3d_hists.append((np.array(hist_xyz[0], dtype=np.uint8),
-                               np.array(hist_xyt[0], dtype=np.uint8),
-                               np.array(hist_xzt[0], dtype=np.uint8),
-                               np.array(hist_yzt[0], dtype=np.uint8),
-                               np.array(hist_rzt[0], dtype=np.uint8)))
+    hist_xyz = kp.dataclasses.NDArray(hist_xyz[0][np.newaxis, ...].astype(np.uint8), h5loc='x', title='XYZ_Event_Images')
+    hist_xyt = kp.dataclasses.NDArray(hist_xyt[0][np.newaxis, ...].astype(np.uint8), h5loc='x', title='XYT_Event_Images')
+    hist_xzt = kp.dataclasses.NDArray(hist_xzt[0][np.newaxis, ...].astype(np.uint8), h5loc='x', title='XZT_Event_Images')
+    hist_yzt = kp.dataclasses.NDArray(hist_yzt[0][np.newaxis, ...].astype(np.uint8), h5loc='x', title='YZT_Event_Images')
+    hist_rzt = kp.dataclasses.NDArray(hist_rzt[0][np.newaxis, ...].astype(np.uint8), h5loc='x', title='RZT_Event_Images')
+
+    return hist_xyz, hist_xyt, hist_xzt, hist_yzt, hist_rzt
 
 
-def compute_4d_to_4d_histograms(event_hits, x_bin_edges, y_bin_edges, z_bin_edges, n_bins, all_4d_to_4d_hists, timecut, do4d):
+def compute_4d_to_4d_histograms(event_hits, x_bin_edges, y_bin_edges, z_bin_edges, n_bins, timecut, do4d):
     """
     Computes 4D numpy histogram 'images' from the 4D data and appends the 4D histogram to the all_4d_to_4d_hists list,
     [xyzt / xyzc]
@@ -263,8 +261,6 @@ def compute_4d_to_4d_histograms(event_hits, x_bin_edges, y_bin_edges, z_bin_edge
         Bin edges for the X/Y/Z-direction.
     n_bins : tuple of int
         Contains the number of bins that should be used for each dimension.
-    all_4d_to_4d_hists : list
-        List that contains all 4D histogram projections.
     timecut : tuple(str, str/None)
         Tuple that defines what timecut should be used in hits_to_histograms.
     do4d : tuple(bool, str)
@@ -290,4 +286,69 @@ def compute_4d_to_4d_histograms(event_hits, x_bin_edges, y_bin_edges, z_bin_edge
     else:
         raise ValueError('The parameter in do4d[1] ' + str(do4d[1]) + ' is not available. Currently, only time and channel_id are supported.')
 
-    all_4d_to_4d_hists.append(np.array(hist_4d[0], dtype=np.uint8))
+    proj_name = 'XYZT' if not do4d[1] == 'channel_id' else 'XYZC'
+    title = proj_name + '_Event_Images'
+    hist_4d = kp.dataclasses.NDArray(hist_4d[0][np.newaxis, ...].astype(np.uint8), h5loc='x', title=title)
+
+    return hist_4d
+
+
+class HistogramMaker(kp.Module):
+    """
+    Class that takes a km3pipe blob which contains the information for one event and returns
+    a blob with a hit array and a track array that contains all relevant information of the event.
+    """
+    def configure(self):
+        """
+        Sets up the input arguments of the EventDataExtractor class.
+        """
+        self.x_bin_edges = self.require('x_bin_edges')
+        self.y_bin_edges = self.require('y_bin_edges')
+        self.z_bin_edges = self.require('z_bin_edges')
+        self.n_bins = self.require('n_bins')
+        self.timecut = self.require('timecut')
+        self.do2d = self.require('do2d')
+        self.do2d_plots = self.require('do2d_plots')
+        self.pdf_2d_plots = self.get('pdf_2d_plots')
+        self.do3d = self.require('do3d')
+        self.do4d = self.require('do4d')
+
+        self.i = 0
+
+    def process(self, blob):
+        """
+        Returns a blob (dict), which contains the event_hits array and the event_track array.
+
+        Parameters
+        ----------
+        blob : dict
+            Km3pipe blob which contains all the data from the input file.
+
+        Returns
+        -------
+        blob : dict
+            Dictionary that contains the event_hits array and the event_track array.
+
+        """
+        if self.do2d:
+            blob['xy'], blob['xz'], blob['yz'], blob['xt'], blob['yt'], blob['zt'] = compute_4d_to_2d_histograms(
+                blob['event_hits'], blob['event_track'], self.x_bin_edges, self.y_bin_edges, self.z_bin_edges,
+                self.n_bins, self.timecut, self.do2d_plots[0], self.pdf_2d_plots)
+
+            self.i += 1
+            if self.pdf_2d_plots is not None and self.i >= self.do2d_plots[1]:
+                self.pdf_2d_plots.close()
+                raise StopIteration
+
+        if self.do3d:
+            blob['xyz'], blob['xyt'], blob['xzt'], blob['yzt'], blob['rzt'] = compute_4d_to_3d_histograms(
+                blob['event_hits'], self.x_bin_edges, self.y_bin_edges, self.z_bin_edges,
+                self.n_bins, self.timecut)
+
+        if self.do4d[0]:
+            proj_key = 'xyzt' if not self.do4d[1] == 'channel_id' else 'xyzc'
+
+            blob[proj_key] = compute_4d_to_4d_histograms(blob['event_hits'], self.x_bin_edges, self.y_bin_edges, self.z_bin_edges,
+                                        self.n_bins, self.timecut, self.do4d)
+
+        return blob
