@@ -18,7 +18,7 @@ setup(
     entry_points={'console_scripts': ['make_nn_images=orcasong.data_to_images:main']},
     setup_requires=['setuptools_scm'],
     use_scm_version={
-        'write_to': 'km3pipe/version.txt',
+        'write_to': 'orcasong/version.txt',
         'tag_regex': r'^(?P<prefix>v)?(?P<version>[^\+]+)(?P<suffix>.*)?$',
     },
 
