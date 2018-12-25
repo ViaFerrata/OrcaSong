@@ -409,15 +409,6 @@ def skip_event(event_track, data_cuts):
         throw_away = np.random.choice([False, True], p=[1 - throw_away_prob, throw_away_prob])
         if throw_away: continue_bool = True
 
-    #     # TODO temporary, deprecated solution, we always need to throw away the same events if we have multiple inputs -> use fixed seed
-    #     arr = np.load('/home/woody/capn/mppi033h/Code/OrcaSong/utilities/low_e_prod_surviving_evts_elec-CC.npy')
-    #     arr_list = arr.tolist()
-    #     evt_id = event_track[0]
-    #     run_id = event_track[9]
-    #
-    #     if [run_id, evt_id] not in arr_list:
-    #         continue
-
     return continue_bool
 
 
