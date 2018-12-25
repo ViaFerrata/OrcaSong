@@ -14,6 +14,9 @@
 Welcome to OrcaSong's documentation!
 ====================================
 
+.. image:: https://git.km3net.de/ml/OrcaSong/badges/master/build.svg
+    :target: https://git.km3net.de/ml/OrcaSong/pipelines
+
 | OrcaSong is a part of the Deep Learning efforts for the neutrino telescope KM3NeT.
 | Find more information about KM3NeT on http://www.km3net.org.
 
