@@ -20,8 +20,11 @@ OrcaSong: Main Framework
 
   parse_input
   parser_check_input
+  make_output_dirs
   calculate_bin_edges
   calculate_bin_edges_test
+  get_file_particle_type
+  EventSkipper
   skip_event
   data_to_images
   main
@@ -39,9 +42,11 @@ OrcaSong: Main Framework
 .. autosummary::
   :toctree: api
 
-  get_event_data
   get_primary_track_index
   get_time_residual_nu_interaction_mean_triggered_hits
+  get_hits
+  get_tracks
+  EventDataExtractor
 
 
 ``orcasong.hits_to_histograms``: Making images based on the event info
@@ -56,24 +61,9 @@ OrcaSong: Main Framework
 .. autosummary::
   :toctree: api
 
+  get_time_parameters
   compute_4d_to_2d_histograms
+  convert_2d_numpy_hists_to_pdf_image
   compute_4d_to_3d_histograms
   compute_4d_to_4d_histograms
-  convert_2d_numpy_hists_to_pdf_image
-  get_time_parameters
-
-
-``orcasong.histograms_to_files``: Saving the images to a h5 file
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-.. automodule:: orcasong.histograms_to_files
-  :no-members:
-  :no-inherited-members:
-
-
-.. currentmodule:: orcasong.histograms_to_files
-
-.. autosummary::
-  :toctree: api
-
-  store_histograms_as_hdf5
+  HistogramMaker

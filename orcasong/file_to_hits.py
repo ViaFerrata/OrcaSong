@@ -217,52 +217,6 @@ def get_tracks(event_blob, file_particle_type, event_hits, prod_ident):
     return event_track
 
 
-def get_event_data(event_blob, file_particle_type, geo, do_mc_hits, data_cuts, do4d, prod_ident):
-    """
-    Reads a km3pipe blob which contains the information for one event and returns a hit array and a track array
-    that contains all relevant information of the event.
-
-    Parameters
-    ----------
-    event_blob : kp.io.HDF5Pump.blob
-        Event blob of the HDF5Pump which contains all information for one event.
-    file_particle_type : str
-        String that specifies the type of particles that are contained in the file: ['undefined', 'muon', 'neutrino'].
-    geo : kp.Geometry
-        km3pipe Geometry instance that contains the geometry information of the detector.
-        Only used if the event_blob is from a non-calibrated file!
-    do_mc_hits : bool
-        Tells the function of the hits (mc_hits + BG) or the mc_hits only should be parsed.
-        In the case of mc_hits, the dom_id needs to be calculated thanks to the jpp output.
-    data_cuts : dict
-        Specifies if cuts should be applied.
-        Contains the keys 'triggered' and 'energy_lower/upper_limit' and 'throw_away_prob'.
-    do4d : tuple(bool, str)
-        Tuple that declares if 4D histograms should be created [0] and if yes, what should be used as the 4th dim after xyz.
-        In the case of 'channel_id', this information needs to be included in the event_hits as well.
-    prod_ident : int
-        Optional int that identifies the used production, more documentation in the docs of the main function.
-    geo : None/kp.Geometry
-        If none, the event_blob should already contain the calibrated hit information (e.g. pos_xyz).
-        Else, a km3pipe Geometry instance that contains the geometry information of the detector.
-
-    Returns
-    -------
-    event_hits : ndarray(ndim=2)
-        2D array containing the hit information of the event [pos_xyz, time, triggered, (channel_id)].
-
-    event_track : ndarray(ndim=1)
-        1D array containing important MC information of the event,
-        [event_id, particle_type, energy, is_cc, bjorkeny, dir_x, dir_y, dir_z, time_track, run_id,
-        vertex_pos_x, vertex_pos_y, vertex_pos_z, time_residual_vertex, (prod_ident)].
-
-    """
-    event_hits = get_hits(event_blob, geo, do_mc_hits, data_cuts, do4d)
-    event_track = get_tracks(event_blob, file_particle_type, event_hits, prod_ident)
-
-    return event_hits, event_track
-
-
 class EventDataExtractor(kp.Module):
     """
     Class that takes a km3pipe blob which contains the information for one event and returns

@@ -134,9 +134,9 @@ At this point, we are now ready to start using OrcaSong for the generation of ev
 Usage of OrcaSong
 -----------------
 
-After pulling the OrcaSong repo to your local harddisk you first need to install it with the provided setup.py::
+In order to use OrcaSong, you can just install it with :code:`pip`::
 
-    ~/orcasong$: pip install .
+    ~/$: pip install orcasong
 
 Before you can start to use OrcaSong, you need a .detx detector geometry file that corresponds to your input files.
 OrcaSong is currently producing event "images" based on a 1 DOM / XYZ-bin assumption. This image generation is done
@@ -146,18 +146,24 @@ automatically, based on the number of bins (n_bins) for each dimension XYZ that 
 If your .detx file is not contained in the OrcaSong/detx_files folder, please add it to the repository!
 Currently, only the 115l ORCA 2016 detx file is available.
 
-At this point, you're finally ready to use OrcaSong, it can be executed as follows::
+At this point, you're finally ready to use OrcaSong.
+OrcaSong can be called from every directory by using the :code:`make_nn_images` command::
 
-    ~/orcasong$: python data_to_images.py testfile.h5 geofile.detx
+    ~/$: make_nn_images testfile.h5 geofile.detx
 
-OrcaSong will then generate a hdf5 file with images into the Results folder, e.g. Results/4dTo4d/h5/xyzt.
+OrcaSong will then generate a hdf5 file with images that will be put in a "Results" folder at your current path.
 
 The configuration options of OrcaSong can be found by calling the help::
 
-    ~/orcasong$: python data_to_images.py -h
+    ~/$: make_nn_images -h
     Main OrcaSong code which takes raw simulated .h5 files and the corresponding .detx detector file as input in
     order to generate 2D/3D/4D histograms ('images') that can be used for CNNs.
-    The input file can be calibrated or not (e.g. contains pos_xyz of the hits).
+
+    First argument: KM3NeT hdf5 simfile at JTE level.
+    Second argument: a .detx file that is associated with the hdf5 file.
+
+    The input file can be calibrated or not (e.g. contains pos_xyz of the hits) and the OrcaSong output is written
+    to the current folder by default (otherwise use --o option).
     Makes only 4D histograms ('images') by default.
 
     Usage:
@@ -168,6 +174,15 @@ The configuration options of OrcaSong can be found by calling the help::
         -h --help                       Show this screen.
 
         -c CONFIGFILE                   Load all options from a config file (.toml format).
+
+        --o OUTPUTPATH                  Path for the directory, where the OrcaSong output should be stored. [default: ./]
+
+        --chunksize CHUNKSIZE           Chunksize (axis_0) that should be used for the hdf5 output of OrcaSong. [default: 32]
+
+        --complib COMPLIB               Compression library that should be used for the OrcaSong output.
+                                        All PyTables compression filters are available. [default: zlib]
+
+        --complevel COMPLEVEL           Compression level that should be used for the OrcaSong output. [default: 1]
 
         --n_bins N_BINS                 Number of bins that are used in the image making for each dimension, e.g. (x,y,z,t).
                                         [default: 11,13,18,60]
@@ -222,18 +237,15 @@ The configuration options of OrcaSong can be found by calling the help::
                                         the 'y' dataset of the output file of OrcaSong. [default: 1]
 
 
-
-OrcaSong will then generate a hdf5 file with images into the Results folder, e.g. Results/4dTo4d/h5/xyzt.
-
-Alternatively, they can also be found in the docs of the :code:`main()` function:
+Alternatively, they can also be found in the docs of the :code:`data_to_images()` function:
 
 .. currentmodule:: orcasong.data_to_images
 .. autosummary::
-    main
+    data_to_images
 
 Other than parsing every information to orcasong via the console, you can also load a .toml config file::
 
-    ~/orcasong$: python data_to_images.py -c config.toml testfile.h5 geofile.detx
+    ~/$: make_nn_images -c config.toml testfile.h5 geofile.detx
 
 Please checkout the config.toml file in the main folder of the OrcaSong repo in order to get an idea about
 the structure of the config file.
