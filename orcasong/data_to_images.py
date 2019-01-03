@@ -97,6 +97,7 @@ import toml
 from docopt import docopt
 #from memory_profiler import profile # for memory profiling, call with @profile; myfunc()
 #import line_profiler # call with kernprof -l -v file.py args
+import numpy as np
 import km3pipe as kp
 import km3modules as km
 import matplotlib as mpl
