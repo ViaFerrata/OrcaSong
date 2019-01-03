@@ -135,17 +135,15 @@ def get_tracks(event_blob, file_particle_type, event_hits, prod_ident):
     """
     # parse EventInfo and Header information
     event_id = event_blob['EventInfo'].event_id[0]
-    run_id = event_blob['Header'].start_run.run_id.astype('float32')
 
-    # if 'Header' in event_blob: # if Header exists in file, take run_id from it.
-    #     run_id = event_blob['Header'].start_run.run_id.astype('float32')
-    # else:
-    #     if file_particle_type == 'muon':
-    #         run_id = event_blob['RawHeader'][1][0].astype('float32')
-    #     elif file_particle_type == 'undefined': # currently used with random_noise files
-    #         run_id = event_blob['EventInfo'].run_id
-    #     else:
-    #         run_id = event_blob['RawHeader'][0][0].astype('float32')
+    if 'Header' in event_blob: # if Header exists in file, take run_id from it.
+        run_id = event_blob['Header'].start_run.run_id.astype('float32')
+    else:
+        if file_particle_type == 'undefined': # currently used with random_noise files
+            run_id = event_blob['EventInfo'].run_id
+        else:
+            raise InputError('The run_id could not be read from the EventInfo or the Header, '
+                             'please check the source code in get_tracks().')
 
     # collect all event_track information, dependent on file_particle_type
 
@@ -190,15 +188,6 @@ def get_tracks(event_blob, file_particle_type, event_hits, prod_ident):
 
         hits_time, triggered = event_hits[:, 3], event_hits[:, 4]
         time_residual_vertex = get_time_residual_nu_interaction_mean_triggered_hits(time_interaction, hits_time, triggered)
-
-        if event_id == 12627:
-            print(time_interaction)
-            hits_time_triggered = hits_time[triggered == 1]
-            print(hits_time_triggered)
-            t_mean_triggered = np.mean(hits_time_triggered, dtype=np.float64)
-            print(t_mean_triggered)
-            time_residual_vertex = t_mean_triggered - time_interaction
-            print(time_residual_vertex)
 
         track = {'event_id': event_id, 'particle_type': particle_type, 'energy': energy, 'is_cc': is_cc,
                  'bjorkeny': bjorkeny, 'dir_x': dir_x, 'dir_y': dir_y, 'dir_z': dir_z,

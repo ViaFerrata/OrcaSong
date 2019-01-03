@@ -1,7 +1,7 @@
 #!/bin/bash
 #
-#PBS -l nodes=1:ppn=4:sl32g,walltime=06:00:00
-#PBS -o /home/woody/capn/mppi033h/logs/submit_data_to_images_${PBS_JOBID}_${PBS_ARRAYID}.out -e /home/woody/capn/mppi033h/logs/submit_data_to_images_${PBS_JOBID}_${PBS_ARRAYID}.err
+#PBS -l nodes=1:ppn=4:sl32g,walltime=15:00:00
+#PBS -o /home/woody/capn/mppi033h/logs/orcasong_submit_data_to_images_${PBS_JOBID}_${PBS_ARRAYID}.out -e /home/woody/capn/mppi033h/logs/orcasong/submit_data_to_images_${PBS_JOBID}_${PBS_ARRAYID}.err
 # first non-empty non-comment line ends PBS options
 
 # Submit with 'qsub -t 1-10 submit_data_to_images.sh'
@@ -20,18 +20,18 @@
 
 # load env, only working for conda env as of now
 python_env_folder=/home/hpc/capn/mppi033h/.virtualenv/python_3_env/
-code_folder=/home/woody/capn/mppi033h/Code/OrcaSong
+job_logs_folder=/home/woody/capn/mppi033h/logs/orcasong/cout
 
-detx_filepath=${code_folder}/orcasong/detx_files/orca_115strings_av23min20mhorizontal_18OMs_alt9mvertical_v1.detx
-config_file=${code_folder}/user/config/orca_115l_mupage_rn_neutr_classifier/conf_ORCA_115l_random_noise_xyz-c.toml
+detx_filepath=/home/woody/capn/mppi033h/Code/OrcaSong/user/detx_files/orca_115strings_av23min20mhorizontal_18OMs_alt9mvertical_v1.detx
+config_file=/home/woody/capn/mppi033h/Code/OrcaSong/user/config/orca_115l_mupage_rn_neutr_classifier/conf_ORCA_115l_mupage_xyz-c.toml
 
-particle_type=random_noise
-mc_prod=random_noise
+particle_type=mupage
+mc_prod=mupage
 
 # total number of files per job, e.g. 10 jobs for 600: 600/10 = 60. For neutrin
 # For neutrinos and random_noise n=60 with PBS -l nodes=1:ppn=4:sl32g,walltime=3:00:00
 # For mupage: n=1000 with PBS -l nodes=1:ppn=4:sl32g,walltime=15:00:00
-files_per_job=50
+files_per_job=1000
 
 #--- USER INPUT ---#
 
@@ -39,7 +39,6 @@ files_per_job=50
 
 n=${PBS_ARRAYID}
 source activate ${python_env_folder}
-cd ${code_folder}
 
 declare -A filename_arr
 declare -A folder_ip_files_arr
@@ -83,10 +82,10 @@ do
     thread3=$((${file_no_loop_start} + 2))
     thread4=$((${file_no_loop_start} + 3))
 
-    (time taskset -c 0  python ${code_folder}/orcasong/data_to_images.py -c ${config_file} ${folder}/${filename}.${thread1}.h5 ${detx_filepath} > ${code_folder}/user/job_logs/cout/${filename}.${thread1}.txt) &
-    (time taskset -c 1  python ${code_folder}/orcasong/data_to_images.py -c ${config_file} ${folder}/${filename}.${thread2}.h5 ${detx_filepath} > ${code_folder}/user/job_logs/cout/${filename}.${thread2}.txt) &
-    (time taskset -c 2  python ${code_folder}/orcasong/data_to_images.py -c ${config_file} ${folder}/${filename}.${thread3}.h5 ${detx_filepath} > ${code_folder}/user/job_logs/cout/${filename}.${thread3}.txt) &
-    (time taskset -c 3  python ${code_folder}/orcasong/data_to_images.py -c ${config_file} ${folder}/${filename}.${thread4}.h5 ${detx_filepath} > ${code_folder}/user/job_logs/cout/${filename}.${thread4}.txt) &
+    (time taskset -c 0  make_nn_images -c ${config_file} ${folder}/${filename}.${thread1}.h5 ${detx_filepath} > ${job_logs_folder}/${filename}.${thread1}.txt) &
+    (time taskset -c 1  make_nn_images -c ${config_file} ${folder}/${filename}.${thread2}.h5 ${detx_filepath} > ${job_logs_folder}/${filename}.${thread2}.txt) &
+    (time taskset -c 2  make_nn_images -c ${config_file} ${folder}/${filename}.${thread3}.h5 ${detx_filepath} > ${job_logs_folder}/${filename}.${thread3}.txt) &
+    (time taskset -c 3  make_nn_images -c ${config_file} ${folder}/${filename}.${thread4}.h5 ${detx_filepath} > ${job_logs_folder}/${filename}.${thread4}.txt) &
     wait
 done
 
