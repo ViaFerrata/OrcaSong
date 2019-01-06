@@ -1,7 +1,7 @@
 #!/bin/bash
 #
-#PBS -l nodes=1:ppn=4:sl32g,walltime=15:00:00
-#PBS -o /home/woody/capn/mppi033h/logs/orcasong_submit_data_to_images_${PBS_JOBID}_${PBS_ARRAYID}.out -e /home/woody/capn/mppi033h/logs/orcasong/submit_data_to_images_${PBS_JOBID}_${PBS_ARRAYID}.err
+#PBS -l nodes=1:ppn=4:sl,walltime=15:00:00
+#PBS -o /home/woody/capn/mppi033h/logs/orcasong/submit_data_to_images_${PBS_JOBID}_${PBS_ARRAYID}.out -e /home/woody/capn/mppi033h/logs/orcasong/submit_data_to_images_${PBS_JOBID}_${PBS_ARRAYID}.err
 # first non-empty non-comment line ends PBS options
 
 # Submit with 'qsub -t 1-10 submit_data_to_images.sh'
@@ -23,14 +23,14 @@ python_env_folder=/home/hpc/capn/mppi033h/.virtualenv/python_3_env/
 job_logs_folder=/home/woody/capn/mppi033h/logs/orcasong/cout
 
 detx_filepath=/home/woody/capn/mppi033h/Code/OrcaSong/user/detx_files/orca_115strings_av23min20mhorizontal_18OMs_alt9mvertical_v1.detx
-config_file=/home/woody/capn/mppi033h/Code/OrcaSong/user/config/orca_115l_mupage_rn_neutr_classifier/conf_ORCA_115l_mupage_xyz-c.toml
+config_file=/home/woody/capn/mppi033h/Code/OrcaSong/user/config/orca_115l_mupage_rn_neutr_classifier/conf_ORCA_115l_mupage_xyz-t.toml
 
 particle_type=mupage
 mc_prod=mupage
 
 # total number of files per job, e.g. 10 jobs for 600: 600/10 = 60. For neutrin
-# For neutrinos and random_noise n=60 with PBS -l nodes=1:ppn=4:sl32g,walltime=3:00:00
-# For mupage: n=1000 with PBS -l nodes=1:ppn=4:sl32g,walltime=15:00:00
+# For neutrinos and random_noise n=60 with PBS -l nodes=1:ppn=4:sl,walltime=3:00:00
+# For mupage: n=1000 with PBS -l nodes=1:ppn=4:sl,walltime=15:00:00
 files_per_job=1000
 
 #--- USER INPUT ---#
@@ -69,14 +69,14 @@ folder="${folder_ip_files_arr[${mc_prod}]}"
 
 # run
 
-no_of_loops=$((${files_per_job}/${4})) # divide by 4 cores -> e.g, 15 4-core loops needed for files_per_job=60
+no_of_loops=$((${files_per_job}/4)) # divide by 4 cores -> e.g, 15 4-core loops needed for files_per_job=60
 file_no_start=$((1+((${n}-1) * ${files_per_job}))) # filenumber of the first file that is being processed by this script (depends on JobArray variable 'n')
 
 # currently only working for 4 cores
 
 for (( k=1; k<=${no_of_loops}; k++ ))
 do
-    file_no_loop_start=$((${file_no_start}+(k-1)*${4}))
+    file_no_loop_start=$((${file_no_start}+(k-1)*4))
     thread1=${file_no_loop_start}
     thread2=$((${file_no_loop_start} + 1))
     thread3=$((${file_no_loop_start} + 2))
@@ -88,6 +88,3 @@ do
     (time taskset -c 3  make_nn_images -c ${config_file} ${folder}/${filename}.${thread4}.h5 ${detx_filepath} > ${job_logs_folder}/${filename}.${thread4}.txt) &
     wait
 done
-
-
-

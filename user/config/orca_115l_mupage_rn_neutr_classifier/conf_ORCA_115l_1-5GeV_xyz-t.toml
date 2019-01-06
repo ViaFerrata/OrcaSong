@@ -1,8 +1,11 @@
-# A config file for OrcaSong with multiple configurations.
-# Outcomment the config that you want to use!
+# A config file for OrcaSong with a list of all configuration options.
 # More info about the .toml format at https://github.com/toml-lang/toml
 
 ### All available options with some dummy values
+# --o = '/home/woody/capn/mppi033h/orcasong_output'
+# --chunksize = 32
+# --complib = 'zlib'
+# --complevel = '1'
 # --n_bins = '11,13,18,60'
 # --det_geo = 'Orca_115l_23m_h_9m_v'
 # --do2d = false
@@ -33,3 +36,7 @@
 --timecut_mode = 'trigger_cluster'
 --timecut_timespan = 'tight-0'
 --prod_ident = 2 # only for neutrinos: 1: 3-100 GeV prod, 2: 1-5 GeV prod.
+--o = '/home/woody/capn/mppi033h'
+--chunksize = 32
+--complib = 'zlib'
+--complevel = 1

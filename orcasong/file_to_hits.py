@@ -133,8 +133,14 @@ def get_tracks(event_blob, file_particle_type, event_hits, prod_ident):
         vertex_pos_x, vertex_pos_y, vertex_pos_z, time_residual_vertex/n_muons, (prod_ident)].
 
     """
-    # parse EventInfo and Header information
-    event_id = event_blob['EventInfo'].event_id[0]
+    ## parse EventInfo and Header information
+
+    # km3pipe event_id is the aanet frame_index
+    # for random_noise files, multiple events have the same frame_index, so use the group_id instead
+    if file_particle_type == 'undefined':
+        event_id = event_blob['EventInfo'].group_id[0]
+    else:
+        event_id = event_blob['EventInfo'].event_id[0]
 
     if 'Header' in event_blob: # if Header exists in file, take run_id from it.
         run_id = event_blob['Header'].start_run.run_id.astype('float32')
@@ -145,11 +151,13 @@ def get_tracks(event_blob, file_particle_type, event_hits, prod_ident):
             raise InputError('The run_id could not be read from the EventInfo or the Header, '
                              'please check the source code in get_tracks().')
 
-    # collect all event_track information, dependent on file_particle_type
+    ## collect all event_track information, dependent on file_particle_type
 
     if file_particle_type == 'undefined':
         particle_type = 0
-        track = {'event_id': event_id, 'run_id': run_id, 'particle_type': particle_type}
+        frame_index = event_blob['EventInfo'].event_id[0]
+
+        track = {'event_id': event_id, 'run_id': run_id, 'particle_type': particle_type, 'frame_index': frame_index}
 
     elif file_particle_type == 'muon':
         # take index 1, index 0 is the empty neutrino mc_track
