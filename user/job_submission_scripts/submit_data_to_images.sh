@@ -1,19 +1,20 @@
 #!/bin/bash
 #
-#PBS -l nodes=1:ppn=4:sl,walltime=15:00:00
+#PBS -l nodes=1:ppn=4:sl,walltime=20:00:00
 #PBS -o /home/woody/capn/mppi033h/logs/orcasong/submit_data_to_images_${PBS_JOBID}_${PBS_ARRAYID}.out -e /home/woody/capn/mppi033h/logs/orcasong/submit_data_to_images_${PBS_JOBID}_${PBS_ARRAYID}.err
 # first non-empty non-comment line ends PBS options
 
-# Submit with 'qsub -t 1-10 submit_data_to_images.sh'
+# Submit with 'qsub -t 1-x submit_data_to_images.sh'
 # This script uses the data_to_images.py file in order to convert all .h5 raw MC files to .h5 event "images" (CNN input).
 # Currently available ORCA 115l sim files:
-# neutrinos: 600 files each for 1-5 GeV prod, else
-#            muon-CC = 2400 files, number of jobs needed = 40,
-#            elec-CC = 1200 files, number of jobs needed = 20,
-#            elec-NC = 1200 files, number of jobs needed = 20,
-#            tau-CC = 1800 files (half the size of other interaction channels), number of jobs needed = 30 (half walltime)
-# mupage: 20000 files, with files_per_job=1000 20 jobs needed.
-# random_noise: 500 files, with files_per_job=
+# neutrinos: 600 files each for 1-5 GeV prod (muon-CC, elec-CC/NC) number of jobs needed = 5 with files_per_job=120,
+#            else (3-100 GeV prod)
+#            muon-CC = 2400 files, number of jobs needed = 20 with files_per_job=120
+#            elec-CC = 1200 files, number of jobs needed = 10 with files_per_job=120
+#            elec-NC = 1200 files, number of jobs needed = 10 with files_per_job=120
+#            tau-CC = 1800 files (half the n_evts of other interaction channels), number of jobs needed = 15 with files_per_job=120 and half walltime
+# mupage: 20000 files, with files_per_job=250, 80 jobs needed with 20h walltime.
+# random_noise: 500 files, with files_per_job=20 , 25 jobs needed with 20h walltime.
 
 
 #--- USER INPUT ---#
@@ -23,15 +24,19 @@ python_env_folder=/home/hpc/capn/mppi033h/.virtualenv/python_3_env/
 job_logs_folder=/home/woody/capn/mppi033h/logs/orcasong/cout
 
 detx_filepath=/home/woody/capn/mppi033h/Code/OrcaSong/user/detx_files/orca_115strings_av23min20mhorizontal_18OMs_alt9mvertical_v1.detx
-config_file=/home/woody/capn/mppi033h/Code/OrcaSong/user/config/orca_115l_mupage_rn_neutr_classifier/conf_ORCA_115l_mupage_xyz-t.toml
+config_file=/home/woody/capn/mppi033h/Code/OrcaSong/user/config/orca_115l_mupage_rn_neutr_classifier/conf_ORCA_115l_random_noise_xyz-c.toml
 
-particle_type=mupage
-mc_prod=mupage
+particle_type=random_noise
+mc_prod=random_noise
 
-# total number of files per job, e.g. 10 jobs for 600: 600/10 = 60. For neutrin
-# For neutrinos and random_noise n=60 with PBS -l nodes=1:ppn=4:sl,walltime=3:00:00
-# For mupage: n=1000 with PBS -l nodes=1:ppn=4:sl,walltime=15:00:00
-files_per_job=1000
+# total number of files per job
+# For neutrinos 3-100GeV:
+# muon-CC/elec-CC/elec-NC/tau-CC n=120 with PBS -l nodes=1:ppn=4:sl,walltime=5:00:00
+# For neutrinos 1-5GeV:
+# muon-CC/elec-CC/elec-NC n=120 with PBS -l nodes=1:ppn=4:sl,walltime=5:00:00
+# For mupage: n=250 with PBS -l nodes=1:ppn=4:sl,walltime=5:00:00
+# For random_noise: n=20 with PBS -l nodes=1:ppn=4:sl,walltime=5:00:00
+files_per_job=20 # must be dividible by 4!
 
 #--- USER INPUT ---#
 

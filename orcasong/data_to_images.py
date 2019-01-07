@@ -91,6 +91,7 @@ __email__ = 'michael.m.moser@fau.de'
 __status__ = 'Prototype'
 
 import os
+import errno
 import sys
 import warnings
 import toml
@@ -223,16 +224,30 @@ def make_output_dirs(output_dirpath, do2d, do3d, do4d):
         projections = ['xy', 'xz', 'yz', 'xt', 'yt', 'zt']
         for proj in projections:
             if not os.path.exists(output_dirpath + '/orcasong_output/4dTo2d/' + proj):
-                os.makedirs(output_dirpath + '/orcasong_output/4dTo2d/' + proj)
+                try:
+                    os.makedirs(output_dirpath + '/orcasong_output/4dTo2d/' + proj)
+                except OSError as e:
+                    if e.errno != errno.EEXIST:
+                        raise
+
     if do3d:
         projections = ['xyz', 'xyt', 'xzt', 'yzt', 'rzt']
         for proj in projections:
             if not os.path.exists(output_dirpath + '/orcasong_output/4dTo3d/' + proj):
-                os.makedirs(output_dirpath + '/orcasong_output/4dTo3d/' + proj)
+                try:
+                    os.makedirs(output_dirpath + '/orcasong_output/4dTo3d/' + proj)
+                except OSError as e:
+                    if e.errno != errno.EEXIST:
+                        raise
+
     if do4d[0]:
         proj = 'xyzt' if not do4d[1] == 'channel_id' else 'xyzc'
         if not os.path.exists(output_dirpath + '/orcasong_output/4dTo4d/' + proj):
-            os.makedirs(output_dirpath + '/orcasong_output/4dTo4d/' + proj)
+            try:
+                os.makedirs(output_dirpath + '/orcasong_output/4dTo4d/' + proj)
+            except OSError as e:
+                if e.errno != errno.EEXIST:
+                    raise
 
 
 def calculate_bin_edges(n_bins, det_geo, detx_filepath, do4d):
