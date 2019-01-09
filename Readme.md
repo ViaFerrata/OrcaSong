@@ -1,6 +1,6 @@
 ## Generating DL images based on KM3NeT data
 
-The documentation for OrcaSong can be found at http://ml.pages.km3net.de/OrcaSong!
+The documentation for OrcaSong can be found at https://ml.pages.km3net.de/OrcaSong!
 
 OrcaSong is a part of the Deep Learning efforts of the neutrino telescope KM3NeT.  
 Find more information about KM3NeT on http://www.km3net.org.
