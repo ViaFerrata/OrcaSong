@@ -149,106 +149,85 @@ Currently, only the 115l ORCA 2016 detx file is available.
 At this point, you're finally ready to use OrcaSong.
 OrcaSong can be called from every directory by using the :code:`make_nn_images` command::
 
-    ~/$: make_nn_images testfile.h5 geofile.detx
+    ~/$: make_nn_images testfile.h5 geofile.detx configfile.toml
 
-OrcaSong will then generate a hdf5 file with images that will be put in a "Results" folder at your current path.
+OrcaSong will then generate a hdf5 file with images that will be put in a "Results" folder at the path that
+you've specified in the configfile current path.
+Please checkout the default_config.toml file in the orcasong folder of the OrcaSong repo in order to get an idea about
+the structure of the config files.
 
-The configuration options of OrcaSong can be found by calling the help::
+All available configuration options of OrcaSong can be found in /orcasong/default_config::
 
-    ~/$: make_nn_images -h
-    Main OrcaSong code which takes raw simulated .h5 files and the corresponding .detx detector file as input in
-    order to generate 2D/3D/4D histograms ('images') that can be used for CNNs.
+    --- Documentation for every config parameter that is available ---
 
-    First argument: KM3NeT hdf5 simfile at JTE level.
-    Second argument: a .detx file that is associated with the hdf5 file.
+    None arguments should be written as string: 'None'
 
-    The input file can be calibrated or not (e.g. contains pos_xyz of the hits) and the OrcaSong output is written
-    to the current folder by default (otherwise use --o option).
-    Makes only 4D histograms ('images') by default.
+    Parameters
+    ----------
+    output_dirpath : str
+        Full path to the directory, where the orcasong output should be stored.
+    chunksize : int
+        Chunksize (along axis_0) that is used for saving the OrcaSong output to a .h5 file.
+    complib : str
+        Compression library that is used for saving the OrcaSong output to a .h5 file.
+        All PyTables compression filters are available, e.g. 'zlib', 'lzf', 'blosc', ... .
+    complevel : int
+        Compression level for the compression filter that is used for saving the OrcaSong output to a .h5 file.
+    n_bins : tuple of int
+        Declares the number of bins that should be used for each dimension, e.g. (x,y,z,t).
+        The option should be written as string, e.g. '11,13,18,60'.
+    det_geo : str
+        Declares what detector geometry should be used for the binning. E.g. 'Orca_115l_23m_h_9m_v'.
+    do2d : bool
+        Declares if 2D histograms, 'images', should be created.
+    do2d_plots : bool
+        Declares if pdf visualizations of the 2D histograms should be created, cannot be called if do2d=False.
+    do2d_plots_n: int
+        After how many events the event loop will be stopped (making the 2d plots in do2d_plots takes long time).
+    do3d : bool
+        Declares if 3D histograms should be created.
+    do4d : bool
+        Declares if 4D histograms should be created.
+    do4d_mode : str
+        If do4d is True, what should be used as the 4th dim after xyz.
+        Currently, only 'time' and 'channel_id' are available.
+    prod_ident : int
+        Optional int identifier for the used mc production.
+        This is e.g. useful, if you use events from two different mc productions, e.g. the 1-5GeV & 3-100GeV Orca 2016 MC.
+        In this case, the events are not fully distinguishable with only the run_id and the event_id!
+        In order to keep a separation, an integer can be set in the event_track for all events, such that they stay distinguishable.
+    timecut_mode : str
+        Defines what timecut should be used in hits_to_histograms.py.
+        Currently available:
+        'timeslice_relative': Cuts out the central 30% of the snapshot. The value of timecut_timespan doesn't matter in this case.
+        'trigger_cluster': Cuts based on the mean of the triggered hits.
+        'None': No timecut. The value of timecut_timespan doesn't matter in this case.
+    timecut_timespan : str/None
+        Defines what timespan should be used if a timecut is applied. Only relevant for timecut_mode = 'trigger_cluster'.
+        Currently available:
+        'all': [-350ns, 850ns] -> 20ns / bin (if e.g. 60 timebins)
+        'tight-0': [-450ns, 500ns] -> 15.8ns / bin (if e.g. 60 timebins)
+        'tight-1': [-250ns, 500ns] -> 12.5ns / bin (if e.g. 60 timebins)
+        'tight-2': [-150ns, 200ns] -> 5.8ns / bin (if e.g. 60 timebins)
+    do_mc_hits : bool
+        Declares if hits (False, mc_hits + BG) or mc_hits (True) should be processed.
+    data_cut_triggered : bool
+        Cuts away hits that haven't been triggered.
+    data_cut_e_low : float
+        Cuts away events that have an energy lower than data_cut_e_low.
+    data_cut_e_high : float
+        Cuts away events that have an energy higher than data_cut_e_high.
+    data_cut_throw_away : float
+        Cuts away random events with a certain probability (1: 100%, 0: 0%).
+    flush_freq : int
+        After how many events the accumulated output should be flushed to the harddisk.
+        A larger value leads to a faster orcasong execution, but it increases the RAM usage as well.
 
-    Usage:
-        data_to_images.py [options] FILENAME DETXFILE
-        data_to_images.py (-h | --help)
-
-    Options:
-        -h --help                       Show this screen.
-
-        -c CONFIGFILE                   Load all options from a config file (.toml format).
-
-        --o OUTPUTPATH                  Path for the directory, where the OrcaSong output should be stored. [default: ./]
-
-        --chunksize CHUNKSIZE           Chunksize (axis_0) that should be used for the hdf5 output of OrcaSong. [default: 32]
-
-        --complib COMPLIB               Compression library that should be used for the OrcaSong output.
-                                        All PyTables compression filters are available. [default: zlib]
-
-        --complevel COMPLEVEL           Compression level that should be used for the OrcaSong output. [default: 1]
-
-        --n_bins N_BINS                 Number of bins that are used in the image making for each dimension, e.g. (x,y,z,t).
-                                        [default: 11,13,18,60]
-
-        --det_geo DET_GEO               Which detector geometry to use for the binning, e.g. 'Orca_115l_23m_h_9m_v'.
-                                        [default: Orca_115l_23m_h_9m_v]
-
-        --do2d                          If 2D histograms, 'images', should be created.
-
-        --do2d_plots                    If 2D pdf plot visualizations of the 2D histograms should be created, cannot be called if do2d=False.
-
-        --do2d_plots_n N                For how many events the 2D plot visualizations should be made.
-                                        OrcaSong will exit after reaching N events. [default: 10]
-
-        --do3d                          If 3D histograms, 'images', should be created.
-
-        --dont_do4d                     If 4D histograms, 'images', should NOT be created.
-
-        --do4d_mode MODE                What dimension should be used in the 4D histograms as the 4th dim.
-                                        Available: 'time', 'channel_id'. [default: time]
-
-        --timecut_mode MODE             Defines what timecut mode should be used in hits_to_histograms.py.
-                                        At the moment, these cuts are only optimized for ORCA 115l neutrino events!
-                                        Currently available:
-                                        'timeslice_relative': Cuts out the central 30% of the snapshot.
-                                        'trigger_cluster': Cuts based on the mean of the triggered hits.
-                                        The timespan for this cut can be chosen in --timecut_timespan.
-                                        'None': No timecut.
-                                        [default: trigger_cluster]
-
-        --timecut_timespan TIMESPAN     Only used with timecut_mode 'trigger_cluster'.
-                                        Defines the timespan of the trigger_cluster cut.
-                                        Currently available:
-                                        'all': [-350ns, 850ns] -> 20ns / bin (60 bins)
-                                        'tight-1': [-250ns, 500ns] -> 12.5ns / bin
-                                        'tight-2': [-150ns, 200ns] -> 5.8ns / bin
-                                        [default: tight-1]
-
-        --do_mc_hits                    If only the mc_hits (no BG hits!) should be used for the image processing.
-
-        --data_cut_triggered            If non-triggered hits should be thrown away for the images.
-
-        --data_cut_e_low E_LOW          Cut events that are lower than the specified threshold value in GeV.
-
-        --data_cut_e_high E_HIGH        Cut events that are higher than the specified threshold value in GeV.
-
-        --data_cut_throw_away FRACTION  Throw away a random fraction (percentage) of events. [default: 0.00]
-
-        --prod_ident PROD_IDENT         Optional int identifier for the used mc production.
-                                        This is useful, if you use events from two different mc productions,
-                                        e.g. the 1-5GeV & 3-100GeV Orca 2016 MC. The prod_ident int will be saved in
-                                        the 'y' dataset of the output file of OrcaSong. [default: 1]
+    --- Documentation for every config parameter that is available ---
 
 
-Alternatively, they can also be found in the docs of the :code:`data_to_images()` function:
 
-.. currentmodule:: orcasong.data_to_images
-.. autosummary::
-    data_to_images
 
-Other than parsing every information to orcasong via the console, you can also load a .toml config file::
-
-    ~/$: make_nn_images -c config.toml testfile.h5 geofile.detx
-
-Please checkout the config.toml file in the main folder of the OrcaSong repo in order to get an idea about
-the structure of the config file.
 
 If anything is still unclear after this introduction just tell me in the deep_learning channel on chat.km3net.de or
 write me an email at michael.m.moser@fau.de, such that I can improve this guide!

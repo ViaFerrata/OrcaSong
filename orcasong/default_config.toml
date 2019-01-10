@@ -1,0 +1,99 @@
+# A config file for OrcaSong with a list of all configuration options.
+# More info about the .toml format at https://github.com/toml-lang/toml
+
+# IMPORTANT: Don't remove any config lines, only modify them!
+
+#--- Documentation for every config parameter that is available ---#
+#
+#    None arguments should be written as string: 'None'
+#
+#    Parameters
+#    ----------
+#    output_dirpath : str
+#        Full path to the directory, where the orcasong output should be stored.
+#    chunksize : int
+#        Chunksize (along axis_0) that is used for saving the OrcaSong output to a .h5 file.
+#    complib : str
+#        Compression library that is used for saving the OrcaSong output to a .h5 file.
+#        All PyTables compression filters are available, e.g. 'zlib', 'lzf', 'blosc', ... .
+#    complevel : int
+#        Compression level for the compression filter that is used for saving the OrcaSong output to a .h5 file.
+#    n_bins : tuple of int
+#        Declares the number of bins that should be used for each dimension, e.g. (x,y,z,t).
+#        The option should be written as string, e.g. '11,13,18,60'.
+#    det_geo : str
+#        Declares what detector geometry should be used for the binning. E.g. 'Orca_115l_23m_h_9m_v'.
+#    do2d : bool
+#        Declares if 2D histograms, 'images', should be created.
+#    do2d_plots : bool
+#        Declares if pdf visualizations of the 2D histograms should be created, cannot be called if do2d=False.
+#    do2d_plots_n: int
+#        After how many events the event loop will be stopped (making the 2d plots in do2d_plots takes long time).
+#    do3d : bool
+#        Declares if 3D histograms should be created.
+#    do4d : bool
+#        Declares if 4D histograms should be created.
+#    do4d_mode : str
+#        If do4d is True, what should be used as the 4th dim after xyz.
+#        Currently, only 'time' and 'channel_id' are available.
+#    prod_ident : int
+#        Optional int identifier for the used mc production.
+#        This is e.g. useful, if you use events from two different mc productions, e.g. the 1-5GeV & 3-100GeV Orca 2016 MC.
+#        In this case, the events are not fully distinguishable with only the run_id and the event_id!
+#        In order to keep a separation, an integer can be set in the event_track for all events, such that they stay distinguishable.
+#    timecut_mode : str
+#        Defines what timecut should be used in hits_to_histograms.py.
+#        Currently available:
+#        'timeslice_relative': Cuts out the central 30% of the snapshot. The value of timecut_timespan doesn't matter in this case.
+#        'trigger_cluster': Cuts based on the mean of the triggered hits.
+#        'None': No timecut. The value of timecut_timespan doesn't matter in this case.
+#    timecut_timespan : str/None
+#        Defines what timespan should be used if a timecut is applied. Only relevant for timecut_mode = 'trigger_cluster'.
+#        Currently available:
+#        'all': [-350ns, 850ns] -> 20ns / bin (if e.g. 60 timebins)
+#        'tight-0': [-450ns, 500ns] -> 15.8ns / bin (if e.g. 60 timebins)
+#        'tight-1': [-250ns, 500ns] -> 12.5ns / bin (if e.g. 60 timebins)
+#        'tight-2': [-150ns, 200ns] -> 5.8ns / bin (if e.g. 60 timebins)
+#    do_mc_hits : bool
+#        Declares if hits (False, mc_hits + BG) or mc_hits (True) should be processed.
+#    data_cut_triggered : bool
+#        Cuts away hits that haven't been triggered.
+#    data_cut_e_low : float
+#        Cuts away events that have an energy lower than data_cut_e_low.
+#    data_cut_e_high : float
+#        Cuts away events that have an energy higher than data_cut_e_high.
+#    data_cut_throw_away : float
+#        Cuts away random events with a certain probability (1: 100%, 0: 0%).
+#    flush_freq : int
+#        After how many events the accumulated output should be flushed to the harddisk.
+#        A larger value leads to a faster orcasong execution, but it increases the RAM usage as well.
+#
+#--- Documentation for every config parameter that is available ---#
+
+#--- All available config options with some default values ---#
+
+output_dirpath = './'
+chunksize = 32
+complib = 'zlib'
+complevel = 1
+n_bins = '11,13,18,60'
+det_geo = 'Orca_115l_23m_h_9m_v'
+do2d = false
+do2d_plots = false
+do2d_plots_n = 10
+do3d = false
+do4d = true
+do4d_mode = 'time'
+timecut_mode = 'trigger_cluster'
+timecut_timespan = 'tight_1'
+do_mc_hits = false
+data_cut_triggered = false
+data_cut_e_low = 'None'
+data_cut_e_high = 'None'
+data_cut_throw_away = 0.00
+prod_ident = 1
+flush_freq = 1000
+
+#--- All available config options with some default values ---#
+
+

@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # coding=utf-8
-# Filename: data_to_images.py
+# Filename: make_nn_images.py
 """
 Main OrcaSong code which takes raw simulated .h5 files and the corresponding .detx detector file as input in
 order to generate 2D/3D/4D histograms ('images') that can be used for CNNs.
@@ -8,79 +8,23 @@ order to generate 2D/3D/4D histograms ('images') that can be used for CNNs.
 First argument: KM3NeT hdf5 simfile at JTE level.
 Second argument: a .detx file that is associated with the hdf5 file.
 
-The input file can be calibrated or not (e.g. contains pos_xyz of the hits) and the OrcaSong output is written
-to the current folder by default (otherwise use --o option).
-Makes only 4D histograms ('images') by default.
+The input file can be calibrated or not (e.g. contains pos_xyz of the hits).
 
 Usage:
-    data_to_images.py [options] FILENAME DETXFILE
-    data_to_images.py (-h | --help)
+    make_nn_images.py SIMFILE DETXFILE CONFIGFILE
+    make_nn_images.py (-h | --help)
+
+Arguments:
+    FILENAME    A KM3NeT hdf5 simfile at JTE level.
+
+    DETXFILE    A .detx geometry file that is associated with the hdf5 file.
+
+    CONFIGFILE  A .toml configuration file that contains all configuration options
+                of this script. A default config can be found in the OrcaSong repo:
+                orcasong/default_config.toml
 
 Options:
-    -h --help                       Show this screen.
-
-    -c CONFIGFILE                   Load all options from a config file (.toml format).
-
-    --o OUTPUTPATH                  Path for the directory, where the OrcaSong output should be stored. [default: ./]
-
-    --chunksize CHUNKSIZE           Chunksize (axis_0) that should be used for the hdf5 output of OrcaSong. [default: 32]
-
-    --complib COMPLIB               Compression library that should be used for the OrcaSong output.
-                                    All PyTables compression filters are available. [default: zlib]
-
-    --complevel COMPLEVEL           Compression level that should be used for the OrcaSong output. [default: 1]
-
-    --n_bins N_BINS                 Number of bins that are used in the image making for each dimension, e.g. (x,y,z,t).
-                                    [default: 11,13,18,60]
-
-    --det_geo DET_GEO               Which detector geometry to use for the binning, e.g. 'Orca_115l_23m_h_9m_v'.
-                                    [default: Orca_115l_23m_h_9m_v]
-
-    --do2d                          If 2D histograms, 'images', should be created.
-
-    --do2d_plots                    If 2D pdf plot visualizations of the 2D histograms should be created, cannot be called if do2d=False.
-
-    --do2d_plots_n N                For how many events the 2D plot visualizations should be made.
-                                    OrcaSong will exit after reaching N events. [default: 10]
-
-    --do3d                          If 3D histograms, 'images', should be created.
-
-    --dont_do4d                     If 4D histograms, 'images', should NOT be created.
-
-    --do4d_mode MODE                What dimension should be used in the 4D histograms as the 4th dim.
-                                    Available: 'time', 'channel_id'. [default: time]
-
-    --timecut_mode MODE             Defines what timecut mode should be used in hits_to_histograms.py.
-                                    At the moment, these cuts are only optimized for ORCA 115l neutrino events!
-                                    Currently available:
-                                    'timeslice_relative': Cuts out the central 30% of the snapshot.
-                                    'trigger_cluster': Cuts based on the mean of the triggered hits.
-                                    The timespan for this cut can be chosen in --timecut_timespan.
-                                    'None': No timecut.
-                                    [default: trigger_cluster]
-
-    --timecut_timespan TIMESPAN     Only used with timecut_mode 'trigger_cluster'.
-                                    Defines the timespan of the trigger_cluster cut.
-                                    Currently available:
-                                    'all': [-350ns, 850ns] -> 20ns / bin (60 bins)
-                                    'tight-1': [-250ns, 500ns] -> 12.5ns / bin
-                                    'tight-2': [-150ns, 200ns] -> 5.8ns / bin
-                                    [default: tight-1]
-
-    --do_mc_hits                    If only the mc_hits (no BG hits!) should be used for the image processing.
-
-    --data_cut_triggered            If non-triggered hits should be thrown away for the images.
-
-    --data_cut_e_low E_LOW          Cut events that are lower than the specified threshold value in GeV.
-
-    --data_cut_e_high E_HIGH        Cut events that are higher than the specified threshold value in GeV.
-
-    --data_cut_throw_away FRACTION  Throw away a random fraction (percentage) of events. [default: 0.00]
-
-    --prod_ident PROD_IDENT         Optional int identifier for the used mc production.
-                                    This is useful, if you use events from two different mc productions,
-                                    e.g. the 1-5GeV & 3-100GeV Orca 2016 MC. The prod_ident int will be saved in
-                                    the 'y' dataset of the output file of OrcaSong. [default: 1]
+    -h --help  Show this screen.
 
 """
 
@@ -111,62 +55,71 @@ from orcasong.hits_to_histograms import HistogramMaker
 
 def parse_input():
     """
-    Parses and returns all necessary input options for the data_to_images function.
+    Parses and returns all necessary input options for the make_nn_images function.
 
-    Check the data_to_images function to get docs about the individual parameters.
+    Returns
+    -------
+    fname : str
+        Full filepath to the input .h5 file.
+    detx_filepath : str
+        Full filepath to the .detx geometry file that belongs to the fname.
+    config_filepath : str
+        Full filepath to a config file. An example can be found in orcasong/default_config.toml
+
     """
     args = docopt(__doc__)
 
-    if args['-c']:
-        config = toml.load(args['-c'])
-        args.update(config)
-
-    fname = args['FILENAME']
+    fname = args['SIMFILE']
     detx_filepath = args['DETXFILE']
+    config_filepath = args['CONFIGFILE']
 
-    output_dirpath = args['--o']
-    chunksize = int(args['--chunksize'])
-    complib = args['--complib']
-    complevel = int(args['--complevel'])
-    n_bins = tuple(map(int, args['--n_bins'].split(',')))
-    det_geo = args['--det_geo']
-    do2d = args['--do2d']
-    do2d_plots = (args['--do2d_plots'], int(args['--do2d_plots_n']))
-    do3d = args['--do3d']
-    do4d = (not bool(args['--dont_do4d']), args['--do4d_mode'])
-    timecut = (args['--timecut_mode'], args['--timecut_timespan'])
-    do_mc_hits = args['--do_mc_hits']
-    data_cuts = dict()
-    data_cuts['triggered'] = args['--data_cut_triggered']
-    data_cuts['energy_lower_limit'] = float(args['--data_cut_e_low']) if args['--data_cut_e_low'] is not None else None
-    data_cuts['energy_upper_limit'] = float(args['--data_cut_e_high']) if args['--data_cut_e_high'] is not None else None
-    data_cuts['throw_away_prob'] = float(args['--data_cut_throw_away'])
-    prod_ident = int(args['--prod_ident'])
-
-    return fname, detx_filepath, output_dirpath, chunksize, complib, complevel, n_bins, det_geo, do2d,\
-           do2d_plots, do3d, do4d, prod_ident, timecut, do_mc_hits, data_cuts
+    return fname, detx_filepath, config_filepath
 
 
-def parser_check_input(args):
+def load_config(config_filepath):
     """
-    Sanity check of the user input. Only necessary for options that are not boolean.
+    Loads the config from a .toml file.
 
     Parameters
     ----------
-    args : dict
-        Docopt parser element that contains all input information.
+    config_filepath : str
+        Full filepath to a config file. An example can be found in orcasong/default_config.toml
+
+    Returns
+    -------
+    config : dict
+        Dictionary that contains all configuration options of the make_nn_images function.
+        An explanation of the config parameters can be found in orcasong/default_config.toml.
+
+    """
+    config = toml.load(config_filepath)
+    print('Loaded the config file from ' + os.path.abspath(config_filepath))
+
+    check_config(config)
+
+    return config
+
+
+def check_config(config):
+    """
+    Sanity check of the user input.
+
+    Parameters
+    ----------
+    config : dict
+        Dictionary that contains all configuration options of the make_nn_images function.
+        An explanation of the config parameters can be found in orcasong/default_config.toml.
 
     """
     #---- Checks input types ----#
 
     # Check for options with a single, non-boolean element
-    single_args = {'--det_geo': str, '--do2d_plots_n': int, '--do4d_mode': str, '--timecut_mode': str,
-                   'timecut_timespan': str,  '--data_cut_e_low ': float, '--data_cut_e_high': float,
-                   '--data_cut_throw_away': float, '--prod_ident': int}
+    number_args = {'do2d_plots_n': int,  'data_cut_e_low ': float, 'data_cut_e_high': float,
+                   'data_cut_throw_away': float, 'prod_ident': int}
 
-    for key in single_args:
-        expected_arg_type = single_args[key]
-        parsed_arg = args[key]
+    for key in number_args:
+        expected_arg_type = number_args[key]
+        parsed_arg = config[key]
 
         if parsed_arg is None: # we don't want to check args when there has been no user input
             continue
@@ -179,7 +132,7 @@ def parser_check_input(args):
 
     # Checks the n_bins tuple input
     try:
-        map(int, args['--n_bins'].split(','))
+        map(int, config['n_bins'].split(','))
     except ValueError:
         raise TypeError('The argument option n_bins only accepts integer values as an input'
                         ' (Format: --n_bins 11,13,18,60).')
@@ -189,16 +142,19 @@ def parser_check_input(args):
 
     # ---- Check other things ----#
 
-    if not os.path.isfile(args['FILENAME']):
-        raise IOError('The file -' + args['FILENAME'] + '- does not exist.')
+    if not os.path.isfile(config['SIMFILE']):
+        raise IOError('The file -' + config['SIMFILE'] + '- does not exist.')
 
-    if not os.path.isfile(args['DETXFILE']):
-        raise IOError('The file -' + args['DETXFILE'] + '- does not exist.')
+    if not os.path.isfile(config['DETXFILE']):
+        raise IOError('The file -' + config['DETXFILE'] + '- does not exist.')
 
-    if bool(args['--do2d']) == False and bool(args['--do2d_plots']) == True:
+    if all(do_nd == False for do_nd in [config['do2d'], config['do3d'],config['do4d']]):
+        raise ValueError('At least one of do2d, do3d or do4d options must be set to True.')
+
+    if config['do2d'] == False and config['do2d_plots'] == True:
         raise ValueError('The 2D pdf images cannot be created if do2d=False!')
 
-    if bool(args['--do2d_plots']) == True and int(args['--do2d_plots_n']) > 100:
+    if config['do2d_plots'] == True and int(config['do2d_plots_n']) > 100:
         warnings.warn('You declared do2d_pdf=(True, int) with int > 100. This will take more than two minutes.'
                       'Do you really want to create pdfs images for so many events?')
 
@@ -428,8 +384,7 @@ def skip_event(event_track, data_cuts):
     return continue_bool
 
 
-def data_to_images(fname, detx_filepath, output_dirpath, chunksize, complib, complevel, n_bins, det_geo, do2d, do2d_plots, do3d, do4d, prod_ident, timecut,
-                   do_mc_hits, data_cuts):
+def make_nn_images(fname, detx_filepath, config):
     """
     Main code with config parameters. Reads raw .hdf5 files and creates 2D/3D histogram projections that can be used
     for a CNN.
@@ -442,54 +397,36 @@ def data_to_images(fname, detx_filepath, output_dirpath, chunksize, complib, com
         String with the full filepath to the corresponding .detx file of the input file.
         Used for the binning and for the hits calibration if the input file is not calibrated yet
         (e.g. hits do not contain pos_x/y/z, time, ...).
-    output_dirpath : str
-        Full path to the directory, where the orcasong output should be stored.
-    chunksize : int
-        Chunksize (along axis_0) that is used for saving the OrcaSong output to a .h5 file.
-    complib : str
-        Compression library that is used for saving the OrcaSong output to a .h5 file.
-        All PyTables compression filters are available, e.g. 'zlib', 'lzf', 'blosc', ... .
-    complevel : int
-        Compression level for the compression filter that is used for saving the OrcaSong output to a .h5 file.
-    n_bins : tuple of int
-        Declares the number of bins that should be used for each dimension, e.g. (x,y,z,t).
-    det_geo : str
-        Declares what detector geometry should be used for the binning. E.g. 'Orca_115l_23m_h_9m_v'.
-    do2d : bool
-        Declares if 2D histograms, 'images', should be created.
-    do2d_plots : tuple(bool, int)
-        Declares if pdf visualizations of the 2D histograms should be created, cannot be called if do2d=False.
-        The event loop will be stopped after the integer specified in the second argument.
-    do3d : bool
-        Declares if 3D histograms should be created.
-    do4d : tuple(bool, str)
-        Tuple that declares if 4D histograms should be created [0] and if yes, what should be used as the 4th dim after xyz.
-        Currently, only 'time' and 'channel_id' are available.
-    prod_ident : int
-        Optional int identifier for the used mc production.
-        This is e.g. useful, if you use events from two different mc productions, e.g. the 1-5GeV & 3-100GeV Orca 2016 MC.
-        In this case, the events are not fully distinguishable with only the run_id and the event_id!
-        In order to keep a separation, an integer can be set in the event_track for all events, such that they stay distinguishable.
-    timecut : tuple(str, str/None)
-        Tuple that defines what timecut should be used in hits_to_histograms.py.
-        Currently available:
-        ('timeslice_relative', None): Cuts out the central 30% of the snapshot.
-        ('trigger_cluster', 'all' / 'tight-1' / 'tight-2'): Cuts based on the mean of the triggered hits.
-        (None, ...): No timecut.
-        all: [-350ns, 850ns] -> 20ns / bin (60 bins)
-        tight-1: [-250ns, 500ns] -> 12.5ns / bin , tight-2: [-150ns, 200ns] -> 5.8ns / bin
-    do_mc_hits : bool
-        Declares if hits (False, mc_hits + BG) or mc_hits (True) should be processed.
-    data_cuts : dict
-        Dictionary that contains information about any possible cuts that should be applied.
-        Supports the following cuts: 'triggered', 'energy_lower_limit', 'energy_upper_limit', 'throw_away_prob'.
+    config : dict
+        Dictionary that contains all configuration options of the make_nn_images function.
+        An explanation of the config parameters can be found in orcasong/default_config.toml.
 
     """
+    # Load all parameters from the config
+    output_dirpath = config['output_dirpath']
+    chunksize, complib, complevel = int(config['chunksize']), int(config['complib']), int(config['complevel'])
+    flush_freq = int(config['flush_freq'])
+    n_bins = tuple(map(int, config['n_bins'].split(',')))
+    timecut, do_mc_hits = config['timecut'], config['do_mc_hits']
+    det_geo = config['det_geo']
+    do2d, do2d_plots = (config['do2d'], int(config['do2d_plots']))
+    do3d = config['do3d']
+    do4d = (config['do4d'], config['do4d_mode'])
+    prod_ident = int(config['prod_ident']) if config['prod_ident'] is not 'None' else None
+    data_cuts = dict()
+    data_cuts['triggered'] = config['data_cut_triggered']
+    data_cuts['energy_lower_limit'] = float(config['data_cut_e_low']) if config['data_cut_e_low'] is not 'None' else None
+    data_cuts['energy_upper_limit'] = float(config['data_cut_e_high']) if config['data_cut_e_high'] is not 'None' else None
+    data_cuts['throw_away_prob'] =float(config['data_cut_throw_away']) if config['data_cut_e_high'] is not 'None' else 0.00
+
     make_output_dirs(output_dirpath, do2d, do3d, do4d)
 
     filename = os.path.basename(os.path.splitext(fname)[0])
     filename_output = filename.replace('.','_')
-    km.GlobalRandomState(seed=42)  # set random km3pipe (=numpy) seed
+
+    # set random km3pipe (=numpy) seed
+    km.GlobalRandomState(seed=42)
+    print('Set a Global Random State with the seed < 42 >.')
 
     geo, x_bin_edges, y_bin_edges, z_bin_edges = calculate_bin_edges(n_bins, det_geo, detx_filepath, do4d)
     pdf_2d_plots = PdfPages(output_dirpath + '/orcasong_output/4dTo2d/' + filename_output + '_plots.pdf') if do2d_plots[0] is True else None
@@ -500,8 +437,9 @@ def data_to_images(fname, detx_filepath, output_dirpath, chunksize, complib, com
 
     # Initialize OrcaSong Event Pipeline
 
-    pipe = kp.Pipeline()
+    pipe = kp.Pipeline(timeit=True)
     pipe.attach(km.common.StatusBar, every=50)
+    pipe.attach(km.common.MemoryObserver, every=50)
     pipe.attach(kp.io.hdf5.HDF5Pump, filename=fname)
     pipe.attach(km.common.Keep, keys=['EventInfo', 'Header', 'RawHeader', 'McTracks', 'Hits', 'McHits'])
     pipe.attach(EventDataExtractor,
@@ -518,18 +456,21 @@ def data_to_images(fname, detx_filepath, output_dirpath, chunksize, complib, com
     if do2d:
         for proj in ['xy', 'xz', 'yz', 'xt', 'yt', 'zt']:
             savestr = output_dirpath + '/orcasong_output/4dTo2d/' + proj + '/' + filename_output + '_' + proj + '.h5'
-            pipe.attach(kp.io.HDF5Sink, filename=savestr, blob_keys=[proj, 'event_track'], complib=complib, complevel=complevel, chunksize=chunksize)
+            pipe.attach(kp.io.HDF5Sink, filename=savestr, blob_keys=[proj, 'event_track'], complib=complib,
+                        complevel=complevel, chunksize=chunksize, flush_frequency=flush_freq)
 
 
     if do3d:
         for proj in ['xyz', 'xyt', 'xzt', 'yzt', 'rzt']:
             savestr = output_dirpath + '/orcasong_output/4dTo3d/' + proj + '/' + filename_output + '_' + proj + '.h5'
-            pipe.attach(kp.io.HDF5Sink, filename=savestr, blob_keys=[proj, 'event_track'], complib=complib, complevel=complevel, chunksize=chunksize)
+            pipe.attach(kp.io.HDF5Sink, filename=savestr, blob_keys=[proj, 'event_track'], complib=complib,
+                        complevel=complevel, chunksize=chunksize, flush_frequency=flush_freq)
 
     if do4d[0]:
         proj = 'xyzt' if not do4d[1] == 'channel_id' else 'xyzc'
         savestr = output_dirpath + '/orcasong_output/4dTo4d/' + proj + '/' + filename_output + '_' + proj + '.h5'
-        pipe.attach(kp.io.HDF5Sink, filename=savestr, blob_keys=[proj, 'event_track'], complib=complib, complevel=complevel, chunksize=chunksize)
+        pipe.attach(kp.io.HDF5Sink, filename=savestr, blob_keys=[proj, 'event_track'], complib=complib,
+                    complevel=complevel, chunksize=chunksize, flush_frequency=flush_freq)
 
     # Execute Pipeline
     pipe.drain()
@@ -537,12 +478,11 @@ def data_to_images(fname, detx_filepath, output_dirpath, chunksize, complib, com
 
 def main():
     """
-    Parses the input to the main data_to_images function.
+    Parses the input to the main make_nn_images function.
     """
-    fname, detx_filepath, output_dirpath, chunksize, complib, complevel, n_bins, det_geo, do2d, do2d_plots, do3d,\
-    do4d, prod_ident, timecut, do_mc_hits, data_cuts = parse_input()
-    data_to_images(fname, detx_filepath, output_dirpath, chunksize, complib, complevel, n_bins, det_geo, do2d,
-                   do2d_plots, do3d, do4d, prod_ident, timecut, do_mc_hits, data_cuts)
+    fname, detx_filepath, config_filepath = parse_input()
+    config = load_config(config_filepath)
+    make_nn_images(fname, detx_filepath, config)
 
 
 if __name__ == '__main__':

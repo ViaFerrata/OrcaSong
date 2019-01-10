@@ -27,8 +27,7 @@ These event 'images' are required for some Deep Learning machine learning algori
 
 As of now, only ORCA detector simulations are supported, but ARCA geometries can be easily implemented as well.
 
-The main code for generating the images is located in orcanet/data_to_images.py.
-If the simulated hdf5 files are not calibrated yet, you need to specify the directory of a .detx file in 'data_to_images.py'.
+The main code for generating the images is located in orcanet/make_nn_images.py.
 
 As of now, the documentation contains a small introduction to get started and and a complete API documentation.
 Please feel free to contact me or just open an issue on Gitlab / Github if you have any suggestions.
@@ -38,7 +37,6 @@ Please feel free to contact me or just open an issue on Gitlab / Github if you h
    :caption: Contents:
 
    getting_started
-   api
 
 
 Indices and tables

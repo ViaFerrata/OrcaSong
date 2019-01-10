@@ -46,10 +46,23 @@ extensions = [
     'sphinx.ext.mathjax',
     'sphinx.ext.viewcode',
     'sphinx.ext.autosummary',
+    'autoapi.extension',
     'numpydoc',
 ]
 
 autosummary_generate = True
+
+# Document Python Code
+autoapi_type = 'python'
+autoapi_dirs = ['../orcasong']
+autoapi_options = [
+    'members', 'undoc-members'
+    # , 'private-members', 'special-members'
+]
+autoapi_ignore = [
+    "*/tests/*", "*test_*.py", "*/doc/conf.py", "*/pydataskel*", "*/style/*"
+]
+autoapi_include_summaries = True
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']

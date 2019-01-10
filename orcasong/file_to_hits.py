@@ -148,7 +148,7 @@ def get_tracks(event_blob, file_particle_type, event_hits, prod_ident):
         if file_particle_type == 'undefined': # currently used with random_noise files
             run_id = event_blob['EventInfo'].run_id
         else:
-            raise InputError('The run_id could not be read from the EventInfo or the Header, '
+            raise ValueError('The run_id could not be read from the EventInfo or the Header, '
                              'please check the source code in get_tracks().')
 
     ## collect all event_track information, dependent on file_particle_type
