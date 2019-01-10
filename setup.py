@@ -15,7 +15,7 @@ setup(
     install_requires=requirements,
     packages=find_packages(),
     include_package_data=True,
-    entry_points={'console_scripts': ['make_nn_images=orcasong.data_to_images:main']},
+    entry_points={'console_scripts': ['make_nn_images=orcasong.make_nn_images:main']},
     setup_requires=['setuptools_scm'],
     use_scm_version={
         'write_to': 'orcasong/version.txt',

@@ -5,3 +5,7 @@ km3pipe
 docopt
 toml
 setuptools_scm
+sphinx
+sphinx-rtd-theme
+sphinx-autoapi
+twine
