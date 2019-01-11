@@ -95,17 +95,19 @@ def load_config(config_filepath):
     config = toml.load(config_filepath)
     print('Loaded the config file from ' + os.path.abspath(config_filepath))
 
-    check_config(config)
-
     return config
 
 
-def check_config(config):
+def check_user_input(fname, detx_filepath, config):
     """
     Sanity check of the user input.
 
     Parameters
     ----------
+    fname : str
+        Full filepath to the input .h5 file.
+    detx_filepath : str
+        Full filepath to the .detx geometry file that belongs to the fname.
     config : dict
         Dictionary that contains all configuration options of the make_nn_images function.
         An explanation of the config parameters can be found in orcasong/default_config.toml.
@@ -114,39 +116,38 @@ def check_config(config):
     #---- Checks input types ----#
 
     # Check for options with a single, non-boolean element
-    number_args = {'do2d_plots_n': int,  'data_cut_e_low ': float, 'data_cut_e_high': float,
+    number_args = {'do2d_plots_n': int,  'data_cut_e_low': float, 'data_cut_e_high': float,
                    'data_cut_throw_away': float, 'prod_ident': int}
 
     for key in number_args:
         expected_arg_type = number_args[key]
         parsed_arg = config[key]
 
-        if parsed_arg is None: # we don't want to check args when there has been no user input
+        if parsed_arg in [None, 'None']: # we don't want to check args when there has been no user input
             continue
 
-        try:
-            map(expected_arg_type, parsed_arg)
-        except ValueError:
-            raise TypeError('The argument option ', key, ' only accepts ', str(expected_arg_type),
-                            ' values as an input.')
+        if type(parsed_arg) != expected_arg_type:
+            try:
+                map(expected_arg_type, parsed_arg)
+            except ValueError:
+                raise TypeError('The argument option ', key, ' only accepts ', str(expected_arg_type),
+                                ' values as an input.')
 
     # Checks the n_bins tuple input
-    try:
-        map(int, config['n_bins'].split(','))
-    except ValueError:
-        raise TypeError('The argument option n_bins only accepts integer values as an input'
-                        ' (Format: --n_bins 11,13,18,60).')
-
+    for dim in config['n_bins']:
+        if type(dim) != int:
+            raise TypeError('The argument option n_bins only accepts integer values as an input!'
+                            ' Your values have the type ' + str(type(dim)))
 
     # ---- Checks input types ----#
 
     # ---- Check other things ----#
 
-    if not os.path.isfile(config['SIMFILE']):
-        raise IOError('The file -' + config['SIMFILE'] + '- does not exist.')
+    if not os.path.isfile(fname):
+        raise IOError('The file -' + fname+ '- does not exist.')
 
-    if not os.path.isfile(config['DETXFILE']):
-        raise IOError('The file -' + config['DETXFILE'] + '- does not exist.')
+    if not os.path.isfile(detx_filepath):
+        raise IOError('The file -' + detx_filepath + '- does not exist.')
 
     if all(do_nd == False for do_nd in [config['do2d'], config['do3d'],config['do4d']]):
         raise ValueError('At least one of do2d, do3d or do4d options must be set to True.')
@@ -154,7 +155,7 @@ def check_config(config):
     if config['do2d'] == False and config['do2d_plots'] == True:
         raise ValueError('The 2D pdf images cannot be created if do2d=False!')
 
-    if config['do2d_plots'] == True and int(config['do2d_plots_n']) > 100:
+    if config['do2d_plots'] == True and config['do2d_plots_n'] > 100:
         warnings.warn('You declared do2d_pdf=(True, int) with int > 100. This will take more than two minutes.'
                       'Do you really want to create pdfs images for so many events?')
 
@@ -369,14 +370,13 @@ def skip_event(event_track, data_cuts):
 
     """
     continue_bool = False
-
     if data_cuts['energy_lower_limit'] is not None:
         continue_bool = event_track.energy[0] < data_cuts['energy_lower_limit'] # True if E < lower limit
 
     if data_cuts['energy_upper_limit'] is not None and continue_bool == False:
         continue_bool = event_track.energy[0] > data_cuts['energy_upper_limit'] # True if E > upper limit
 
-    if data_cuts['throw_away_prob'] > 0 and continue_bool == False:
+    if data_cuts['throw_away_prob'] is not None and continue_bool == False:
         throw_away_prob = data_cuts['throw_away_prob']
         throw_away = np.random.choice([False, True], p=[1 - throw_away_prob, throw_away_prob])
         if throw_away: continue_bool = True
@@ -404,20 +404,22 @@ def make_nn_images(fname, detx_filepath, config):
     """
     # Load all parameters from the config
     output_dirpath = config['output_dirpath']
-    chunksize, complib, complevel = int(config['chunksize']), int(config['complib']), int(config['complevel'])
-    flush_freq = int(config['flush_freq'])
-    n_bins = tuple(map(int, config['n_bins'].split(',')))
-    timecut, do_mc_hits = config['timecut'], config['do_mc_hits']
+    chunksize, complib, complevel = config['chunksize'], config['complib'], config['complevel']
+    flush_freq = config['flush_freq']
+    n_bins = tuple(config['n_bins'])
+    timecut = (config['timecut_mode'], config['timecut_timespan'])
+    do_mc_hits = config['do_mc_hits']
     det_geo = config['det_geo']
-    do2d, do2d_plots = (config['do2d'], int(config['do2d_plots']))
+    do2d = config['do2d']
+    do2d_plots = (config['do2d_plots'], config['do2d_plots_n'])
     do3d = config['do3d']
     do4d = (config['do4d'], config['do4d_mode'])
-    prod_ident = int(config['prod_ident']) if config['prod_ident'] is not 'None' else None
+    prod_ident = config['prod_ident'] if config['prod_ident'] != 'None' else None
     data_cuts = dict()
     data_cuts['triggered'] = config['data_cut_triggered']
-    data_cuts['energy_lower_limit'] = float(config['data_cut_e_low']) if config['data_cut_e_low'] is not 'None' else None
-    data_cuts['energy_upper_limit'] = float(config['data_cut_e_high']) if config['data_cut_e_high'] is not 'None' else None
-    data_cuts['throw_away_prob'] =float(config['data_cut_throw_away']) if config['data_cut_e_high'] is not 'None' else 0.00
+    data_cuts['energy_lower_limit'] = config['data_cut_e_low'] if config['data_cut_e_low'] != 'None' else None
+    data_cuts['energy_upper_limit'] = config['data_cut_e_high'] if config['data_cut_e_high'] != 'None' else None
+    data_cuts['throw_away_prob'] = config['data_cut_throw_away'] if config['data_cut_throw_away'] != 'None' else None
 
     make_output_dirs(output_dirpath, do2d, do3d, do4d)
 
@@ -482,6 +484,7 @@ def main():
     """
     fname, detx_filepath, config_filepath = parse_input()
     config = load_config(config_filepath)
+    check_user_input(fname, detx_filepath, config)
     make_nn_images(fname, detx_filepath, config)
 
 

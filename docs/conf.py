@@ -60,7 +60,7 @@ autoapi_options = [
     # , 'private-members', 'special-members'
 ]
 autoapi_ignore = [
-    "*/tests/*", "*test_*.py", "*/doc/conf.py", "*/pydataskel*", "*/style/*"
+    "*/tests/*", "*test_*.py", "*/docs/conf.py", "*/pydataskel*", "*/style/*"
 ]
 autoapi_include_summaries = True
 
