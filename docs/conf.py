@@ -14,21 +14,24 @@
 #
 import os
 import sys
+from datetime import date
+from pkg_resources import get_distribution
 sys.path.insert(0, os.path.abspath('../..'))
-#sys.path.insert(0, os.path.abspath('.'))
+sys.path.insert(0, os.path.abspath('.'))
 import orcasong
 
 
 # -- Project information -----------------------------------------------------
 
 project = 'OrcaSong'
-copyright = '2018, Michael Moser'
+copyright = u'{0}, Michael Moser'.format(date.today().year)
 author = 'Michael Moser'
 
-# The short X.Y version
-version = ''
 # The full version, including alpha/beta/rc tags
-release = ''
+release = get_distribution('orcasong').version
+# The short X.Y version
+version = '.'.join(release.split('.')[:2])
+
 
 
 # -- General configuration ---------------------------------------------------
