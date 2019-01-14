@@ -8,7 +8,7 @@
 
 ## XYZ-C
 
-output_dirpath = '/home/woody/capn/mppi033h/test3'
+output_dirpath = '/home/woody/capn/mppi033h'
 chunksize = 32
 complib = 'zlib'
 complevel = 1
