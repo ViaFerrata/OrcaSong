@@ -24,7 +24,7 @@ python_env_folder=/home/hpc/capn/mppi033h/.virtualenv/python_3_env/
 job_logs_folder=/home/woody/capn/mppi033h/logs/orcasong/cout
 
 detx_filepath=/home/woody/capn/mppi033h/Code/OrcaSong/user/detx_files/orca_115strings_av23min20mhorizontal_18OMs_alt9mvertical_v1.detx
-config_file=/home/woody/capn/mppi033h/Code/OrcaSong/user/config/orca_115l_mupage_rn_neutr_classifier/conf_ORCA_115l_mupage_xyz-t.toml
+config_file=/home/woody/capn/mppi033h/Code/OrcaSong/user/config/orca_115l_mupage_rn_neutr_classifier/conf_ORCA_115l_mupage_xyz-c.toml
 
 particle_type=mupage
 mc_prod=mupage
@@ -36,7 +36,7 @@ mc_prod=mupage
 # muon-CC/elec-CC/elec-NC n=120 with PBS -l nodes=1:ppn=4:sl,walltime=5:00:00
 # For mupage: n=250 with PBS -l nodes=1:ppn=4:sl,walltime=5:00:00
 # For random_noise: n=100 with PBS -l nodes=1:ppn=4:sl,walltime=5:00:00
-files_per_job=250 # must be dividible by 4!
+files_per_job=200 # must be dividible by 4!
 
 #--- USER INPUT ---#
 
