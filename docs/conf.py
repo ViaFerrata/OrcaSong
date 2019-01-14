@@ -16,9 +16,9 @@ import os
 import sys
 from datetime import date
 from pkg_resources import get_distribution
-sys.path.insert(0, os.path.abspath('../..'))
-sys.path.insert(0, os.path.abspath('.'))
+
 import orcasong
+#sys.path.insert(0, os.path.abspath('.'))
 
 
 # -- Project information -----------------------------------------------------

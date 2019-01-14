@@ -314,7 +314,7 @@ def get_file_particle_type(fname):
         String that specifies the type of particles that are contained in the file: ['undefined', 'muon', 'neutrino'].
 
     """
-    event_pump = kp.io.hdf5.HDF5Pump(filename=fname) # TODO suppress print of hdf5pump and close pump afterwards
+    event_pump = kp.io.hdf5.HDF5Pump(filename=fname, verbose=False) # TODO suppress print of hdf5pump
 
     if 'McTracks' not in event_pump[0]:
         file_particle_type = 'undefined'
@@ -427,8 +427,8 @@ def make_nn_images(fname, detx_filepath, config):
     filename_output = filename.replace('.','_')
 
     # set random km3pipe (=numpy) seed
+    print('Setting a Global Random State with the seed < 42 >.')
     km.GlobalRandomState(seed=42)
-    print('Set a Global Random State with the seed < 42 >.')
 
     geo, x_bin_edges, y_bin_edges, z_bin_edges = calculate_bin_edges(n_bins, det_geo, detx_filepath, do4d)
     pdf_2d_plots = PdfPages(output_dirpath + '/orcasong_output/4dTo2d/' + filename_output + '_plots.pdf') if do2d_plots[0] is True else None
@@ -439,9 +439,9 @@ def make_nn_images(fname, detx_filepath, config):
 
     # Initialize OrcaSong Event Pipeline
 
-    pipe = kp.Pipeline(timeit=True)
-    pipe.attach(km.common.StatusBar, every=50)
-    pipe.attach(km.common.MemoryObserver, every=50)
+    pipe = kp.Pipeline() # add timeit=True argument for profiling
+    pipe.attach(km.common.StatusBar, every=200)
+    pipe.attach(km.common.MemoryObserver, every=400)
     pipe.attach(kp.io.hdf5.HDF5Pump, filename=fname)
     pipe.attach(km.common.Keep, keys=['EventInfo', 'Header', 'RawHeader', 'McTracks', 'Hits', 'McHits'])
     pipe.attach(EventDataExtractor,
