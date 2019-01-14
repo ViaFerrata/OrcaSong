@@ -9,3 +9,4 @@ sphinx
 sphinx-rtd-theme
 sphinx-autoapi
 twine
+numpydoc
