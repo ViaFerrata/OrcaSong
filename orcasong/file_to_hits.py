@@ -89,8 +89,7 @@ def get_hits(event_blob, geo, do_mc_hits, data_cuts, do4d):
         hits = geo.apply(hits)
 
     if data_cuts['triggered'] is True:
-        hits = hits.__array__[hits.triggered.astype(bool)]
-        #hits = hits.triggered_hits # alternative, though it only works for the triggered condition!
+        hits = hits.triggered_hits # alternative, though it only works for the triggered condition!
 
     pos_x, pos_y, pos_z = hits.pos_x, hits.pos_y, hits.pos_z
     hits_time = hits.time
