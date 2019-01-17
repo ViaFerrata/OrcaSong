@@ -20,7 +20,7 @@
 #        Compression level for the compression filter that is used for saving the OrcaSong output to a .h5 file.
 #    n_bins : tuple of int
 #        Declares the number of bins that should be used for each dimension, e.g. (x,y,z,t).
-#        The option should be written as string, e.g. '11,13,18,60'.
+#        The option should be written as a list of ints, e.g. [11,13,18,60].
 #    det_geo : str
 #        Declares what detector geometry should be used for the binning. E.g. 'Orca_115l_23m_h_9m_v'.
 #    do2d : bool
@@ -78,7 +78,7 @@ output_dirpath = './'
 chunksize = 32
 complib = 'zlib'
 complevel = 1
-n_bins = '11,13,18,60'
+n_bins = [11,13,18,60]
 det_geo = 'Orca_115l_23m_h_9m_v'
 do2d = false
 do2d_plots = false
