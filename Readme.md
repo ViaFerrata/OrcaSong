@@ -2,7 +2,7 @@
 
 [![alt text][image_1]][hyperlink_1] [![alt text][image_2]][hyperlink_2]
 
-  [hyperlink_1]: https://git.km3net.de/OrcaSong/pipelines
+  [hyperlink_1]: https://git.km3net.de/ml/OrcaSong/pipelines
   [image_1]: https://git.km3net.de/ml/OrcaSong/badges/master/build.svg
 
   [hyperlink_2]: https://ml.pages.km3net.de/OrcaSong
