@@ -24,10 +24,10 @@ python_env_folder=/home/hpc/capn/mppi033h/.virtualenv/python_3_env/
 job_logs_folder=/home/woody/capn/mppi033h/logs/orcasong/cout
 
 detx_filepath=/home/woody/capn/mppi033h/Code/OrcaSong/user/detx_files/orca_115strings_av23min20mhorizontal_18OMs_alt9mvertical_v1.detx
-config_file=/home/woody/capn/mppi033h/Code/OrcaSong/user/config/orca_115l_mupage_rn_neutr_classifier/conf_ORCA_115l_mupage_xyz-c.toml
+config_file=/home/woody/capn/mppi033h/Code/OrcaSong/user/config/orca_115l_mupage_rn_neutr_classifier/conf_ORCA_115l_random_noise_xyz-t.toml
 
-particle_type=mupage
-mc_prod=mupage
+particle_type=random_noise
+mc_prod=random_noise
 
 # total number of files per job
 # For neutrinos 3-100GeV:
@@ -36,7 +36,7 @@ mc_prod=mupage
 # muon-CC/elec-CC/elec-NC n=120 with PBS -l nodes=1:ppn=4:sl,walltime=5:00:00
 # For mupage: n=250 with PBS -l nodes=1:ppn=4:sl,walltime=5:00:00
 # For random_noise: n=100 with PBS -l nodes=1:ppn=4:sl,walltime=5:00:00
-files_per_job=200 # must be dividible by 4!
+files_per_job=100 # must be dividible by 4!
 
 #--- USER INPUT ---#
 
@@ -75,7 +75,7 @@ folder="${folder_ip_files_arr[${mc_prod}]}"
 # run
 
 no_of_loops=$((${files_per_job}/4)) # divide by 4 cores -> e.g, 15 4-core loops needed for files_per_job=60
-file_no_start=$((1+((${n}-1) * ${files_per_job}))) # filenumber of the first file that is being processed by this script (depends on JobArray variable 'n')
+file_no_start=$((500+1+((${n}-1) * ${files_per_job}))) # filenumber of the first file that is being processed by this script (depends on JobArray variable 'n')
 
 # currently only working for 4 cores
 

@@ -477,6 +477,9 @@ def make_nn_images(fname, detx_filepath, config):
     # Execute Pipeline
     pipe.drain()
 
+    if do2d_plots[0] is True:
+        pdf_2d_plots.close()
+
 
 def main():
     """
