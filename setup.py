@@ -21,7 +21,6 @@ setup(
         'Intended Audience :: Science/Research',
         'Programming Language :: Python', ],
 
-
     setup_requires=['setuptools_scm'],
     use_scm_version={'write_to': 'orcasong/version.txt',
                      'tag_regex': r'^(?P<prefix>v)?(?P<version>[^\+]+)(?P<suffix>.*)?$', },
