@@ -344,9 +344,9 @@ def make_concatenate_and_shuffle_list_files(cfg):
                     + ' ' + conc_outputfile_fpath)
 
 
-def make_data_split():
+def main():
     """
-    Main function.
+    Main function to make the data split.
     """
 
     cfg = parse_input()
@@ -379,4 +379,4 @@ def make_data_split():
 
 
 if __name__ == '__main__':
-    make_data_split()
+    main()

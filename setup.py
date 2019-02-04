@@ -15,7 +15,10 @@ setup(
     install_requires=requirements,
     packages=find_packages(),
     include_package_data=True,
-    entry_points={'console_scripts': ['make_nn_images=orcasong.make_nn_images:main']},
+    entry_points={'console_scripts': ['make_nn_images=orcasong.make_nn_images:main',
+                                      'shuffle=orcasong_contrib.data_tools.shuffle.shuffle_h5:main',
+                                      'concatenate=orcasong_contrib.data_tools.concatenate.concatenate_h5:main',
+                                      'make_dsplit=orcasong_contrib.data_tools.make_data_split.make_data_split:main']},
     setup_requires=['setuptools_scm'],
     use_scm_version={
         'write_to': 'orcasong/version.txt',

@@ -271,7 +271,7 @@ def shuffle_h5(filepath_input, tool=False, seed=42, delete=True, chunksize=None,
         return output_file_shuffled
 
 
-def shuffle_h5_tool():
+def main():
     """
     Frontend for the shuffle_h5 function that can be used in a bash environment.
 
@@ -297,4 +297,4 @@ def shuffle_h5_tool():
 
 
 if __name__ == '__main__':
-    shuffle_h5_tool()
+    main()
