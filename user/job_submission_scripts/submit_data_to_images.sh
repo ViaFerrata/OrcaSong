@@ -19,6 +19,7 @@
 
 #--- USER INPUT ---#
 
+#TODO fix writing to logs folder
 # load env, only working for conda env as of now
 python_env_folder=/home/hpc/capn/mppi033h/.virtualenv/python_3_env/
 job_logs_folder=/home/woody/capn/mppi033h/logs/orcasong/cout
@@ -87,9 +88,9 @@ do
     thread3=$((${file_no_loop_start} + 2))
     thread4=$((${file_no_loop_start} + 3))
 
-    (time taskset -c 0  make_nn_images ${folder}/${filename}.${thread1}.h5 ${detx_filepath} ${config_file} > ${job_logs_folder}/${filename}.${thread1}.txt) &
-    (time taskset -c 1  make_nn_images ${folder}/${filename}.${thread2}.h5 ${detx_filepath} ${config_file} > ${job_logs_folder}/${filename}.${thread2}.txt) &
-    (time taskset -c 2  make_nn_images ${folder}/${filename}.${thread3}.h5 ${detx_filepath} ${config_file} > ${job_logs_folder}/${filename}.${thread3}.txt) &
-    (time taskset -c 3  make_nn_images ${folder}/${filename}.${thread4}.h5 ${detx_filepath} ${config_file} > ${job_logs_folder}/${filename}.${thread4}.txt) &
+    (time taskset -c 0  make_nn_images ${folder}/${filename}.${thread1}.h5 ${detx_filepath} ${config_file} > ${job_logs_folder}/${filename}.${thread1}.${PBS_JOBID}.txt) &
+    (time taskset -c 1  make_nn_images ${folder}/${filename}.${thread2}.h5 ${detx_filepath} ${config_file} > ${job_logs_folder}/${filename}.${thread2}.${PBS_JOBID}.txt) &
+    (time taskset -c 2  make_nn_images ${folder}/${filename}.${thread3}.h5 ${detx_filepath} ${config_file} > ${job_logs_folder}/${filename}.${thread3}.${PBS_JOBID}.txt) &
+    (time taskset -c 3  make_nn_images ${folder}/${filename}.${thread4}.h5 ${detx_filepath} ${config_file} > ${job_logs_folder}/${filename}.${thread4}.${PBS_JOBID}.txt) &
     wait
 done
