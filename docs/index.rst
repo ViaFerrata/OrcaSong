@@ -37,7 +37,7 @@ Please feel free to contact me or just open an issue on Gitlab / Github if you h
    :caption: Contents:
 
    getting_started
-   contributing_link
+   CONTRIBUTING
    Source (Git) <https://git.km3net.de/ml/OrcaSong.git>
 
 Indices and tables
