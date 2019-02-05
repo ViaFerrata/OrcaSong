@@ -23,7 +23,7 @@ Please follow the instructions in the templates to provide all the
 necessary information which will help other people to understand the
 situation.
 
-Make a Fork of OrcaNet
+Make a Fork of OrcaSong
 ----------------------
 
 You create a fork (your full own copy of the
