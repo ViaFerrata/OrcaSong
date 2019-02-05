@@ -23,7 +23,7 @@ import orcasong
 
 # -- Project information -----------------------------------------------------
 
-project = 'OrcaSong'
+project = "OrcaSong {}".format(orcasong.__version__)
 copyright = u'{0}, Michael Moser'.format(date.today().year)
 author = 'Michael Moser'
 
