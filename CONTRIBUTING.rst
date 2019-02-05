@@ -1,3 +1,7 @@
+Contributing
+============
+.. contents:: :local:
+
 Contact Us
 ----------
 Join the Deep Learning channel here: https://chat.km3net.de/channel/deep_learning
@@ -20,7 +24,7 @@ necessary information which will help other people to understand the
 situation.
 
 Make a Fork of OrcaNet
-~~~~~~~~~~~~~~~~~~~~~~
+----------------------
 
 You create a fork (your full own copy of the
 repository), change the code and when you are happy with the changes, you create
