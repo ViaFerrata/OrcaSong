@@ -14,21 +14,21 @@
 #            elec-NC = 1200 files, number of jobs needed = 10 with files_per_job=120
 #            tau-CC = 1800 files (half the n_evts of other interaction channels), number of jobs needed = 15 with files_per_job=120 and half walltime
 # mupage: 20000 files, with files_per_job=200, 100 jobs needed with 5h walltime.
-# random_noise: 500 files, with files_per_job=100 , 5 jobs needed with 5h walltime.
+# random_noise: 1500 files, with files_per_job=100 , 15 jobs needed with 5h walltime.
 
 
 #--- USER INPUT ---#
 
-#TODO fix writing to logs folder
+# TODO fix writing to logs folder
 # load env, only working for conda env as of now
 python_env_folder=/home/hpc/capn/mppi033h/.virtualenv/python_3_env/
 job_logs_folder=/home/woody/capn/mppi033h/logs/orcasong/cout
 
-detx_filepath=/home/woody/capn/mppi033h/Code/OrcaSong/user/detx_files/orca_115strings_av23min20mhorizontal_18OMs_alt9mvertical_v1.detx
-config_file=/home/woody/capn/mppi033h/Code/OrcaSong/user/config/orca_115l_mupage_rn_neutr_classifier/conf_ORCA_115l_random_noise_xyz-t.toml
+detx_filepath=/home/woody/capn/mppi033h/Code/OrcaSong/orcasong_contrib/detx_files/orca_115strings_av23min20mhorizontal_18OMs_alt9mvertical_v1.detx
+config_file=/home/woody/capn/mppi033h/Code/OrcaSong/user/config/orca_115l_regression/conf_ORCA_115l_3-100GeV_xyz-c.toml
 
-particle_type=random_noise
-mc_prod=random_noise
+particle_type=muon-CC
+mc_prod=neutr_3-100GeV
 
 # total number of files per job
 # For neutrinos 3-100GeV:
@@ -37,7 +37,7 @@ mc_prod=random_noise
 # muon-CC/elec-CC/elec-NC n=120 with PBS -l nodes=1:ppn=4:sl,walltime=5:00:00
 # For mupage: n=250 with PBS -l nodes=1:ppn=4:sl,walltime=5:00:00
 # For random_noise: n=100 with PBS -l nodes=1:ppn=4:sl,walltime=5:00:00
-files_per_job=100 # must be dividible by 4!
+files_per_job=120 # must be dividible by 4!
 
 #--- USER INPUT ---#
 
@@ -76,7 +76,7 @@ folder="${folder_ip_files_arr[${mc_prod}]}"
 # run
 
 no_of_loops=$((${files_per_job}/4)) # divide by 4 cores -> e.g, 15 4-core loops needed for files_per_job=60
-file_no_start=$((500+1+((${n}-1) * ${files_per_job}))) # filenumber of the first file that is being processed by this script (depends on JobArray variable 'n')
+file_no_start=$((1+((${n}-1) * ${files_per_job}))) # filenumber of the first file that is being processed by this script (depends on JobArray variable 'n')
 
 # currently only working for 4 cores
 
