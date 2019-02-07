@@ -63,7 +63,7 @@
 n_files_train = 10
 n_files_validate = 5
 n_files_rest = 1
-output_file_folder = "/home/saturn/capn/mppi033h/Data/input_images/ORCA_2016_115l/data_splits/xyzt"
+output_file_folder = "/home/saturn/capn/mppi033h/Data/input_images/ORCA_2016_115l/tight_1_60b_regression_classifier/data_splits/xyzt"
 output_file_name = "xyzt_tight_1_60b_regression_dataset"
 print_only = false # only print information of your input_groups, don't make any .list files
 
