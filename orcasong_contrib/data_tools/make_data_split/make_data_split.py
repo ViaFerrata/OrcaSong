@@ -303,7 +303,7 @@ def make_concatenate_and_shuffle_list_files(cfg):
             f.write('# Concatenate the files in the list\n')
 
             f.write(
-                    'time python concatenate_h5.py'
+                    'time python concatenate/concatenate_h5.py'
                     + ' --chunksize ' + str(cfg['chunksize'])
                     + ' --complib ' + str(cfg['complib'])
                     + ' --complevel ' + str(cfg['complevel'])
@@ -336,7 +336,7 @@ def make_concatenate_and_shuffle_list_files(cfg):
             f.write('# Shuffle the h5 file \n')
 
             f.write(
-                    'time python shuffle_h5.py'
+                    'time python shuffle/shuffle_h5.py'
                     + delete_flag_shuffle_tool
                     + ' --chunksize ' + str(cfg['chunksize'])
                     + ' --complib ' + str(cfg['complib'])
