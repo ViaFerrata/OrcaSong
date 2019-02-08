@@ -313,7 +313,7 @@ def make_concatenate_and_shuffle_list_files(cfg):
             os.system('qsub -l nodes=1:ppn=4,walltime=23:59:00 ' + fpath_bash_script)
 
     # make qsub .sh file for shuffling
-    delete_flag_shuffle_tool = '--delete' if cfg['shuffle_delete'] is True else ''
+    delete_flag_shuffle_tool = ' --delete' if cfg['shuffle_delete'] is True else ''
     for listfile_fpath in cfg['output_lists']:
         listfile_fname = os.path.basename(listfile_fpath)
         listfile_fname_wout_ext = os.path.splitext(listfile_fname)[0]
