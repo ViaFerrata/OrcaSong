@@ -79,7 +79,7 @@ data_tools_folder = "/home/woody/capn/mppi033h/Code/OrcaSong/orcasong_contrib/da
 chunksize = 32
 complib = "gzip"
 complevel = 1
-shuffle_delete = false
+shuffle_delete = true
 
 # --- Options, for submitting jobs to concatenate the .list files. --- #
 
@@ -87,43 +87,43 @@ shuffle_delete = false
 
 
 [muon_cc_3_100] # 1 to 2400
-dir = "/home/saturn/capn/mppi033h/Data/input_images/ORCA_2016_115l/tight_0_100b_t_bg_classifier/muon-CC/3-100GeV/xyzt"
+dir = "/home/saturn/capn/mppi033h/Data/input_images/ORCA_2016_115l/tight_1_60b_regression_classifier/muon-CC/3-100GeV/xyzt"
 run_ids_train = [721, 2400]
 run_ids_validate = [1, 720]
 
 
 [muon_cc_1_5] # 1 to 600
-dir = "/home/saturn/capn/mppi033h/Data/input_images/ORCA_2016_115l/tight_0_100b_t_bg_classifier/muon-CC/1-5GeV/xyzt"
+dir = "/home/saturn/capn/mppi033h/Data/input_images/ORCA_2016_115l/tight_1_60b_regression_classifier/muon-CC/1-5GeV/xyzt"
 run_ids_train = [181, 600]
 run_ids_validate = [1, 180]
 
 
 [elec_cc_3_100] # 1 to 2400
-dir = "/home/saturn/capn/mppi033h/Data/input_images/ORCA_2016_115l/tight_0_100b_t_bg_classifier/elec-CC/3-100GeV/xyzt"
+dir = "/home/saturn/capn/mppi033h/Data/input_images/ORCA_2016_115l/tight_1_60b_regression_classifier/elec-CC/3-100GeV/xyzt"
 run_ids_train = [361, 1200]
 run_ids_validate = [1, 360]
 
 
 [elec_cc_1_5] # 1 to 600
-dir = "/home/saturn/capn/mppi033h/Data/input_images/ORCA_2016_115l/tight_0_100b_t_bg_classifier/elec-CC/1-5GeV/xyzt"
+dir = "/home/saturn/capn/mppi033h/Data/input_images/ORCA_2016_115l/tight_1_60b_regression_classifier/elec-CC/1-5GeV/xyzt"
 run_ids_train = [181, 600]
 run_ids_validate = [1, 180]
 
 
 [elec_nc_3_100] # 1 to 2400
-dir = "/home/saturn/capn/mppi033h/Data/input_images/ORCA_2016_115l/tight_0_100b_t_bg_classifier/elec-NC/3-100GeV/xyzt"
+dir = "/home/saturn/capn/mppi033h/Data/input_images/ORCA_2016_115l/tight_1_60b_regression_classifier/elec-NC/3-100GeV/xyzt"
 run_ids_train = [361, 1200]
 run_ids_validate = [1, 360]
 
 
 [elec_nc_1_5] # 1 to 600
-dir = "/home/saturn/capn/mppi033h/Data/input_images/ORCA_2016_115l/tight_0_100b_t_bg_classifier/elec-NC/1-5GeV/xyzt"
+dir = "/home/saturn/capn/mppi033h/Data/input_images/ORCA_2016_115l/tight_1_60b_regression_classifier/elec-NC/1-5GeV/xyzt"
 run_ids_train = [181, 600]
 run_ids_validate = [1, 180]
 
 
 [tau_cc_3_100] # 1 to 1800
-dir = "/home/saturn/capn/mppi033h/Data/input_images/ORCA_2016_115l/tight_0_100b_t_bg_classifier/tau-CC/3-100GeV/xyzt"
+dir = "/home/saturn/capn/mppi033h/Data/input_images/ORCA_2016_115l/tight_1_60b_regression_classifier/tau-CC/3-100GeV/xyzt"
 run_ids_rest = [1, 1800]
 
 # --- Input groups : these are the datafiles, that should be concatenated somehow --- #

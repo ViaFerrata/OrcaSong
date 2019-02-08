@@ -288,13 +288,13 @@ def make_concatenate_and_shuffle_list_files(cfg):
         listfile_fname_wout_ext = os.path.splitext(listfile_fname)[0]
         conc_outputfile_fpath = cfg['output_file_folder'] + '/data_split/' + listfile_fname_wout_ext + '.h5'
 
-        fpath_bash_script = dirpath + '/job_scripts/submit_concatenate_h5_' + listfile_fname_wout_ext + '.sh'
+        fpath_bash_script = dirpath + '/job_scripts/concatenate_h5_' + listfile_fname_wout_ext + '.sh'
 
         with open(fpath_bash_script, 'w') as f:
             f.write('#!/usr/bin/env bash\n')
             f.write('#\n')
-            f.write('#PBS -o ' + cfg['output_file_folder'] + '/logs/submit_concatenate_h5_' + listfile_fname_wout_ext + '.out'
-                    ' -e ' + cfg['output_file_folder'] + '/logs/submit_concatenate_h5_' + listfile_fname_wout_ext + '.err\n')
+            f.write('#PBS -o ' + cfg['output_file_folder'] + '/logs/concatenate_h5_' + listfile_fname_wout_ext + '.out'
+                    ' -e ' + cfg['output_file_folder'] + '/logs/concatenate_h5_' + listfile_fname_wout_ext + '.err\n')
             f.write('\n')
             f.write('CodeFolder="' + cfg['data_tools_folder'] + '"\n')
             f.write('cd ${CodeFolder}\n')
@@ -321,13 +321,13 @@ def make_concatenate_and_shuffle_list_files(cfg):
         # This is the input for the shuffle tool!
         conc_outputfile_fpath = cfg['output_file_folder'] + '/data_split/' + listfile_fname_wout_ext + '.h5'
 
-        fpath_bash_script = dirpath + '/job_scripts/submit_shuffle_h5_' + listfile_fname_wout_ext + '.sh'
+        fpath_bash_script = dirpath + '/job_scripts/shuffle_h5_' + listfile_fname_wout_ext + '.sh'
 
         with open(fpath_bash_script, 'w') as f:
             f.write('#!/usr/bin/env bash\n')
             f.write('#\n')
-            f.write('#PBS -o ' + cfg['output_file_folder'] + '/logs/submit_shuffle_h5_' + listfile_fname_wout_ext + '.out'
-                    ' -e ' + cfg['output_file_folder'] + '/logs/submit_shuffle_h5_' + listfile_fname_wout_ext + '.err\n')
+            f.write('#PBS -o ' + cfg['output_file_folder'] + '/logs/shuffle_h5_' + listfile_fname_wout_ext + '.out'
+                    ' -e ' + cfg['output_file_folder'] + '/logs/shuffle_h5_' + listfile_fname_wout_ext + '.err\n')
             f.write('\n')
             f.write('CodeFolder="' + cfg['data_tools_folder'] + '"\n')
             f.write('cd ${CodeFolder}\n')
