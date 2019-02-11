@@ -39,6 +39,9 @@ def parse_input():
     cfg = toml.load(config_file)
     cfg['toml_filename'] = config_file
 
+    if 'chunksize' not in cfg: cfg['chunksize'] = None
+    if 'complib' not in cfg: cfg['complib'] = None
+    if 'complevel' not in cfg: cfg['complevel'] = None
     return cfg
 
 
@@ -282,6 +285,10 @@ def make_concatenate_and_shuffle_list_files(cfg):
     if not os.path.exists(dirpath + '/data_split'):  # check if /data_split folder exists, if not create it.
         os.makedirs(dirpath + '/data_split')
 
+    chunksize = '' if cfg['chunksize'] is None else ' --chunksize ' + str(cfg['chunksize'])
+    complib = '' if cfg['complib'] is None else ' --complib ' + str(cfg['complib'])
+    complevel = '' if cfg['complevel'] is None else ' --complevel ' + str(cfg['complevel'])
+
     # make qsub .sh file for concatenating
     for listfile_fpath in cfg['output_lists']:
         listfile_fname = os.path.basename(listfile_fpath)
@@ -303,10 +310,9 @@ def make_concatenate_and_shuffle_list_files(cfg):
             f.write('# Concatenate the files in the list\n')
 
             f.write(
-                    'time python concatenate/concatenate_h5.py'
-                    + ' --chunksize ' + str(cfg['chunksize'])
-                    + ' --complib ' + str(cfg['complib'])
-                    + ' --complevel ' + str(cfg['complevel'])
+                    'python concatenate_h5.py'              #Nikhef
+#                    'time python concatenate_h5.py'
+                    + chunksize + complib + complevel
                     + ' -l ' + listfile_fpath + ' ' + conc_outputfile_fpath)
 
         if cfg['submit_jobs'] is True:
@@ -336,11 +342,10 @@ def make_concatenate_and_shuffle_list_files(cfg):
             f.write('# Shuffle the h5 file \n')
 
             f.write(
-                    'time python shuffle/shuffle_h5.py'
+                    'python shuffle_h5.py'                  #Nikhef
+#                    'time python shuffle_h5.py'
                     + delete_flag_shuffle_tool
-                    + ' --chunksize ' + str(cfg['chunksize'])
-                    + ' --complib ' + str(cfg['complib'])
-                    + ' --complevel ' + str(cfg['complevel'])
+                    + chunksize + complib + complevel
                     + ' ' + conc_outputfile_fpath)
 
 
