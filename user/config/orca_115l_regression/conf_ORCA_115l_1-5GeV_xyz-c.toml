@@ -6,8 +6,6 @@
 
 ###--- 1-5GeV ---###
 
-### only take < 3GeV events, info throw away: elec-CC 0.25, muon-CC 0.25, elec-NC: 0.00
-
 ## XYZ-C
 
 output_dirpath = '/home/woody/capn/mppi033h'

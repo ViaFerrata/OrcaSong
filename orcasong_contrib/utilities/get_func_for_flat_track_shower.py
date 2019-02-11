@@ -163,7 +163,12 @@ def plot_e_and_make_flat_func(energies_for_ic):
     pdfpages = PdfPages('./e_hist_plots.pdf')
     fig, ax = plt.subplots()
 
-    e_bins = 199
+    e_bins_1_to_2 = np.linspace(1, 2, 3)
+    e_bins_2_to_25 = np.linspace(2.25, 25, 92)
+    e_bins_25_to_60 = np.linspace(25.5, 60, 70)
+    e_bins_60_to_100 = np.linspace(61, 100, 40)
+
+    e_bins = np.concatenate([e_bins_1_to_2, e_bins_2_to_25, e_bins_25_to_60, e_bins_60_to_100], axis=0)
 
     # plot
     hist_muon_cc = plt.hist(energies_for_ic['muon_cc'], bins=e_bins)
@@ -187,18 +192,33 @@ def plot_e_and_make_flat_func(energies_for_ic):
     # hist_shower[0][1] = hist_shower[0][1] / 2 # 2-3GeV
 
     track_div_shower = np.divide(hist_muon_cc[0], hist_shower[0])
-    print(hist_muon_cc[0])
-    print(hist_shower[0])
+    # print(hist_muon_cc[0])
+    # print(hist_shower[0])
 
     bins=hist_muon_cc[1] # doesnt matter which bins to use
-    track_div_shower = np.append(track_div_shower, track_div_shower[-1])
-    print(bins)
-    print(track_div_shower)
-    ax.step(bins, track_div_shower, linestyle='-', where='post')
+    track_div_shower_mpl = np.append(track_div_shower, track_div_shower[-1])
+
+    ax.step(bins, track_div_shower_mpl, linestyle='-', where='post')
     plt.title('Ratio tracks divided by showers')
     make_plot_options_and_save(ax, pdfpages, ylabel='Fraction')
 
     pdfpages.close()
+
+    # save e_bins and corresponding fractions
+
+    # make e_bins with mean center
+    e_bins = []
+    for i in range(bins.shape[0] - 1):
+        e_mean = (bins[i] + bins[i+1]) / 2
+        e_bins.append(e_mean)
+
+    e_bins = np.array(e_bins)
+
+
+    arr_fract_for_e_bins = np.vstack((e_bins, track_div_shower))
+    print(arr_fract_for_e_bins)
+
+    np.save('./arr_fract_for_e_bins.npy', arr_fract_for_e_bins)
 
 
 def main():

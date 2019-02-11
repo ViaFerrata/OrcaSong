@@ -41,14 +41,38 @@ import sys
 import km3pipe as kp
 import km3modules as km
 import matplotlib as mpl
+from docopt import docopt
 mpl.use('Agg')
 from matplotlib.backends.backend_pdf import PdfPages
 
 from orcasong.file_to_hits import EventDataExtractor
 from orcasong.hits_to_histograms import HistogramMaker
-from orcasong.io import parse_input, load_config, check_user_input, make_output_dirs
+from orcasong.io import load_config, check_user_input, make_output_dirs
 from orcasong.geo_binning import calculate_bin_edges
 from orcasong.utils import get_file_particle_type, EventSkipper
+
+
+def parse_input():
+    """
+    Parses and returns all necessary input options for the make_nn_images function.
+
+    Returns
+    -------
+    fname : str
+        Full filepath to the input .h5 file.
+    detx_filepath : str
+        Full filepath to the .detx geometry file that belongs to the fname.
+    config_filepath : str
+        Full filepath to a config file. An example can be found in orcasong/default_config.toml
+
+    """
+    args = docopt(__doc__)
+
+    fname = args['SIMFILE']
+    detx_filepath = args['DETXFILE']
+    config_filepath = args['CONFIGFILE']
+
+    return fname, detx_filepath, config_filepath
 
 
 def make_nn_images(fname, detx_filepath, config):

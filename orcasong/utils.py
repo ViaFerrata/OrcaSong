@@ -87,7 +87,7 @@ def use_custom_skip_function(skip_function, event_track):
             continue_bool = False
 
         else:
-            prob_for_e_bin_arr_path = 'placeholder.npy'
+            prob_for_e_bin_arr_path = '/home/woody/capn/mppi033h/Code/OrcaSong/orcasong_contrib/utilities/arr_fract_for_e_bins.npy'
             # Fraction of tracks compared to showers (n_muon-cc / (n_e-cc + n_e-nc))
             arr_fract_for_e_bins = np.load(prob_for_e_bin_arr_path) # 2d arr, one row e_bins, second row prob
             e_bins = arr_fract_for_e_bins[0, :]

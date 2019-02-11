@@ -9,31 +9,7 @@ IO Code for OrcaSong.
 import os
 import errno
 import toml
-from docopt import docopt
 import warnings
-
-
-def parse_input():
-    """
-    Parses and returns all necessary input options for the make_nn_images function.
-
-    Returns
-    -------
-    fname : str
-        Full filepath to the input .h5 file.
-    detx_filepath : str
-        Full filepath to the .detx geometry file that belongs to the fname.
-    config_filepath : str
-        Full filepath to a config file. An example can be found in orcasong/default_config.toml
-
-    """
-    args = docopt(__doc__)
-
-    fname = args['SIMFILE']
-    detx_filepath = args['DETXFILE']
-    config_filepath = args['CONFIGFILE']
-
-    return fname, detx_filepath, config_filepath
 
 
 def load_config(config_filepath):

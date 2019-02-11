@@ -4,7 +4,7 @@
 
 ####----- Configuration for ORCA 115l -----####
 
-###--- 1-5GeV ---###
+###--- 3-100GeV ---###
 
 ## XYZ-T
 
@@ -27,5 +27,6 @@ data_cut_triggered = false
 data_cut_e_low = 'None'
 data_cut_e_high = 'None'
 data_cut_throw_away = 'None'
-prod_ident = 2 # for neutrinos: 1: 3-100 GeV prod, 2: 1-5 GeV prod ; mupage: 3 ; random_noise: 4
+data_cut_custom_func = 'ts_e_flat'
+prod_ident = 1 # for neutrinos: 1: 3-100 GeV prod, 2: 1-5 GeV prod ; mupage: 3 ; random_noise: 4
 flush_freq = 1000
