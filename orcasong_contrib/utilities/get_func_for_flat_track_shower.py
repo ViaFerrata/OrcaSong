@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-TODO
+Code that calculates the fraction of track to shower events for given files.
 """
 
 import os
@@ -74,7 +74,7 @@ def get_energies_for_fpaths(fpath_list, fpath_list_key_ic, cut_e_higher_than_3=F
 
         f.close()
 
-    print('Total number of events for ' + fpath_list_key_ic + ' (without 3-5GeV from low_e prod): '
+    print('Total number of events for ' + fpath_list_key_ic + ' : '
           + str(energy_conc_arr.shape[0]))
     print('Total number of files: ' + str(len(fpath_list)))
 
@@ -82,6 +82,16 @@ def get_energies_for_fpaths(fpath_list, fpath_list_key_ic, cut_e_higher_than_3=F
 
 
 def save_energies_for_ic(energies_for_ic):
+    """
+
+    Parameters
+    ----------
+    energies_for_ic
+
+    Returns
+    -------
+
+    """
 
     np.savez('./energies_for_ic.npz',
              muon_cc_3_100=energies_for_ic['muon_cc_3_100'], muon_cc_1_5=energies_for_ic['muon_cc_1_5'],
@@ -90,6 +100,12 @@ def save_energies_for_ic(energies_for_ic):
 
 
 def load_energies_for_ic():
+    """
+
+    Returns
+    -------
+
+    """
 
     data = np.load('./energies_for_ic.npz')
 
@@ -147,26 +163,28 @@ def plot_e_and_make_flat_func(energies_for_ic):
     pdfpages = PdfPages('./e_hist_plots.pdf')
     fig, ax = plt.subplots()
 
+    e_bins = 199
+
     # plot
-    hist_muon_cc = plt.hist(energies_for_ic['muon_cc'], bins=99)
-    plt.title('Muon-CC 1-3 + 3-100 GeV for Run 1-2400')
+    hist_muon_cc = plt.hist(energies_for_ic['muon_cc'], bins=e_bins)
+    plt.title('Muon-CC 1-5 + 3-100 GeV for Run 1-2400')
     make_plot_options_and_save(ax, pdfpages, ylabel='Counts [#]')
 
-    hist_shower = plt.hist(energies_for_ic['elec_cc_and_nc'], bins=99)
-    plt.title('Shower (elec-CC + elec-NC) 1-3 + 3-100 GeV for 2x Run 1-1200')
+    hist_shower = plt.hist(energies_for_ic['elec_cc_and_nc'], bins=e_bins)
+    plt.title('Shower (elec-CC + elec-NC) 1-5 + 3-100 GeV for 2x Run 1-1200')
     make_plot_options_and_save(ax, pdfpages, ylabel='Counts [#]')
 
-    hist_elec_cc = plt.hist(energies_for_ic['elec_cc'], bins=99)
-    plt.title('Elec-CC 1-3 + 3-100 GeV for Run 1-1200')
+    hist_elec_cc = plt.hist(energies_for_ic['elec_cc'], bins=e_bins)
+    plt.title('Elec-CC 1-5 + 3-100 GeV for Run 1-1200')
     make_plot_options_and_save(ax, pdfpages, ylabel='Counts [#]')
 
-    hist_elec_nc = plt.hist(energies_for_ic['elec_nc'], bins=99)
-    plt.title('Elec-NC 1-3 + 3-100 GeV for Run 1-1200')
+    hist_elec_nc = plt.hist(energies_for_ic['elec_nc'], bins=e_bins)
+    plt.title('Elec-NC 1-5 + 3-100 GeV for Run 1-1200')
     make_plot_options_and_save(ax, pdfpages, ylabel='Counts [#]')
 
-    # We take 600 muon-CC files and 300 elec-cc and 300 elec_nc files for the split, reduce 1-3GeV bins by 1/2
-    hist_shower[0][0] = hist_shower[0][0] / 2 # 1-2GeV
-    hist_shower[0][1] = hist_shower[0][1] / 2 # 2-3GeV
+    # # We take 600 muon-CC files and 300 elec-cc and 300 elec_nc files for the split, reduce 1-3GeV bins by 1/2
+    # hist_shower[0][0] = hist_shower[0][0] / 2 # 1-2GeV
+    # hist_shower[0][1] = hist_shower[0][1] / 2 # 2-3GeV
 
     track_div_shower = np.divide(hist_muon_cc[0], hist_shower[0])
     print(hist_muon_cc[0])
@@ -174,7 +192,6 @@ def plot_e_and_make_flat_func(energies_for_ic):
 
     bins=hist_muon_cc[1] # doesnt matter which bins to use
     track_div_shower = np.append(track_div_shower, track_div_shower[-1])
-    #track_div_shower = np.concatenate([track_div_shower, np.array(track_div_shower[-1])[:, np.newaxis]], axis=0) # fix for mpl
     print(bins)
     print(track_div_shower)
     ax.step(bins, track_div_shower, linestyle='-', where='post')
@@ -205,7 +222,8 @@ def main():
         energies_for_ic = dict()
         for fpath_list_key_ic in fpaths:
             print('Getting energies for ' + fpath_list_key_ic)
-            cut_flag = True if fpath_list_key_ic in ['muon_cc_1_5', 'elec_cc_1_5', 'elec_nc_1_5'] else False
+            cut_flag = False
+            # cut_flag = True if fpath_list_key_ic in ['muon_cc_1_5', 'elec_cc_1_5', 'elec_nc_1_5'] else False
             fpath_list = fpaths[fpath_list_key_ic]
             energies_for_ic[fpath_list_key_ic] = get_energies_for_fpaths(fpath_list, fpath_list_key_ic, cut_e_higher_than_3=cut_flag)
 

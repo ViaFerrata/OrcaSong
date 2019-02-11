@@ -93,6 +93,7 @@ data_cut_triggered = false
 data_cut_e_low = 'None'
 data_cut_e_high = 'None'
 data_cut_throw_away = 0.00
+data_cut_custom_func = 'None'
 prod_ident = 1
 flush_freq = 1000
 
