@@ -309,9 +309,7 @@ def make_concatenate_and_shuffle_list_files(cfg):
             f.write('\n')
             f.write('# Concatenate the files in the list\n')
 
-            f.write(
-                    'python concatenate_h5.py'              #Nikhef
-#                    'time python concatenate_h5.py'
+            f.write('time python concatenate/concatenate_h5.py'
                     + chunksize + complib + complevel
                     + ' -l ' + listfile_fpath + ' ' + conc_outputfile_fpath)
 
@@ -341,9 +339,7 @@ def make_concatenate_and_shuffle_list_files(cfg):
             f.write('\n')
             f.write('# Shuffle the h5 file \n')
 
-            f.write(
-                    'python shuffle_h5.py'                  #Nikhef
-#                    'time python shuffle_h5.py'
+            f.write('time python shuffle/shuffle_h5.py'
                     + delete_flag_shuffle_tool
                     + chunksize + complib + complevel
                     + ' ' + conc_outputfile_fpath)
