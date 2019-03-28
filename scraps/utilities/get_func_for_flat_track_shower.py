@@ -58,10 +58,11 @@ def get_energies_for_fpaths(fpath_list, fpath_list_key_ic, cut_e_higher_than_3=F
 
         f = h5py.File(fpath, 'r')
 
-        tracks = f['mc_tracks']
-        tracks_neutr = tracks[tracks['bjorkeny'] != 0]
+        # tracks = f['mc_tracks']
+        # tracks_neutr = tracks[tracks['bjorkeny'] != 0]
+        # assert f['event_info'].shape == tracks_neutr.shape
+        tracks_neutr = f['y']
 
-        assert f['event_info'].shape == tracks_neutr.shape
         energies = tracks_neutr['energy']
 
         if cut_e_higher_than_3 is True:
@@ -207,28 +208,38 @@ def plot_e_and_make_flat_func(energies_for_ic):
     # save e_bins and corresponding fractions
 
     # make e_bins with mean center
-    e_bins = []
-    for i in range(bins.shape[0] - 1):
-        e_mean = (bins[i] + bins[i+1]) / 2
-        e_bins.append(e_mean)
 
-    e_bins = np.array(e_bins)
-
-
-    arr_fract_for_e_bins = np.vstack((e_bins, track_div_shower))
-    print(arr_fract_for_e_bins)
-
-    np.save('./arr_fract_for_e_bins.npy', arr_fract_for_e_bins)
+    # e_bins = []
+    # for i in range(bins.shape[0] - 1):
+    #     e_mean = (bins[i] + bins[i+1]) / 2
+    #     e_bins.append(e_mean)
+    #
+    # e_bins = np.array(e_bins)
+    #
+    #
+    # arr_fract_for_e_bins = np.vstack((e_bins, track_div_shower))
+    # print(arr_fract_for_e_bins)
+    #
+    # np.save('./arr_fract_for_e_bins.npy', arr_fract_for_e_bins)
 
 
 def main():
-    dirs = {
+    dirs_temp = {
             'muon_cc_3_100': '/home/saturn/capn/mppi033h/Data/raw_data/ORCA_JTE_NEMOWATER/calibrated/with_jte_times/3-100GeV/muon-CC',
             'muon_cc_1_5': '/home/saturn/capn/mppi033h/Data/raw_data/ORCA_JTE_NEMOWATER/calibrated/with_jte_times/1-5GeV/muon-CC',
             'elec_cc_3_100': '/home/saturn/capn/mppi033h/Data/raw_data/ORCA_JTE_NEMOWATER/calibrated/with_jte_times/3-100GeV/elec-CC',
             'elec_cc_1_5': '/home/saturn/capn/mppi033h/Data/raw_data/ORCA_JTE_NEMOWATER/calibrated/with_jte_times/1-5GeV/elec-CC',
             'elec_nc_3_100': '/home/saturn/capn/mppi033h/Data/raw_data/ORCA_JTE_NEMOWATER/calibrated/with_jte_times/3-100GeV/elec-NC',
             'elec_nc_1_5': '/home/saturn/capn/mppi033h/Data/raw_data/ORCA_JTE_NEMOWATER/calibrated/with_jte_times/1-5GeV/elec-NC'
+            }
+
+    dirs = {
+            'muon_cc_3_100': '/home/saturn/capn/mppi033h/Data/input_images/ORCA_2016_115l/tight_1_60b_ts_classifier/muon-CC/3-100GeV/xyzt',
+            'muon_cc_1_5': '/home/saturn/capn/mppi033h/Data/input_images/ORCA_2016_115l/tight_1_60b_ts_classifier/muon-CC/1-5GeV/xyzt',
+            'elec_cc_3_100': '/home/saturn/capn/mppi033h/Data/input_images/ORCA_2016_115l/tight_1_60b_ts_classifier/elec-CC/3-100GeV/xyzt',
+            'elec_cc_1_5': '/home/saturn/capn/mppi033h/Data/input_images/ORCA_2016_115l/tight_1_60b_ts_classifier/elec-CC/1-5GeV/xyzt',
+            'elec_nc_3_100': '/home/saturn/capn/mppi033h/Data/input_images/ORCA_2016_115l/tight_1_60b_ts_classifier/elec-NC/3-100GeV/xyzt',
+            'elec_nc_1_5': '/home/saturn/capn/mppi033h/Data/input_images/ORCA_2016_115l/tight_1_60b_ts_classifier/elec-NC/1-5GeV/xyzt'
             }
 
     if os.path.isfile('./energies_for_ic.npz') is True:

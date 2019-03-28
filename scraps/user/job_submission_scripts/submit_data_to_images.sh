@@ -25,10 +25,10 @@ python_env_folder=/home/hpc/capn/mppi033h/.virtualenv/python_3_env/
 job_logs_folder=/home/woody/capn/mppi033h/logs/orcasong/cout
 
 detx_filepath=/home/woody/capn/mppi033h/Code/OrcaSong/orcasong_contrib/detx_files/orca_115strings_av23min20mhorizontal_18OMs_alt9mvertical_v1.detx
-config_file=/home/woody/capn/mppi033h/Code/OrcaSong/user/config/orca_115l_regression/conf_ORCA_115l_3-100GeV_xyz-c.toml
+config_file=/home/woody/capn/mppi033h/Code/OrcaSong/user/config/orca_115l_ts_classifier/conf_ORCA_115l_1-5GeV_xyz-t_tight-2.toml
 
-particle_type=muon-CC
-mc_prod=neutr_3-100GeV
+particle_type=elec-NC
+mc_prod=neutr_1-5GeV
 
 # total number of files per job
 # For neutrinos 3-100GeV:
