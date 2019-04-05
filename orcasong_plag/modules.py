@@ -43,20 +43,12 @@ class TimePreproc(kp.Module):
     Time hits and mchits will be shifted by the time of the first
     triggered hit.
 
-    Attributes
-    ----------
-    correct_hits : bool
-        If true, will correct time of the hits.
-    correct_mchits : bool
-        If true, will correct the time of the McHits.
-
     """
-    def configure(self):
-        self.correct_hits = self.get('correct_hits', default=True)
-        self.correct_mchits = self.get('correct_mchits', default=True)
-
     def process(self, blob):
-        blob = time_preproc(blob, self.correct_hits, self.correct_mchits)
+        correct_mchits = "McHits" in blob
+        blob = time_preproc(blob,
+                            correct_hits=True,
+                            correct_mchits=correct_mchits)
         return blob
 
 

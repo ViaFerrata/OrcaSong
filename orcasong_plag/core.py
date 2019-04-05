@@ -28,8 +28,9 @@ class FileBinner:
     n_memory_observer : int, optional
         Print memory usage every n blobs.
     do_time_preproc : bool
-        Do time preprocessing, i.e. add t0 to real data, subtract time
+        Do time preprocessing, i.e. add t0 only to real data, and subtract time
         of first triggered hit.
+        Will also be done for McHits if they are in the blob.
     chunksize : int
         Chunksize (along axis_0) used for saving the output to a .h5 file.
     complib : str
