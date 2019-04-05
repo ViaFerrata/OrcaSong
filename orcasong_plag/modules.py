@@ -9,6 +9,15 @@ import numpy as np
 class McInfoMaker(kp.Module):
     """
     Get the desired mc_info from the blob.
+
+    Attributes
+    ----------
+    mc_info_extr : function
+        Function to extract the info. Takes the blob as input, outputs
+        a dict with the desired mc_infos.
+    store_as : str
+        Store the mcinfo with this name in the blob.
+
     """
     def configure(self):
         self.mc_info_extr = self.require('mc_info_extr')
@@ -33,6 +42,13 @@ class TimePreproc(kp.Module):
     t0 will be added to the time for real data, but not simulations.
     Time hits and mchits will be shifted by the time of the first
     triggered hit.
+
+    Attributes
+    ----------
+    correct_hits : bool
+        If true, will correct time of the hits.
+    correct_mchits : bool
+        If true, will correct the time of the McHits.
 
     """
     def configure(self):
@@ -76,6 +92,15 @@ def time_preproc(blob, correct_hits=True, correct_mchits=True):
 class ImageMaker(kp.Module):
     """
     Make a n-d histogram from the blob.
+
+    Attributes
+    ----------
+    bin_edges_list : List
+        List with the names of the fields to bin, and the respective bin edges,
+        including the left- and right-most bin edge.
+    store_as : str
+        Store the images with this name in the blob.
+
     """
     def configure(self):
         self.bin_edges_list = self.require('bin_edges_list')

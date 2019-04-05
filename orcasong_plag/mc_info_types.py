@@ -6,16 +6,22 @@ in the h5 files.
 import numpy as np
 
 
-def get_mc_info_extr(mc_info_type):
+def get_mc_info_extr(mc_info_extr):
     """
     Get an existing mc info extractor function.
 
+    Attributes
+    ----------
+    mc_info_extr : function
+        Function to extract the info. Takes the blob as input, outputs
+        a dict with the desired mc_infos.
+
     """
-    if mc_info_type == "mupage":
+    if mc_info_extr == "mupage":
         mc_info_extr = get_mupage_mc
 
     else:
-        raise ValueError("Unknown mc_info_type " + mc_info_type)
+        raise ValueError("Unknown mc_info_type " + mc_info_extr)
 
     return mc_info_extr
 
@@ -23,6 +29,8 @@ def get_mc_info_extr(mc_info_type):
 def get_mupage_mc(blob):
     """
     For mupage muon simulations.
+
+    e.g. mcv5.1_r3.mupage_10G.km3_AAv1.jterbr00002800.5103.root.h5
 
     Parameters
     ----------
