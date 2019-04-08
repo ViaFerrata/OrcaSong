@@ -1,7 +1,8 @@
 import km3pipe as kp
 import km3modules as km
+import os
 
-from orcasong_plag.modules import TimePreproc, ImageMaker, McInfoMaker
+from orcasong_plag.modules import TimePreproc, ImageMaker, McInfoMaker, BinningPlotter
 from orcasong_plag.mc_info_types import get_mc_info_extr
 
 
@@ -23,6 +24,12 @@ class FileBinner:
         Function that extracts desired mc_info from a blob, which is then
         stored as the "y" datafield in the .h5 file.
         Can also give a str identifier for an existing extractor.
+    bin_plot_freq : int or None
+        If int is given, defines after how many blobs data for an overview
+        histogram is extracted.
+        It shows the distribution of hits, the bin edges, and how many hits
+        were cut off for each field name in bin_edges_list.
+        It will be saved to the same path as the outfile in run.
     n_statusbar : int, optional
         Print a statusbar every n blobs.
     n_memory_observer : int, optional
@@ -50,6 +57,7 @@ class FileBinner:
     def __init__(self, bin_edges_list, mc_info_extr=None):
         self.bin_edges_list = bin_edges_list
         self.mc_info_extr = mc_info_extr
+        self.bin_plot_freq = 20
 
         self.n_statusbar = 200
         self.n_memory_observer = 400
@@ -73,7 +81,7 @@ class FileBinner:
             Path to the output file.
 
         """
-        name, shape = self.get_name_and_shape()
+        name, shape = self.get_names_and_shape()
         print("Generating {} images with shape {}".format(name, shape))
 
         pipe = kp.Pipeline()
@@ -88,7 +96,7 @@ class FileBinner:
 
         pipe.attach(kp.io.hdf5.HDF5Pump, filenames=infile)
 
-        self.attach_binning_modules(pipe)
+        self.attach_binning_modules(pipe, outfile=outfile)
 
         pipe.attach(kp.io.HDF5Sink,
                     filename=outfile,
@@ -99,9 +107,9 @@ class FileBinner:
 
         pipe.drain()
 
-    def attach_binning_modules(self, pipe):
+    def attach_binning_modules(self, pipe, outfile):
         """
-        Attach modules to transform a blob to images and mc_info to a km3pipe.
+        Attach modules to a km3pipe which transform a blob to images and mc_info.
 
         """
         pipe.attach(km.common.Keep, keys=['EventInfo', 'Header', 'RawHeader',
@@ -112,6 +120,13 @@ class FileBinner:
         # if self.data_cuts is not None:
         #     from orcasong.utils import EventSkipper
         #     pipe.attach(EventSkipper, data_cuts=self.data_cuts)
+
+        if self.bin_plot_freq is not None:
+            pdf_name = os.path.splitext(outfile)[0] + "_hists.pdf"
+            pipe.attach(BinningPlotter,
+                        bin_plot_freq=self.bin_plot_freq,
+                        bin_edges_list=self.bin_edges_list,
+                        pdf_path=pdf_name)
 
         pipe.attach(ImageMaker,
                     bin_edges_list=self.bin_edges_list,
@@ -129,20 +144,17 @@ class FileBinner:
 
         pipe.attach(km.common.Keep, keys=['histogram', 'mc_info'])
 
-    def get_name_and_shape(self):
+    def get_names_and_shape(self):
         """
-        Get name and shape of the resulting x data, e.g. "pos_z_time", (18, 50).
+        Get names and shape of the resulting x data, e.g. (pos_z, time), (18, 50).
         """
-        res_names, shape = [], []
+        names, shape = [], []
         for bin_name, bin_edges in self.bin_edges_list:
-            res_names.append(bin_name)
+            names.append(bin_name)
             shape.append(len(bin_edges) - 1)
 
-        name = "_".join(res_names)
-        shape = tuple(shape)
-
-        return name, shape
+        return tuple(names), tuple(shape)
 
     def __repr__(self):
-        name, shape = self.get_name_and_shape()
+        name, shape = self.get_names_and_shape()
         return "<FileBinner: {} {}>".format(name, shape)
