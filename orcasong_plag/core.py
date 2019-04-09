@@ -2,13 +2,18 @@ import km3pipe as kp
 import km3modules as km
 import os
 
-from orcasong_plag.modules import TimePreproc, ImageMaker, McInfoMaker, BinningPlotter, plot_hists
+from orcasong_plag.modules import TimePreproc, ImageMaker, McInfoMaker, BinningStatsMaker
 from orcasong_plag.mc_info_types import get_mc_info_extr
+from orcasong_plag.util.bin_stats_plot import plot_hists, add_hists_to_h5file, plot_hist_of_files
 
 
 class FileBinner:
     """
-    For making binned images.
+    For making binned images and mc_infos, which can be used for conv. nets.
+
+    Can also add statistics of the binning to the h5 files, which can
+    be plotted to show the distribution of hits among the bins and how
+    many hits were cut off.
 
     Attributes
     ----------
@@ -54,10 +59,14 @@ class FileBinner:
         but it increases the RAM usage as well.
 
     """
-    def __init__(self, bin_edges_list, mc_info_extr=None):
+    def __init__(self, bin_edges_list, mc_info_extr=None, add_bin_stats=True):
         self.bin_edges_list = bin_edges_list
         self.mc_info_extr = mc_info_extr
-        self.bin_plot_freq = 20
+
+        if add_bin_stats:
+            self.bin_plot_freq = 1
+        else:
+            self.bin_plot_freq = None
 
         self.n_statusbar = 1000
         self.n_memory_observer = 1000
@@ -69,52 +78,70 @@ class FileBinner:
         self.complevel = 1
         self.flush_frequency = 1000
 
-    def run(self, infile, outfile):
+    def run(self, infile, outfile, save_plot=False):
         """
-        Build the pipeline to make images for the given file.
+        Make images for a file.
 
         Parameters
         ----------
         infile : str
             Path to the input file.
         outfile : str
-            Path to the output file.
+            Path to the output file (will be created).
+        save_plot : bool
+            Save the binning hists as a pdf. Only possible if bin_plot_freq
+            is not None.
 
         """
+        if save_plot and self.bin_plot_freq is None:
+            raise ValueError("Can not make plot when add_bin_stats is False")
+
         name, shape = self.get_names_and_shape()
         print("Generating {} images with shape {}".format(name, shape))
 
-        plot_hists = self.bin_plot_freq is not None
+        pipe = self.build_pipe(infile, outfile)
+        smry = pipe.drain()
 
-        pipe = self.build_pipe(infile, outfile, plot_hists=plot_hists)
-        pipe.drain()
+        if self.bin_plot_freq is not None:
+            hists = smry["BinningStatsMaker"]
+            add_hists_to_h5file(hists, outfile)
 
-    def run_multi(self, infiles, outfolder):
+            if save_plot:
+                save_as = os.path.splitext(outfile)[0] + "_hists.pdf"
+                plot_hists(hists, save_as)
+
+    def run_multi(self, infiles, outfolder, save_plot=False):
         """
         Bin multiple files into their own output files each.
-
-        Will also generate a summary binning plot for all of the files.
 
         Parameters
         ----------
         infiles : List
             The path to infiles as str.
         outfolder : str
-            The output folder to place them in.
+            The output folder to place them in. The output file name will
+            be generated automatically.
+        save_plot : bool
+            Save the binning hists as a pdf. Only possible if bin_plot_freq
+            is not None.
 
         """
-        hists = None
+        if save_plot and self.bin_plot_freq is None:
+            raise ValueError("Can not make plot when add_bin_stats is False")
+
+        outfiles = []
         for infile in infiles:
-            outfile_name = os.path.splitext(os.path.basename(infile))[0] + "_hist.h5"
+            outfile_name = os.path.splitext(os.path.basename(infile))[0] \
+                           + "_hist.h5"
             outfile = outfolder + outfile_name
+            outfiles.append(outfile)
 
-            pipe = self.build_pipe(infile, outfile,
-                                   plot_hists=False, hists_start=hists)
-            smry = pipe.drain()
-            hists = smry["BinningPlotter"]
-        plot_hists(hists, pdf_path=outfolder + "binning_summary.pdf")
+            self.run(infile, outfile, save_plot=False)
 
-    def build_pipe(self, infile, outfile, plot_hists=True, hists_start=None):
+        if save_plot:
+            plot_hist_of_files(outfiles, save_as=outfolder+"binning_hist.pdf")
+
+    def build_pipe(self, infile, outfile):
         """
         Build the pipe to generate images and mc_info for a file.
         """
@@ -138,15 +165,9 @@ class FileBinner:
         #     pipe.attach(EventSkipper, data_cuts=self.data_cuts)
 
         if self.bin_plot_freq is not None:
-            if plot_hists:
-                pdf_name = os.path.splitext(outfile)[0] + "_hists.pdf"
-            else:
-                pdf_name = None
-            pipe.attach(BinningPlotter,
+            pipe.attach(BinningStatsMaker,
                         bin_plot_freq=self.bin_plot_freq,
-                        bin_edges_list=self.bin_edges_list,
-                        hists_start=hists_start,
-                        pdf_path=pdf_name)
+                        bin_edges_list=self.bin_edges_list)
 
         pipe.attach(ImageMaker,
                     bin_edges_list=self.bin_edges_list,
