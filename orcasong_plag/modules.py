@@ -137,7 +137,7 @@ class BinningPlotter(kp.Module):
     bin_edges_list : List
         List with the names of the fields to bin, and the respective bin edges,
         including the left- and right-most bin edge.
-    pdf_path : str
+    pdf_path : str, optional
         Where to save the hists to. This pdf will contain all the field names
         on their own page each.
     bin_plot_freq : int
@@ -150,22 +150,35 @@ class BinningPlotter(kp.Module):
     plot_bin_edges : bool
         If true, will plot the bin edges as horizontal lines. Is never used
         for the time binning (field name "time").
+    hists_start : dict, optional
+        Starting values for the statistics.
 
     """
     def configure(self):
         self.bin_edges_list = self.require('bin_edges_list')
-        self.pdf_path = self.require('pdf_path')
+        self.pdf_path = self.get('pdf_path', default=None)
         self.bin_plot_freq = self.get("bin_plot_freq", default=20)
         self.res_increase = self.get('res_increase', default=5)
         self.plot_bin_edges = self.get('plot_bin_edges', default=True)
+        self.hists_start = self.get('hists_start', default=None)
 
-        self.hists = {}
-        for bin_name, bin_edges in self._yield_spaced_bin_edges():
-            self.hists[bin_name] = {
-                "hist": np.zeros(len(bin_edges) - 1),
-                "out_pos": 0,
-                "out_neg": 0,
-            }
+        if self.hists_start is None:
+            self.hists = {}
+            for bin_name, org_bin_edges in self.bin_edges_list:
+                if bin_name == "time":
+                    bin_edges = org_bin_edges
+                else:
+                    bin_edges = self._space_bin_edges(org_bin_edges)
+
+                self.hists[bin_name] = {
+                    "hist": np.zeros(len(bin_edges) - 1),
+                    "hist_bin_edges": bin_edges,
+                    "bin_edges": org_bin_edges,
+                    "out_pos": 0,
+                    "out_neg": 0,
+                }
+        else:
+            self.hists = self.hists_start
 
         self.i = 0
 
@@ -179,23 +192,19 @@ class BinningPlotter(kp.Module):
 
         return bin_edges
 
-    def _yield_spaced_bin_edges(self):
-        for bin_name, bin_edges in self.bin_edges_list:
-            if bin_name != "time":
-                bin_edges = self._space_bin_edges(bin_edges)
-            yield bin_name, bin_edges
-
     def process(self, blob):
         """
         Extract data from blob for the hist plots.
         """
         if self.i % self.bin_plot_freq == 0:
-            for bin_name, bin_edges in self._yield_spaced_bin_edges():
-                data = blob["Hits"][bin_name]
-                hist = np.histogram(data, bins=bin_edges)[0]
+            for bin_name, hists_data in self.hists.items():
+                hist_bin_edges = hists_data["hist_bin_edges"]
 
-                out_pos = data[data > np.max(bin_edges)].size
-                out_neg = data[data < np.min(bin_edges)].size
+                data = blob["Hits"][bin_name]
+                hist = np.histogram(data, bins=hist_bin_edges)[0]
+
+                out_pos = data[data > np.max(hist_bin_edges)].size
+                out_neg = data[data < np.min(hist_bin_edges)].size
 
                 self.hists[bin_name]["hist"] += hist
                 self.hists[bin_name]["out_pos"] += out_pos
@@ -208,44 +217,54 @@ class BinningPlotter(kp.Module):
         """
         Make and save the histograms to pdf.
         """
-        with PdfPages(self.pdf_path) as pdf_file:
-            for bin_name, org_bin_edges in self.bin_edges_list:
-                hist = self.hists[bin_name]["hist"]
-                out_pos = self.hists[bin_name]["out_pos"]
-                out_neg = self.hists[bin_name]["out_neg"]
-                hist_frac = hist / (np.sum(hist) + out_pos + out_neg)
+        if self.pdf_path is not None:
+            plot_hists(self.hists, self.pdf_path,
+                       plot_bin_edges=self.plot_bin_edges)
 
-                if bin_name != "time":
-                    bin_edges = self._space_bin_edges(org_bin_edges)
-                else:
-                    bin_edges = org_bin_edges
+        return self.hists
 
-                bin_spacing = bin_edges[1] - bin_edges[0]
-                fig, ax = plt.subplots()
-                plt.bar(bin_edges[:-1],
-                        hist_frac,
-                        align="edge",
-                        width=0.9*bin_spacing,
-                        )
-                ax.yaxis.set_major_formatter(ticker.PercentFormatter(xmax=1))
 
-                if self.plot_bin_edges and bin_name != "time":
-                    for bin_edge in org_bin_edges:
-                        plt.axvline(x=bin_edge, color='grey', linestyle='-',
-                                    linewidth=1, alpha=0.9)
+def plot_hists(hists, pdf_path, plot_bin_edges=True):
+    """
+    Plot histograms made by the BinningPlotter to the given pdf path.
 
-                # place a text box in upper left in axes coords
-                out_pos_rel = out_pos / np.sum(hist)
-                out_neg_rel = out_neg / np.sum(hist)
-                textstr = "Hits cut off:\n Left: {:.1%}\n" \
-                          " Right: {:.1%}".format(out_neg_rel, out_pos_rel)
-                props = dict(boxstyle='round', facecolor='white', alpha=0.9)
-                ax.text(0.05, 0.95, textstr, transform=ax.transAxes,
-                        verticalalignment='top', bbox=props)
+    """
+    with PdfPages(pdf_path) as pdf_file:
+        for bin_name, hists_data in hists.items():
+            hist_bin_edges = hists_data["hist_bin_edges"]
+            bin_edges = hists_data["bin_edges"]
+            hist = hists_data["hist"]
+            out_pos = hists_data["out_pos"]
+            out_neg = hists_data["out_neg"]
 
-                plt.xlabel(bin_name)
-                plt.ylabel("Fraction of hits")
+            hist_frac = hist / (np.sum(hist) + out_pos + out_neg)
 
-                pdf_file.savefig(fig)
-                print(bin_name, out_neg, out_pos)
-        print("Saved binning plot to " + self.pdf_path)
+            bin_spacing = hist_bin_edges[1] - hist_bin_edges[0]
+            fig, ax = plt.subplots()
+            plt.bar(hist_bin_edges[:-1],
+                    hist_frac,
+                    align="edge",
+                    width=0.9 * bin_spacing,
+                    )
+            ax.yaxis.set_major_formatter(ticker.PercentFormatter(xmax=1))
+
+            if plot_bin_edges and bin_name != "time":
+                for bin_edge in bin_edges:
+                    plt.axvline(x=bin_edge, color='grey', linestyle='-',
+                                linewidth=1, alpha=0.9)
+
+            # place a text box in upper left in axes coords
+            out_pos_rel = out_pos / np.sum(hist)
+            out_neg_rel = out_neg / np.sum(hist)
+            textstr = "Hits cut off:\n Left: {:.1%}\n" \
+                      " Right: {:.1%}".format(out_neg_rel, out_pos_rel)
+            props = dict(boxstyle='round', facecolor='white', alpha=0.9)
+            ax.text(0.05, 0.95, textstr, transform=ax.transAxes,
+                    verticalalignment='top', bbox=props)
+
+            plt.xlabel(bin_name)
+            plt.ylabel("Fraction of hits")
+
+            pdf_file.savefig(fig)
+
+    print("Saved binning plot to " + pdf_path)

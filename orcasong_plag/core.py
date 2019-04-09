@@ -2,7 +2,7 @@ import km3pipe as kp
 import km3modules as km
 import os
 
-from orcasong_plag.modules import TimePreproc, ImageMaker, McInfoMaker, BinningPlotter
+from orcasong_plag.modules import TimePreproc, ImageMaker, McInfoMaker, BinningPlotter, plot_hists
 from orcasong_plag.mc_info_types import get_mc_info_extr
 
 
@@ -59,8 +59,8 @@ class FileBinner:
         self.mc_info_extr = mc_info_extr
         self.bin_plot_freq = 20
 
-        self.n_statusbar = 200
-        self.n_memory_observer = 400
+        self.n_statusbar = 1000
+        self.n_memory_observer = 1000
         self.do_time_preproc = True
         # self.data_cuts = None
 
@@ -75,8 +75,8 @@ class FileBinner:
 
         Parameters
         ----------
-        infile : str or List
-            Path to the input file(s).
+        infile : str
+            Path to the input file.
         outfile : str
             Path to the output file.
 
@@ -84,34 +84,50 @@ class FileBinner:
         name, shape = self.get_names_and_shape()
         print("Generating {} images with shape {}".format(name, shape))
 
+        plot_hists = self.bin_plot_freq is not None
+
+        pipe = self.build_pipe(infile, outfile, plot_hists=plot_hists)
+        pipe.drain()
+
+    def run_multi(self, infiles, outfolder):
+        """
+        Bin multiple files into their own output files each.
+
+        Will also generate a summary binning plot for all of the files.
+
+        Parameters
+        ----------
+        infiles : List
+            The path to infiles as str.
+        outfolder : str
+            The output folder to place them in.
+
+        """
+        hists = None
+        for infile in infiles:
+            outfile_name = os.path.splitext(os.path.basename(infile))[0] + "_hist.h5"
+            outfile = outfolder + outfile_name
+
+            pipe = self.build_pipe(infile, outfile,
+                                   plot_hists=False, hists_start=hists)
+            smry = pipe.drain()
+            hists = smry["BinningPlotter"]
+        plot_hists(hists, pdf_path=outfolder + "binning_summary.pdf")
+
+    def build_pipe(self, infile, outfile, plot_hists=True, hists_start=None):
+        """
+        Build the pipe to generate images and mc_info for a file.
+        """
+
         pipe = kp.Pipeline()
 
         if self.n_statusbar is not None:
             pipe.attach(km.common.StatusBar, every=self.n_statusbar)
         if self.n_memory_observer is not None:
-            pipe.attach(km.common.MemoryObserver, every=400)
+            pipe.attach(km.common.MemoryObserver, every=self.n_memory_observer)
 
-        if not isinstance(infile, list):
-            infile = [infile]
+        pipe.attach(kp.io.hdf5.HDF5Pump, filename=infile)
 
-        pipe.attach(kp.io.hdf5.HDF5Pump, filenames=infile)
-
-        self.attach_binning_modules(pipe, outfile=outfile)
-
-        pipe.attach(kp.io.HDF5Sink,
-                    filename=outfile,
-                    complib=self.complib,
-                    complevel=self.complevel,
-                    chunksize=self.chunksize,
-                    flush_frequency=self.flush_frequency)
-
-        pipe.drain()
-
-    def attach_binning_modules(self, pipe, outfile):
-        """
-        Attach modules to a km3pipe which transform a blob to images and mc_info.
-
-        """
         pipe.attach(km.common.Keep, keys=['EventInfo', 'Header', 'RawHeader',
                                           'McTracks', 'Hits', 'McHits'])
         if self.do_time_preproc:
@@ -122,10 +138,14 @@ class FileBinner:
         #     pipe.attach(EventSkipper, data_cuts=self.data_cuts)
 
         if self.bin_plot_freq is not None:
-            pdf_name = os.path.splitext(outfile)[0] + "_hists.pdf"
+            if plot_hists:
+                pdf_name = os.path.splitext(outfile)[0] + "_hists.pdf"
+            else:
+                pdf_name = None
             pipe.attach(BinningPlotter,
                         bin_plot_freq=self.bin_plot_freq,
                         bin_edges_list=self.bin_edges_list,
+                        hists_start=hists_start,
                         pdf_path=pdf_name)
 
         pipe.attach(ImageMaker,
@@ -143,6 +163,14 @@ class FileBinner:
                         store_as="mc_info")
 
         pipe.attach(km.common.Keep, keys=['histogram', 'mc_info'])
+
+        pipe.attach(kp.io.HDF5Sink,
+                    filename=outfile,
+                    complib=self.complib,
+                    complevel=self.complevel,
+                    chunksize=self.chunksize,
+                    flush_frequency=self.flush_frequency)
+        return pipe
 
     def get_names_and_shape(self):
         """
