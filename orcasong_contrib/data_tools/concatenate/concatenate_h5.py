@@ -105,7 +105,8 @@ def parse_input():
 
 def get_cum_number_of_rows(file_list):
     """
-    Returns the cumulative number of rows (axis_0) in a list based on the specified input .h5 files.
+    Returns the cumulative number of rows (axis_0) in a list based on the
+    specified input .h5 files.
 
     Parameters
     ----------
@@ -115,31 +116,55 @@ def get_cum_number_of_rows(file_list):
     Returns
     -------
     cum_number_of_rows_list : list
-        List that contains the cumulative number of rows (i.e. [0,100,200,300,...] if each file has 100 rows).
+        List that contains the cumulative number of rows
+        (i.e. [0,100,200,300,...] if each file has 100 rows).
 
     """
     total_number_of_rows = 0
     cum_number_of_rows_list = [0]
     number_of_rows_list = []  # used for approximating the chunksize
 
-    # Get total number of rows for the files in the list, faster than resizing the dataset in each iteration of the file loop in concatenate_h5_files()
+    # Get total number of rows for the files in the list, faster than resizing
+    # the dataset in each iteration of the file loop in concatenate_h5_files()
 
     for file_name in file_list:
-        f = h5py.File(file_name, 'r')
+        with h5py.File(file_name, 'r') as f:
+            # get number of rows from the first folder of the file
+            # -> each folder needs to have the same number of rows
+            f_keys = list(f.keys())
+            f_keys_stripped = strip_keys(f_keys)
 
-        # get number of rows from the first folder of the file -> each folder needs to have the same number of rows
-        f_keys = list(f.keys())
-        # remove pytables folders starting with '_i_', because the shape of its first axis does not correspond to the number of events in the file.
-        # all other folders normally have an axis_0 shape that is equal to the number of events in the file.
-        f_keys_stripped = [x for x in f_keys if '_i_' not in x]
-
-        total_number_of_rows += f[f_keys_stripped[0]].shape[0]
-        cum_number_of_rows_list.append(total_number_of_rows)
-        number_of_rows_list.append(f[f_keys_stripped[0]].shape[0])
-
-        f.close()
+            total_number_of_rows += f[f_keys_stripped[0]].shape[0]
+            cum_number_of_rows_list.append(total_number_of_rows)
+            number_of_rows_list.append(f[f_keys_stripped[0]].shape[0])
 
     return cum_number_of_rows_list
+
+
+def strip_keys(f_keys):
+    """
+    Remove pytables folders starting with '_i_', because the shape
+    of its first axis does not correspond to the number of events
+    in the file. All other folders normally have an axis_0 shape
+    that is equal to the number of events in the file.
+    Also remove bin_stats.
+    """
+    f_keys_stripped = []
+    for x in f_keys:
+        if is_folder_ignored(x):
+            continue
+        f_keys_stripped.append(x)
+    return f_keys_stripped
+
+
+def is_folder_ignored(folder_name):
+    """
+    Defines pytable folders which should be ignored during concat.
+    """
+    if '_i_' in folder_name or "bin_stats" in folder_name:
+        return True
+    else:
+        return False
 
 
 def get_f_compression_and_chunking(filepath):
@@ -165,7 +190,8 @@ def get_f_compression_and_chunking(filepath):
     f = h5py.File(filepath, 'r')
 
     # remove any keys to pytables folders that may be in the file
-    f_keys_stripped = [x for x in list(f.keys()) if '_i_' not in x]
+    f_keys = list(f.keys())
+    f_keys_stripped = strip_keys(f_keys)
 
     compression = f[f_keys_stripped[0]].compression  # compression filter
     compression_opts = f[f_keys_stripped[0]].compression_opts  # filter strength
@@ -226,7 +252,7 @@ def concatenate_h5_files(output_filepath, file_list, cum_rows_list, chunksize, c
 
         for folder_name in input_file:
 
-            if folder_name.startswith('_i_'):
+            if is_folder_ignored(folder_name):
                 # we ignore datasets that have been created by pytables, don't need them anymore
                 continue
 
