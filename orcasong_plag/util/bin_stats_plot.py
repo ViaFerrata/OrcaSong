@@ -4,9 +4,9 @@ Functions for plotting the bin stats made by the BinningStatsMaker module.
 
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_pdf import PdfPages
-import matplotlib.ticker as ticker
 import h5py
 import numpy as np
+import argparse
 
 
 def plot_hists(hists, save_to, plot_bin_edges=True):
@@ -37,16 +37,15 @@ def plot_hists(hists, save_to, plot_bin_edges=True):
             cut_off = hists_data["cut_off"]
             total_hits = np.sum(hist) + np.sum(cut_off)
 
-            hist_frac = hist / total_hits
+            bin_widths = np.diff(hist_bin_edges)
+            hist_prob = hist / bin_widths / np.sum(hist)
 
-            bin_spacing = hist_bin_edges[1] - hist_bin_edges[0]
             fig, ax = plt.subplots()
             plt.bar(hist_bin_edges[:-1],
-                    hist_frac,
+                    hist_prob,
                     align="edge",
-                    width=0.9 * bin_spacing,
+                    width=bin_widths
                     )
-            ax.yaxis.set_major_formatter(ticker.PercentFormatter(xmax=1))
 
             if plot_bin_edges and bin_name != "time":
                 for bin_edge in bin_edges:
@@ -56,14 +55,19 @@ def plot_hists(hists, save_to, plot_bin_edges=True):
             # place a text box in upper left in axes coords
             out_neg_rel = cut_off[0] / total_hits
             out_pos_rel = cut_off[1] / total_hits
-            textstr = "Hits cut off:\n Left: {:.1%}\n" \
-                      " Right: {:.1%}".format(out_neg_rel, out_pos_rel)
+            textstr = "Hits cut off:\nLeft: {:.1%}\n" \
+                      "Right: {:.1%}".format(out_neg_rel, out_pos_rel)
             props = dict(boxstyle='round', facecolor='white', alpha=0.9)
-            ax.text(0.05, 0.95, textstr, transform=ax.transAxes,
-                    verticalalignment='top', bbox=props)
+            ax.text(0.95, 0.95, textstr, transform=ax.transAxes,
+                    verticalalignment='top', bbox=props,
+                    horizontalalignment="right")
+
+            # the auto ticks are nice even numbers
+            ylims = [0, ax.get_yticks().max()]
+            ax.set_ylim(ylims)
 
             plt.xlabel(bin_name)
-            plt.ylabel("Fraction of hits")
+            plt.ylabel("Density of hits")
 
             pdf_file.savefig(fig)
 
@@ -161,12 +165,33 @@ def plot_hist_of_files(files, save_as):
     """
     hists_list = []
     opened_files = []
-    for file in files:
-        f = h5py.File(file, "r")
-        hists_list.append(f["bin_stats/"])
-        opened_files.append(f)
 
-    plot_hists(hists_list, save_as)
+    try:
+        for i, file in enumerate(files):
+            if i % 100 == 0:
+                print("File {} of {}..." .format(i, len(files)))
 
-    for file in opened_files:
-        file.close()
+            f = h5py.File(file, "r")
+            if "bin_stats/" not in f:
+                raise ValueError("Can not plot: File does not have bin_stats")
+            hists_list.append(f["bin_stats/"])
+            opened_files.append(f)
+
+        print("Plotting...")
+        plot_hists(hists_list, save_as)
+
+    finally:
+        print("Closing files...")
+        for file in opened_files:
+            file.close()
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description='Plot the bin stats in h5 files')
+    parser.add_argument('save_as', metavar='S', type=str,
+                        help='Where to save the plot to.')
+    parser.add_argument('files', metavar='F', type=str, nargs='+',
+                        help='The files')
+
+    args = parser.parse_args()
+    plot_hist_of_files(args.files, args.save_as)
