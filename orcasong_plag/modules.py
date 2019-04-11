@@ -214,3 +214,25 @@ class BinningStatsMaker(kp.Module):
 
         """
         return self.hists
+
+
+class EventSkipper(kp.Module):
+    """
+    Skip events based on some user function.
+
+    Attributes
+    ----------
+    event_skipper : func
+        Function that takes the blob as an input, and returns a bool.
+        If the bool is true, the blob will be skipped.
+
+    """
+    def configure(self):
+        self.event_skipper = self.require('event_skipper')
+
+    def process(self, blob):
+        skip_event = self.event_skipper(blob)
+        if skip_event:
+            return
+        else:
+            return blob

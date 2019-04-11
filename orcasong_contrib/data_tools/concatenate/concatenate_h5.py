@@ -106,7 +106,8 @@ def parse_input():
 def get_cum_number_of_rows(file_list):
     """
     Returns the cumulative number of rows (axis_0) in a list based on the
-    specified input .h5 files.
+    specified input .h5 files (i.e. [0,100,200,300,...] if each file has
+    100 rows).
 
     Parameters
     ----------
@@ -200,7 +201,8 @@ def get_f_compression_and_chunking(filepath):
     return compression, compression_opts, chunksize
 
 
-def concatenate_h5_files(output_filepath, file_list, cum_rows_list, chunksize, complib, complevel):
+def concatenate_h5_files(output_filepath, file_list,
+                         chunksize=None, complib=None, complevel=None):
     """
     Function that concatenates hdf5 files based on an output_filepath and a file_list of input files.
 
@@ -213,8 +215,6 @@ def concatenate_h5_files(output_filepath, file_list, cum_rows_list, chunksize, c
         String that specifies the filepath (path+name) of the output .h5 file.
     file_list : list
         List that contains all filepaths of the input files.
-    cum_rows_list : list
-        List that contains the cumulative number of rows (i.e. [0,100,200,300,...] if each file has 100 rows).
     chunksize : None/int
         Specifies the chunksize for axis_0 in the concatenated output files.
         If None, the chunksize is read from the first input file.
@@ -231,6 +231,7 @@ def concatenate_h5_files(output_filepath, file_list, cum_rows_list, chunksize, c
         Else, a custom compression level will be used.
 
     """
+    cum_rows_list = get_cum_number_of_rows(file_list)
     complib_f, complevel_f, chunksize_f = get_f_compression_and_chunking(file_list[0])
 
     chunksize = chunksize_f if chunksize is None else chunksize
@@ -305,8 +306,7 @@ def main():
     In deep learning applications for example, the chunksize should be equal to the batch size that is used later on for reading the data.
     """
     file_list, output_filepath, chunksize, complib, complevel = parse_input()
-    cum_rows_list = get_cum_number_of_rows(file_list)
-    concatenate_h5_files(output_filepath, file_list, cum_rows_list, chunksize, complib, complevel)
+    concatenate_h5_files(output_filepath, file_list, chunksize, complib, complevel)
 
 
 if __name__ == '__main__':

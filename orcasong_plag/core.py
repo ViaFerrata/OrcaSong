@@ -2,7 +2,7 @@ import km3pipe as kp
 import km3modules as km
 import os
 
-from orcasong_plag.modules import TimePreproc, ImageMaker, McInfoMaker, BinningStatsMaker
+from orcasong_plag.modules import TimePreproc, ImageMaker, McInfoMaker, BinningStatsMaker, EventSkipper
 from orcasong_plag.mc_info_types import get_mc_info_extr
 from orcasong_plag.util.bin_stats_plot import plot_hists, add_hists_to_h5file, plot_hist_of_files
 
@@ -29,6 +29,9 @@ class FileBinner:
         Function that extracts desired mc_info from a blob, which is then
         stored as the "y" datafield in the .h5 file.
         Can also give a str identifier for an existing extractor.
+    event_skipper : func, optional
+        Function that takes the blob as an input, and returns a bool.
+        If the bool is true, the blob will be skipped.
     bin_plot_freq : int or None
         If int is given, defines after how many blobs data for an overview
         histogram is extracted.
@@ -59,9 +62,11 @@ class FileBinner:
         but it increases the RAM usage as well.
 
     """
-    def __init__(self, bin_edges_list, mc_info_extr=None, add_bin_stats=True):
+    def __init__(self, bin_edges_list, mc_info_extr=None,
+                 event_skipper=None, add_bin_stats=True):
         self.bin_edges_list = bin_edges_list
         self.mc_info_extr = mc_info_extr
+        self.event_skipper = event_skipper
 
         if add_bin_stats:
             self.bin_plot_freq = 1
@@ -71,7 +76,6 @@ class FileBinner:
         self.n_statusbar = 1000
         self.n_memory_observer = 1000
         self.do_time_preproc = True
-        # self.data_cuts = None
 
         self.chunksize = 32
         self.complib = 'zlib'
@@ -160,9 +164,8 @@ class FileBinner:
         if self.do_time_preproc:
             pipe.attach(TimePreproc)
 
-        # if self.data_cuts is not None:
-        #     from orcasong.utils import EventSkipper
-        #     pipe.attach(EventSkipper, data_cuts=self.data_cuts)
+        if self.event_skipper is not None:
+            pipe.attach(EventSkipper, event_skipper=self.event_skipper)
 
         if self.bin_plot_freq is not None:
             pipe.attach(BinningStatsMaker,
