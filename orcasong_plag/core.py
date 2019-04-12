@@ -2,9 +2,15 @@ import km3pipe as kp
 import km3modules as km
 import os
 
-from orcasong_plag.modules import TimePreproc, ImageMaker, McInfoMaker, BinningStatsMaker, EventSkipper
+from orcasong_plag.modules import (TimePreproc,
+                                   ImageMaker,
+                                   McInfoMaker,
+                                   BinningStatsMaker,
+                                   EventSkipper)
 from orcasong_plag.mc_info_types import get_mc_info_extr
-from orcasong_plag.util.bin_stats_plot import plot_hists, add_hists_to_h5file, plot_hist_of_files
+from orcasong_plag.util.bin_stats_plot import (plot_hists,
+                                               add_hists_to_h5file,
+                                               plot_hist_of_files)
 
 
 class FileBinner:
@@ -198,7 +204,8 @@ class FileBinner:
 
     def get_names_and_shape(self):
         """
-        Get names and shape of the resulting x data, e.g. (pos_z, time), (18, 50).
+        Get names and shape of the resulting x data,
+        e.g. (pos_z, time), (18, 50).
         """
         names, shape = [], []
         for bin_name, bin_edges in self.bin_edges_list:
