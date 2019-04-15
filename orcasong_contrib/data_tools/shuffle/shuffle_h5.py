@@ -124,7 +124,7 @@ def parse_input():
     return input_files_list, delete, chunksize, complib, complevel, legacy_mode
 
 
-def shuffle_h5(filepath_input, tool=False, seed=42, delete=True, chunksize=None,
+def shuffle_h5(filepath_input, tool=False, seed=42, delete=False, chunksize=None,
                complib=None, complevel=None, legacy_mode=False, shuffle=True,
                event_skipper=None):
     """
