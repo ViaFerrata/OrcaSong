@@ -186,7 +186,7 @@ def plot_hist_of_files(files, save_as):
             file.close()
 
 
-if __name__ == "__main__":
+def main():
     parser = argparse.ArgumentParser(description='Plot the bin stats in h5 files')
     parser.add_argument('save_as', metavar='S', type=str,
                         help='Where to save the plot to.')
@@ -195,3 +195,7 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
     plot_hist_of_files(args.files, args.save_as)
+
+
+if __name__ == "__main__":
+    main()

@@ -126,7 +126,7 @@ def parse_input():
 
 def shuffle_h5(filepath_input, tool=False, seed=42, delete=False, chunksize=None,
                complib=None, complevel=None, legacy_mode=False, shuffle=True,
-               event_skipper=None):
+               event_skipper=None, filepath_output=None):
     """
     Shuffles a .h5 file where each dataset needs to have the same number of rows (axis_0).
     The shuffled data is saved to a new .h5 file with the suffix < _shuffled.h5 >.
@@ -166,6 +166,9 @@ def shuffle_h5(filepath_input, tool=False, seed=42, delete=False, chunksize=None
     event_skipper : func, optional
         Function that takes the blob as an input, and returns a bool.
         If the bool is true, the blob will be skipped.
+    filepath_output : str, optional
+        If given, this will be the name of the output file. Otherwise, a name
+        is auto generated.
 
     Returns
     -------
@@ -185,13 +188,14 @@ def shuffle_h5(filepath_input, tool=False, seed=42, delete=False, chunksize=None
     if complib == 'lzf':
         complevel = None
 
-    filepath_input_without_ext = os.path.splitext(filepath_input)[0]
-    fname_adtn = ''
-    if shuffle:
-        fname_adtn += '_shuffled'
-    if event_skipper is not None:
-        fname_adtn += '_reb'
-    filepath_output = filepath_input_without_ext + fname_adtn + ".h5"
+    if filepath_output is None:
+        filepath_input_without_ext = os.path.splitext(filepath_input)[0]
+        fname_adtn = ''
+        if shuffle:
+            fname_adtn += '_shuffled'
+        if event_skipper is not None:
+            fname_adtn += '_reb'
+        filepath_output = filepath_input_without_ext + fname_adtn + ".h5"
 
     if not legacy_mode:
         # set random km3pipe (=numpy) seed

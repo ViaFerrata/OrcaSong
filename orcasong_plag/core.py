@@ -26,7 +26,7 @@ class FileBinner:
     bin_edges_list : List
         List with the names of the fields to bin, and the respective bin edges,
         including the left- and right-most bin edge.
-        Example:
+        Example: For 10 bins in the z direction, and 100 bins in time:
             bin_edges_list = [
                 ["pos_z", np.linspace(0, 10, 11)],
                 ["time", np.linspace(-50, 550, 101)],
@@ -44,6 +44,10 @@ class FileBinner:
         It shows the distribution of hits, the bin edges, and how many hits
         were cut off for each field name in bin_edges_list.
         It will be saved to the same path as the outfile in run.
+    keep_event_info : bool
+        If True, will keep the "event_info" table.
+    keep_mc_tracks : bool
+        If True, will keep the "McTracks" table.
     n_statusbar : int, optional
         Print a statusbar every n blobs.
     n_memory_observer : int, optional
@@ -70,6 +74,7 @@ class FileBinner:
     """
     def __init__(self, bin_edges_list, mc_info_extr=None,
                  event_skipper=None, add_bin_stats=True):
+
         self.bin_edges_list = bin_edges_list
         self.mc_info_extr = mc_info_extr
         self.event_skipper = event_skipper
@@ -78,6 +83,9 @@ class FileBinner:
             self.bin_plot_freq = 1
         else:
             self.bin_plot_freq = None
+
+        self.keep_event_info = True
+        self.keep_mc_tracks = False
 
         self.n_statusbar = 1000
         self.n_memory_observer = 1000
@@ -192,7 +200,12 @@ class FileBinner:
                         mc_info_extr=mc_info_extr,
                         store_as="mc_info")
 
-        pipe.attach(km.common.Keep, keys=['histogram', 'mc_info'])
+        keys_keep = ['histogram', 'mc_info']
+        if self.keep_event_info:
+            keys_keep.append('EventInfo')
+        if self.keep_mc_tracks:
+            keys_keep.append('McTracks')
+        pipe.attach(km.common.Keep, keys=keys_keep)
 
         pipe.attach(kp.io.HDF5Sink,
                     filename=outfile,
