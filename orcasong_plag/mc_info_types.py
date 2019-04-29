@@ -65,58 +65,74 @@ def get_mupage_mc(blob):
     track = dict()
 
     track["event_id"] = blob['EventInfo'].event_id[0]
-    track["run_id"] = blob["EventInfo"].run_id
+    track["run_id"] = blob["EventInfo"].run_id[0]
     # run_id = blob['Header'].start_run.run_id.astype('float32')
 
     # take 0: assumed that this is the same for all muons in a bundle
     track["particle_type"] = blob['McTracks'][0].type
+
     # always 1 actually
-    track["is_cc"] = blob['McTracks'][0].is_cc
+    # track["is_cc"] = blob['McTracks'][0].is_cc
+
     # always 0 actually
-    track["bjorkeny"] = blob['McTracks'][0].bjorkeny
+    # track["bjorkeny"] = blob['McTracks'][0].bjorkeny
+
     # same for all muons in a bundle #TODO not?
     track["time_interaction"] = blob['McTracks'][0].time
+
     # takes position of time_residual_vertex in 'neutrino' case
-    track["n_muons"] = blob['McTracks'].shape[0]
+    n_muons = blob['McTracks'].shape[0]
+    track["n_muons"] = n_muons
 
     # sum up the energy of all muons
     energy = blob['McTracks'].energy
     track["energy"] = np.sum(energy)
-    # energy in the highest energy muons of the bundle
-    sorted_energy = np.sort(energy)
-    track["energy_highest_frac"] = sorted_energy[-1]/np.sum(energy)
-    if len(energy) > 1:
-        sec_highest_energy = sorted_energy[-2]/np.sum(energy)
-    else:
-        sec_highest_energy = 0.
-    track["energy_sec_highest_frac"] = sec_highest_energy
-    # coefficient of variation of energy
-    track["energy_cvar"] = np.std(energy)/np.mean(energy)
+
+    # Origin of each mchit (as int) in the active line
+    in_active_du = blob["McHits"]["du"] == active_du
+    origin = blob["McHits"]["origin"][in_active_du]
 
     # get how many mchits were produced per muon in the bundle
-    origin = blob["McHits"]["origin"][blob["McHits"]["du"] == active_du]
     origin_dict = dict(zip(*np.unique(origin, return_counts=True)))
     origin_list = []
-    for i in range(1, track["n_muons"]+1):
+    for i in range(1, n_muons+1):
         origin_list.append(origin_dict.get(i, 0))
     origin_list = np.array(origin_list)
+    track["n_mc_hits"] = np.sum(origin_list)
+    desc_order = np.argsort(-origin_list)
 
-    # fraction of mchits in the highest mchit muons of the bundle
-    sorted_origin = np.sort(origin_list)
-    track["mchit_highest_frac"] = sorted_origin[-1] / np.sum(origin_list)
-    if len(sorted_origin) > 1:
-        sec_highest_mchit_frac = sorted_origin[-2] / np.sum(origin_list)
-    else:
-        sec_highest_mchit_frac = 0.
-    track["mchit_sec_highest_frac"] = sec_highest_mchit_frac
+    # Sort by energy, highest first
+    sorted_energy = energy[desc_order]
+    sorted_mc_hits = origin_list[desc_order]
+
+    # Store number of mchits of the 10 highest mchits muons (-1 if it has less)
+    for i in range(10):
+        field_name = "n_mc_hits_"+str(i)
+
+        if i < len(sorted_mc_hits):
+            field_data = sorted_mc_hits[i]
+        else:
+            field_data = -1
+
+        track[field_name] = field_data
+
+    # Store energy of the 10 highest mchits muons (-1 if it has less)
+    for i in range(10):
+        field_name = "energy_"+str(i)
+
+        if i < len(sorted_energy):
+            field_data = sorted_energy[i]
+        else:
+            field_data = -1
+
+        track[field_name] = field_data
 
     # only muons with at least one mchit in active line
     track["n_muons_visible"] = len(origin_list[origin_list > 0])
     # only muons with at least 5 mchits in active line
-    track["n_muons_thresh"] = len(origin_list[origin_list > 4])
-
-    # coefficient of variation of the origin of mc hits in the bundle
-    track["mchit_cvar"] = np.std(origin_list)/np.mean(origin_list)
+    track["n_muons_5_mchits"] = len(origin_list[origin_list > 4])
+    # only muons with at least 10 mchits in active line
+    track["n_muons_10_mchits"] = len(origin_list[origin_list > 9])
 
     # all muons in a bundle are parallel, so just take dir of first muon
     track["dir_x"] = blob['McTracks'][0].dir_x
