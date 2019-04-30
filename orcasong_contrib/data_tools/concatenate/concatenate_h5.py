@@ -202,7 +202,8 @@ def get_f_compression_and_chunking(filepath):
 
 
 def concatenate_h5_files(output_filepath, file_list,
-                         chunksize=None, complib=None, complevel=None):
+                         chunksize=None, complib=None, complevel=None,
+                         event_skipper=None):
     """
     Function that concatenates hdf5 files based on an output_filepath and a file_list of input files.
 
@@ -229,6 +230,9 @@ def concatenate_h5_files(output_filepath, file_list,
         A compression level is only available for gzip compression, not lzf!
         If None, the compression level is read from the first input file.
         Else, a custom compression level will be used.
+    event_skipper : function, optional
+        Function that gets the "y" dataset, and returns an array with bools
+        showing which events to skip (ie not include in the output).
 
     """
     cum_rows_list = get_cum_number_of_rows(file_list)
@@ -251,6 +255,10 @@ def concatenate_h5_files(output_filepath, file_list,
         if 'format_version' in list(input_file.attrs.keys()) and n == 0:
             file_output.attrs['format_version'] = input_file.attrs['format_version']
 
+        if event_skipper is not None:
+            y_dataset = input_file["y"]
+            skips = event_skipper(y_dataset)
+
         for folder_name in input_file:
 
             if is_folder_ignored(folder_name):
@@ -269,6 +277,12 @@ def concatenate_h5_files(output_filepath, file_list,
                 folder_data = input_file[folder_name]
 
             print('Shape and dtype of dataset ' + folder_name + ': ' + str(folder_data.shape) + ' ; ' + str(folder_data.dtype))
+
+            if event_skipper is not None:
+                folder_data = folder_data[skips]
+                print('Event Skipper: Shape and dtype of dataset ' +
+                      folder_name + ': ' + str(folder_data.shape) +
+                      ' ; ' + str(folder_data.dtype))
 
             if n == 0:
                 # first file; create the dummy dataset with no max shape
@@ -292,6 +306,9 @@ def concatenate_h5_files(output_filepath, file_list,
         print('Dataset ' + folder_name + ' with the following shape, dtype and chunks (first argument'
               ' is the chunksize in axis_0): \n' + str(file_output[folder_name].shape) + ' ; ' +
               str(file_output[folder_name].dtype) + ' ; ' + str(file_output[folder_name].chunks))
+
+    file_list_ascii = [n.encode("ascii", "ignore") for n in file_list]
+    file_output.create_dataset("used_files", data=file_list_ascii)
 
     file_output.close()
 

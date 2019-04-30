@@ -35,8 +35,8 @@ Calling the object like this will show you the binning:
 
 .. code-block:: python
 
-    fb
-    >>> <FileBinner: ('pos_z', 'time') (10, 100)>
+    >>> fb
+    <FileBinner: ('pos_z', 'time') (10, 100)>
 
 As you can see, the FileBinner will produce zt data, with 10 and 100 bins,
 respectively.
