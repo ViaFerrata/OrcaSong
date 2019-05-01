@@ -1,3 +1,28 @@
+"""
+Distribute filepaths among lists, so that they can be concatenated to a
+given number of files, and with a train/val split.
+
+Main function: get_split
+    The output will be a list with dicts containing a name for the concatenated
+    file, and the paths of the individual files that will be concatenated.
+    This can be handed over to concatenate_h5 in orcasong.
+
+Example:
+    For a folder with 4 files named file_0.h5 to file_3.h5 and a 50:50 split
+    between train/val:
+
+    [
+     {
+      'file_list': array(['file_2.h5', file_1.h5]), dtype='<U69'),
+      'output_filepath': 'test_train_0.h5'
+     },
+     {
+      'file_list': array(['file_4.h5', 'file_0.h5']), dtype='<U69'),
+      'output_filepath': 'test_val_0.h5'
+     },
+    ]
+
+"""
 import os
 import numpy as np
 
@@ -67,7 +92,7 @@ def split_path_list(files, train_frac, n_train_files, n_val_files):
 
 
 def get_split(folder, outfile_basestr, n_train_files=1, n_val_files=1,
-              train_frac=0.8):
+              train_frac=0.8, seed=64):
     """
     Prepare to concatentate binned .h5 files to training and validation files.
 
@@ -88,6 +113,8 @@ def get_split(folder, outfile_basestr, n_train_files=1, n_val_files=1,
         get automatically attached to the name.
     train_frac : float
         The fraction of files in the train set.
+    seed : int, optional
+        Seed for the random stuff.
 
     Returns
     -------
@@ -95,6 +122,9 @@ def get_split(folder, outfile_basestr, n_train_files=1, n_val_files=1,
         Contains the arguments for the concatenate script.
 
     """
+    if seed is not None:
+        np.random.seed(seed)
+
     files = get_files(folder)
     job_files_train, job_files_val = split_path_list(files, train_frac, n_train_files, n_val_files)
 
