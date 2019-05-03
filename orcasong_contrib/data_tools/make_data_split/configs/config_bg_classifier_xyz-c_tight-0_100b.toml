@@ -62,7 +62,7 @@
 
 n_files_train = 29
 n_files_validate = 13
-n_files_rest = 1
+n_files_rest = 50
 output_file_folder = "/home/saturn/capn/mppi033h/Data/input_images/ORCA_2016_115l/tight_0_100b_t_bg_classifier/data_splits/xyzc"
 output_file_name = "xyzc_tight_0_100b_bg_classifier_dataset"
 print_only = false # only print information of your input_groups, don't make any .list files
