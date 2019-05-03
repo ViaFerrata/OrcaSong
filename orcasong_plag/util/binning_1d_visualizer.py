@@ -16,6 +16,8 @@ import matplotlib.pyplot as plt
 
 from orcasong_plag.modules import time_preproc
 
+__author__ = 'Stefan Reck'
+
 
 class FieldPlotter:
     """

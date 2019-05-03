@@ -8,6 +8,8 @@ import h5py
 import numpy as np
 import argparse
 
+__author__ = 'Stefan Reck'
+
 
 def plot_hists(hists, save_to, plot_bin_edges=True):
     """

@@ -26,6 +26,8 @@ Example:
 import os
 import numpy as np
 
+__author__ = 'Stefan Reck'
+
 
 def get_files(folder):
     """

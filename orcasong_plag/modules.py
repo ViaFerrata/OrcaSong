@@ -5,6 +5,8 @@ Custom km3pipe modules for making nn input files.
 import km3pipe as kp
 import numpy as np
 
+__author__ = 'Stefan Reck'
+
 
 class McInfoMaker(kp.Module):
     """

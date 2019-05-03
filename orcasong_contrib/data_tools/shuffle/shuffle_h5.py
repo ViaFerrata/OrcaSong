@@ -216,13 +216,15 @@ def shuffle_h5(filepath_input, tool=False, seed=42, delete=False, chunksize=None
 
         pipe.attach(kp.io.hdf5.HDF5Sink, filename=filepath_output, complib=complib, complevel=complevel, chunksize=chunksize, flush_frequency=1000)
         pipe.drain()
+
+        # copy the used_files dataset to the new file
+        copy_used_files(filepath_input, filepath_output)
+
         if delete:
             os.remove(filepath_input)
 
-        output_file_filepath = filepath_output if delete is False else filepath_input
-        output_file_shuffled = h5py.File(output_file_filepath, 'r+')
-
         # delete folders with '_i_' that are created by pytables in the HDF5Sink, we don't need them
+        output_file_shuffled = h5py.File(filepath_output, 'r+')
         for folder_name in output_file_shuffled:
             if folder_name.startswith('_i_'):
                 del output_file_shuffled[folder_name]
@@ -264,6 +266,20 @@ def shuffle_h5(filepath_input, tool=False, seed=42, delete=False, chunksize=None
         output_file_shuffled.close()
     else:
         return output_file_shuffled
+
+
+def copy_used_files(source_file, target_file):
+    """
+    Copy the "used_files" dataset from one h5 file to another, if it is present.
+
+    """
+    with h5py.File(source_file, "r") as src:
+        if "used_files" in src:
+            print("Copying used_files dataset to new file...")
+            used_files = src["used_files"]
+
+            with h5py.File(target_file, "a") as trg:
+                trg.create_dataset("used_files", data=used_files)
 
 
 def main():

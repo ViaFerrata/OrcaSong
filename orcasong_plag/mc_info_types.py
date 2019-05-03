@@ -3,8 +3,10 @@ Functions that extract info from a blob for the mc_info / y datafield
 in the h5 files.
 """
 
-import numpy as np
 import warnings
+import numpy as np
+
+__author__ = 'Stefan Reck'
 
 
 def get_mc_info_extr(mc_info_extr):
