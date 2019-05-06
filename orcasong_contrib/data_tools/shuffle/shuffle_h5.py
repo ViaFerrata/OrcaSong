@@ -124,6 +124,21 @@ def parse_input():
     return input_files_list, delete, chunksize, complib, complevel, legacy_mode
 
 
+def get_filepath_output(filepath_input, shuffle, event_skipper):
+    """
+    Get the filename of the shuffled / rebalanced output file as a str.
+
+    """
+    filepath_input_without_ext = os.path.splitext(filepath_input)[0]
+    fname_adtn = ''
+    if shuffle:
+        fname_adtn += '_shuffled'
+    if event_skipper is not None:
+        fname_adtn += '_reb'
+    filepath_output = filepath_input_without_ext + fname_adtn + ".h5"
+    return filepath_output
+
+
 def shuffle_h5(filepath_input, tool=False, seed=42, delete=False, chunksize=None,
                complib=None, complevel=None, legacy_mode=False, shuffle=True,
                event_skipper=None, filepath_output=None):
@@ -189,13 +204,8 @@ def shuffle_h5(filepath_input, tool=False, seed=42, delete=False, chunksize=None
         complevel = None
 
     if filepath_output is None:
-        filepath_input_without_ext = os.path.splitext(filepath_input)[0]
-        fname_adtn = ''
-        if shuffle:
-            fname_adtn += '_shuffled'
-        if event_skipper is not None:
-            fname_adtn += '_reb'
-        filepath_output = filepath_input_without_ext + fname_adtn + ".h5"
+        filepath_output = get_filepath_output(filepath_input, shuffle,
+                                              event_skipper)
 
     if not legacy_mode:
         # set random km3pipe (=numpy) seed

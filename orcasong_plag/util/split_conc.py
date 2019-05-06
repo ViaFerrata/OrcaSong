@@ -13,12 +13,14 @@ Example:
 
     [
      {
-      'file_list': array(['file_2.h5', file_1.h5]), dtype='<U69'),
-      'output_filepath': 'test_train_0.h5'
+      'file_list': array(['file_2.h5', file_1.h5]),
+      'output_filepath': 'test_train_0.h5',
+      'is_train': True,
      },
      {
-      'file_list': array(['file_4.h5', 'file_0.h5']), dtype='<U69'),
-      'output_filepath': 'test_val_0.h5'
+      'file_list': array(['file_4.h5', 'file_0.h5']),
+      'output_filepath': 'test_val_0.h5',
+      'is_train': False,
      },
     ]
 
@@ -136,7 +138,8 @@ def get_split(folder, outfile_basestr, n_train_files=1, n_val_files=1,
         output_filepath = "{}_train_{}.h5".format(outfile_basestr, i)
         job_dict = {
             "file_list": job_files,
-            "output_filepath": output_filepath
+            "output_filepath": output_filepath,
+            "is_train": True,
         }
         jobs.append(job_dict)
 
@@ -144,7 +147,8 @@ def get_split(folder, outfile_basestr, n_train_files=1, n_val_files=1,
         output_filepath = "{}_val_{}.h5".format(outfile_basestr, i)
         job_dict = {
             "file_list": job_files,
-            "output_filepath": output_filepath
+            "output_filepath": output_filepath,
+            "is_train": False,
         }
         jobs.append(job_dict)
 
