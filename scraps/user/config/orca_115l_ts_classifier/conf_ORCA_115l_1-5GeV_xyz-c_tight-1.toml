@@ -1,0 +1,32 @@
+# A config file for OrcaSong.
+# More info about the .toml format at https://github.com/toml-lang/toml
+
+
+####----- Configuration for ORCA 115l -----####
+
+###--- 1-5GeV ---###
+
+## XYZ-T
+
+output_dirpath = '/home/woody/capn/mppi033h/orcasong_outputs/ts_tight_1_1_5_xyzc'
+chunksize = 32
+complib = 'zlib'
+complevel = 1
+n_bins = [11,13,18,60]
+det_geo = 'Orca_115l_23m_h_9m_v'
+do2d = false
+do2d_plots = false
+do2d_plots_n = 10
+do3d = false
+do4d = true
+do4d_mode = 'channel_id'
+timecut_mode = 'trigger_cluster'
+timecut_timespan = 'tight-1'
+do_mc_hits = false
+data_cut_triggered = false
+data_cut_e_low = 'None'
+data_cut_e_high = 'None'
+data_cut_throw_away = 'None'
+data_cut_custom_func = 'ts_e_flat'
+prod_ident = 2 # for neutrinos: 1: 3-100 GeV prod, 2: 1-5 GeV prod ; mupage: 3 ; random_noise: 4
+flush_freq = 1000
