@@ -37,7 +37,7 @@ Please feel free to contact me or just open an issue on Gitlab / Github if you h
    :caption: Contents:
 
    getting_started
-   orcasong_plag
+   orcasong_2
    CONTRIBUTING
    Source (Git) <https://git.km3net.de/ml/OrcaSong.git>
 

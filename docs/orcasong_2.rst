@@ -1,7 +1,7 @@
-OrcaSong Plag
-=============
+OrcaSong 2
+==========
 
-OrcaSong Plag is an alternative to orcasong, with (hopefully) more
+OrcaSong 2 is an alternative to orcasong, with (hopefully) more
 accessible features.
 It has a slightly reduced functionality (no plots), but apart from that
 does the same job as orcasong.
@@ -10,12 +10,12 @@ Basic Use
 ---------
 
 Import the main class, the FileBinner (see
-:py:class:`orcasong_plag.core.FileBinner`),
+:py:class:`orcasong_2.core.FileBinner`),
 like this:
 
 .. code-block:: python
 
-    from orcasong_plag.core import FileBinner
+    from orcasong_2.core import FileBinner
 
 The FileBinner allows to make nd histograms ("images") from calibrated and
 h5-converted root files.
