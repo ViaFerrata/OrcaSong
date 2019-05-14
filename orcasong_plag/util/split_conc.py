@@ -11,6 +11,12 @@ Example:
     For a folder with 4 files named file_0.h5 to file_3.h5 and a 50:50 split
     between train/val:
 
+    get_split(folder,
+              outfile_basestr='test',
+              n_train_files=1,
+              n_val_files=1,
+              train_frac=0.5)
+
     [
      {
       'file_list': array(['file_2.h5', file_1.h5]),
@@ -98,7 +104,7 @@ def split_path_list(files, train_frac, n_train_files, n_val_files):
 def get_split(folder, outfile_basestr, n_train_files=1, n_val_files=1,
               train_frac=0.8, seed=64):
     """
-    Prepare to concatentate binned .h5 files to training and validation files.
+    Distribute filepaths among lists (see doc at top of file).
 
     The files in each train or val file will be drawn randomly from the
     available files. Each train or val files will be created by its own
