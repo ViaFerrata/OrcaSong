@@ -2,15 +2,15 @@ import os
 import km3pipe as kp
 import km3modules as km
 
-from orcasong_plag.modules import (TimePreproc,
-                                   ImageMaker,
-                                   McInfoMaker,
-                                   BinningStatsMaker,
-                                   EventSkipper)
-from orcasong_plag.mc_info_types import get_mc_info_extr
-from orcasong_plag.util.bin_stats_plot import (plot_hists,
-                                               add_hists_to_h5file,
-                                               plot_hist_of_files)
+from orcasong_2.modules import (TimePreproc,
+                                ImageMaker,
+                                McInfoMaker,
+                                BinningStatsMaker,
+                                EventSkipper)
+from orcasong_2.mc_info_types import get_mc_info_extr
+from orcasong_2.util.bin_stats_plot import (plot_hists,
+                                            add_hists_to_h5file,
+                                            plot_hist_of_files)
 
 __author__ = 'Stefan Reck'
 
