@@ -77,7 +77,11 @@ def parse_input():
     args = parser.parse_args()
 
     if args.list_file:
-        file_list = [line.rstrip('\n') for line in open(args.list_file)]
+        file_list = []
+        for line in open(args.list_file):
+            filepath = line.rstrip('\n')
+            if filepath != "":
+                file_list.append(filepath)
     else:
         file_list = []
         for filepath in args.files:

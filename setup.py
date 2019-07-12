@@ -28,7 +28,8 @@ setup(
     entry_points={'console_scripts': ['make_nn_images=orcasong.make_nn_images:main',
                                       'shuffle=orcasong_contrib.data_tools.shuffle.shuffle_h5:main',
                                       'concatenate=orcasong_contrib.data_tools.concatenate.concatenate_h5:main',
-                                      'make_dsplit=orcasong_contrib.data_tools.make_data_split.make_data_split:main']}
+                                      'make_dsplit=orcasong_contrib.data_tools.make_data_split.make_data_split:main',
+                                      'plot_binstats=orcasong_2.util.bin_stats_plot:main']}
 
 )
 

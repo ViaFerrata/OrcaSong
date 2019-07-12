@@ -2,8 +2,9 @@
 Custom km3pipe modules for making nn input files.
 """
 
-import km3pipe as kp
+import warnings
 import numpy as np
+import km3pipe as kp
 
 __author__ = 'Stefan Reck'
 
@@ -41,46 +42,66 @@ class TimePreproc(kp.Module):
     """
     Preprocess the time in the blob.
 
-    t0 will be added to the time for real data, but not simulations.
-    Time hits and mchits will be shifted by the time of the first
+    Can add t0 to hit times.
+    Times of hits and mchits can be centered with the time of the first
     triggered hit.
 
+    Attributes
+    ----------
+    add_t0 : bool
+        If true, t0 will be added.
+    center_time : bool
+        If true, center hit and mchit times.
+
     """
+    def configure(self):
+        self.add_t0 = self.require('add_t0')
+        self.center_time = self.get('center_time', default=True)
+
+        self.has_mchits = None
+        self._t0_flag = False
+        self._cent_hits_flag = False
+        self._cent_mchits_flag = False
+
     def process(self, blob):
-        correct_mchits = "McHits" in blob
-        blob = time_preproc(blob,
-                            correct_hits=True,
-                            correct_mchits=correct_mchits)
+        if self.has_mchits is None:
+            self.has_mchits = "McHits" in blob
+
+        if self.add_t0:
+            blob = self.add_t0_time(blob)
+        blob = self.center_hittime(blob)
+
         return blob
 
-
-def time_preproc(blob, correct_hits=True, correct_mchits=True):
-    """
-    Preprocess the time in the blob.
-
-    t0 will be added to the time for real data, but not simulations.
-    Time hits and mchits will be shifted by the time of the first
-    triggered hit.
-
-    """
-    hits_time = blob["Hits"].time
-
-    if "McHits" not in blob:
-        # add t0 only for real data, not sims
+    def add_t0_time(self, blob):
+        if not self._t0_flag:
+            self._t0_flag = True
+            print("Adding t0 to hit times")
+        hits_time = blob["Hits"].time
         hits_t0 = blob["Hits"].t0
-        hits_time = np.add(hits_time, hits_t0)
+        blob["Hits"].time = np.add(hits_time, hits_t0)
 
-    hits_triggered = blob["Hits"].triggered
-    t_first_trigger = np.min(hits_time[hits_triggered == 1])
+        return blob
 
-    if correct_hits:
-        blob["Hits"].time = np.subtract(hits_time, t_first_trigger)
+    def center_hittime(self, blob):
+        hits_time = blob["Hits"].time
+        hits_triggered = blob["Hits"].triggered
+        t_first_trigger = np.min(hits_time[hits_triggered == 1])
 
-    if correct_mchits:
-        mchits_time = blob["McHits"].time
-        blob["McHits"].time = np.subtract(mchits_time, t_first_trigger)
+        if self.center_time:
+            if not self._cent_hits_flag:
+                print("Centering time of Hits")
+                self._cent_hits_flag = True
+            blob["Hits"].time = np.subtract(hits_time, t_first_trigger)
 
-    return blob
+        if self.has_mchits:
+            if not self._cent_mchits_flag:
+                print("Centering time of McHits")
+                self._cent_mchits_flag = True
+            mchits_time = blob["McHits"].time
+            blob["McHits"].time = np.subtract(mchits_time, t_first_trigger)
+
+        return blob
 
 
 class ImageMaker(kp.Module):
@@ -238,3 +259,39 @@ class EventSkipper(kp.Module):
             return
         else:
             return blob
+
+
+class DetApplier(kp.Module):
+    """
+    Apply calibration to the Hits with a detx file.
+
+    Attributes
+    ----------
+    det_file : str
+        Path to a .detx detector geometry file.
+
+    """
+    def configure(self):
+        self.det_file = self.require("det_file")
+        self.assert_t0_is_added = self.get("check_t0", default=False)
+
+        self.calib = kp.calib.Calibration(filename=self.det_file)
+
+    def process(self, blob):
+        if self.assert_t0_is_added:
+            original_time = blob["Hits"].time
+
+        blob = self.calib.process(blob, outkey="Hits")
+
+        if self.assert_t0_is_added:
+            actual_time = blob["Hits"].time
+            t0 = blob["Hits"].t0
+            target_time = np.add(original_time, t0)
+            if not np.array_equal(actual_time, target_time):
+                print(actual_time)
+                print(target_time)
+                raise AssertionError("t0 not added!")
+            else:
+                print("t0 was added ok")
+
+        return blob

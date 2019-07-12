@@ -14,7 +14,7 @@ import numpy as np
 import km3pipe as kp
 import matplotlib.pyplot as plt
 
-from orcasong_2.modules import time_preproc
+from orcasong_2.modules import TimePreproc, DetApplier
 
 __author__ = 'Stefan Reck'
 
@@ -43,6 +43,8 @@ class FieldPlotter:
         The .h5 file(s).
     field : str
         The field to look stuff up, e.g. "time", "pos_z", ...
+    det_file : str, optional
+        Path to a detx file for calibrating.
     filter_for_du : int, optional
         Only get hits from one specific du, specified by the int.
     hits : ndarray
@@ -70,10 +72,11 @@ class FieldPlotter:
         If True, auto plt.show() the plot.
 
     """
-    def __init__(self, files, field):
+    def __init__(self, files, field, det_file=None):
         self.files = files
         self.field = field
         self.filter_for_du = None
+        self.det_file = det_file
 
         self.hits = None
         self.mc_hits = None
@@ -177,8 +180,14 @@ class FieldPlotter:
 
         event_pump = kp.io.hdf5.HDF5Pump(filenames=files)
 
+        if self.det_file is not None:
+            cal = DetApplier(det_file=self.det_file)
+
         for i, event_blob in enumerate(event_pump):
             self.n_events += 1
+
+            if self.det_file is not None:
+                event_blob = cal.process(event_blob)
 
             if i % 2000 == 0:
                 print("Blob no. "+str(i))
@@ -345,12 +354,13 @@ class TimePlotter(FieldPlotter):
     """
     For plotting the time.
     """
-    def __init__(self, files):
+    def __init__(self, files, add_t0=True, det_file=None):
         field = "time"
-        FieldPlotter.__init__(self, files, field)
+        FieldPlotter.__init__(self, files, field, det_file=det_file)
+        self.tp = TimePreproc(add_t0=add_t0)
 
     def _get_hits(self, blob, get_mc_hits):
-        blob = time_preproc(blob)
+        blob = self.tp.process(blob)
 
         if get_mc_hits:
             field_name = "McHits"
@@ -370,9 +380,9 @@ class ZPlotter(FieldPlotter):
     """
     For plotting the z dim.
     """
-    def __init__(self, files):
+    def __init__(self, files, det_file=None):
         field = "pos_z"
-        FieldPlotter.__init__(self, files, field)
+        FieldPlotter.__init__(self, files, field, det_file=det_file)
 
         self.plotting_bins = 100
 

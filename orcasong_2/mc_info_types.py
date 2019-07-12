@@ -1,6 +1,10 @@
 """
 Functions that extract info from a blob for the mc_info / y datafield
 in the h5 files.
+
+These are examples made for the specific given runs. They might not be
+applicable to other data.
+
 """
 
 import warnings
@@ -23,8 +27,11 @@ def get_mc_info_extr(mc_info_extr):
     if mc_info_extr == "mupage":
         mc_info_extr = get_mupage_mc
 
-    elif mc_info_extr == "event_and_run_id":
-        mc_info_extr = get_event_and_run_id
+    elif mc_info_extr == "real_data":
+        mc_info_extr = get_data_info
+
+    elif mc_info_extr == "random_noise":
+        mc_info_extr = get_rn_mc
 
     else:
         raise NameError("Unknown mc_info_type " + mc_info_extr)
@@ -32,16 +39,33 @@ def get_mc_info_extr(mc_info_extr):
     return mc_info_extr
 
 
-def get_event_and_run_id(blob):
+def get_data_info(blob):
     """
-    Get event id and run id from event info.
-    E.g. for the 2017 one line real data.
+    Get info present for real data, e.g.
+    for the 2017 one line real data.
+
+    """
+    event_info = blob['EventInfo']
+
+    track = {
+        'event_id': event_info.event_id,  # was .event_id[0] up to km3pipe 8.16.0
+        'run_id': event_info.run_id,
+        'trigger_mask': event_info.trigger_mask,
+    }
+    return track
+
+
+def get_rn_mc(blob):
+    """
+    For random noise, which has particle_type 0.
     """
     event_id = blob['EventInfo'].event_id[0]
     run_id = blob["EventInfo"].run_id
+    particle_type = 0
 
     track = {'event_id': event_id,
-             'run_id': run_id, }
+             'run_id': run_id,
+             'particle_type': particle_type}
     return track
 
 
