@@ -281,7 +281,9 @@ class DetApplier(kp.Module):
         if self.assert_t0_is_added:
             original_time = blob["Hits"].time
 
-        blob = self.calib.process(blob, outkey="Hits")
+        blob = self.calib.process(blob, key="Hits", outkey="Hits")
+        if "McHits" in blob:
+            blob = self.calib.process(blob, key="McHits", outkey="McHits")
 
         if self.assert_t0_is_added:
             actual_time = blob["Hits"].time

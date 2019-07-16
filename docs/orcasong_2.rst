@@ -52,6 +52,16 @@ Or event this for multiple files, which will all be saved in the given folder:
 
     fb.run_multi(infiles, outfolder)
 
+Calibration
+-----------
+You can supply a detx file to the file binner, in order to
+calibrate the data on the fly:
+
+.. code-block:: python
+
+    fb = FileBinner(bin_edges_list, det_file="path/to/det_file.detx")
+
+
 Adding mc_info
 --------------
 
