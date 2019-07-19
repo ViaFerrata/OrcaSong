@@ -4,7 +4,7 @@ import km3modules as km
 
 import orcasong.modules as modules
 import orcasong.plotting.plot_binstats as plot_binstats
-from orcasong.mc_info_types import get_mc_info_extr
+from orcasong.mc_info_extr import get_mc_info_extr
 
 
 __author__ = 'Stefan Reck'
@@ -72,7 +72,7 @@ class FileBinner:
             stored as the "y" datafield in the .h5 file.
             The function takes the km3pipe blob as an input, and returns
             a dict mapping str to floats.
-            Some examples can be found in orcasong.mc_info_types.
+            Some examples can be found in orcasong.mc_info_extr.
         det_file : str, optional
             Path to a .detx detector geometry file, which can be used to
             calibrate the hits.
