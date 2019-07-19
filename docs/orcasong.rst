@@ -95,6 +95,6 @@ into the file my_plotname.pdf.
 Using existing binnings
 -----------------------
 
-You can use existing bin edges and mc info extractors from ´orcasong.bin_edges´
+You can use existing bin edges and mc info extractors from `orcasong.bin_edges`
 and ´orcasong.mc_info_extr´. These were designed for specific detector layouts
 and productions, though, and might not work properly when used on other data.
