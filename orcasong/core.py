@@ -3,7 +3,7 @@ import km3pipe as kp
 import km3modules as km
 
 import orcasong.modules as modules
-import orcasong.util.bin_stats_plot as bs_plot
+import orcasong.plotting.plot_binstats as plot_binstats
 from orcasong.mc_info_types import get_mc_info_extr
 
 
@@ -66,10 +66,13 @@ class FileBinner:
                     ["pos_z", np.linspace(0, 10, 11)],
                     ["time", np.linspace(-50, 550, 101)],
                 ]
-        mc_info_extr : function or string, optional
+            Some examples can be found in orcasong.bin_edges.
+        mc_info_extr : function, optional
             Function that extracts desired mc_info from a blob, which is then
             stored as the "y" datafield in the .h5 file.
-            Can also give a str identifier for an existing extractor.
+            The function takes the km3pipe blob as an input, and returns
+            a dict mapping str to floats.
+            Some examples can be found in orcasong.mc_info_types.
         det_file : str, optional
             Path to a .detx detector geometry file, which can be used to
             calibrate the hits.
@@ -148,11 +151,11 @@ class FileBinner:
 
         if self.bin_plot_freq is not None:
             hists = smry["BinningStatsMaker"]
-            bs_plot.add_hists_to_h5file(hists, outfile)
+            plot_binstats.add_hists_to_h5file(hists, outfile)
 
             if save_plot:
                 save_as = os.path.splitext(outfile)[0] + "_hists.pdf"
-                bs_plot.plot_hists(hists, save_as)
+                plot_binstats.plot_hists(hists, save_as)
 
     def run_multi(self, infiles, outfolder, save_plot=False):
         """
@@ -183,8 +186,8 @@ class FileBinner:
             self.run(infile, outfile, save_plot=False)
 
         if save_plot:
-            bs_plot.plot_hist_of_files(files=outfiles,
-                                       save_as=outfolder+"binning_hist.pdf")
+            plot_binstats.plot_hist_of_files(files=outfiles,
+                                             save_as=outfolder+"binning_hist.pdf")
 
     def build_pipe(self, infile, outfile):
         """

@@ -53,6 +53,7 @@ from legacy.geo_binning import calculate_bin_edges
 from legacy.utils import get_file_particle_type, EventSkipper
 
 
+# TODO deprecated
 warnings.warn("The original Orcasong is deprecated, and is no longer supported. "
               "Consider switching to the new orcasong.")
 

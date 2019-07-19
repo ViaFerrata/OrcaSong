@@ -2,8 +2,9 @@
 Functions that extract info from a blob for the mc_info / y datafield
 in the h5 files.
 
-These are examples made for the specific given runs. They might not be
-applicable to other data.
+These are made for the specific given runs. They might not be
+applicable to other data, and could cause errors or produce unexpected
+results when used on data other then the specified.
 
 """
 
@@ -25,24 +26,33 @@ def get_mc_info_extr(mc_info_extr):
 
     """
     if mc_info_extr == "mupage":
+        funct = "get_mupage_mc"
         mc_info_extr = get_mupage_mc
 
     elif mc_info_extr == "real_data":
-        mc_info_extr = get_data_info
+        funct = "get_real_data"
+        mc_info_extr = get_real_data
 
     elif mc_info_extr == "random_noise":
-        mc_info_extr = get_rn_mc
+        funct = "get_pure_noise"
+        mc_info_extr = get_pure_noise
 
     else:
         raise NameError("Unknown mc_info_type " + mc_info_extr)
 
+    # TODO deprecated
+    wrng = "The use of a str for mc_info_extr is deprecated. Import the " \
+           "function {} from orcasong.mc_info_types instead, and use this" \
+           "as mc_info_extr".format(funct)
+    warnings.warn(wrng)
+
     return mc_info_extr
 
 
-def get_data_info(blob):
+def get_real_data(blob):
     """
-    Get info present for real data, e.g.
-    for the 2017 one line real data.
+    Get info present in real data.
+    Designed for the 2017 one line runs.
 
     """
     event_info = blob['EventInfo']
@@ -55,17 +65,18 @@ def get_data_info(blob):
     return track
 
 
-def get_rn_mc(blob):
+def get_pure_noise(blob):
     """
-    For random noise, which has particle_type 0.
-    """
-    event_id = blob['EventInfo'].event_id[0]
-    run_id = blob["EventInfo"].run_id
-    particle_type = 0
+    For simulated pure noise events, which have particle_type 0.
 
-    track = {'event_id': event_id,
-             'run_id': run_id,
-             'particle_type': particle_type}
+    """
+    event_info = blob['EventInfo']
+
+    track = {
+        'event_id': event_info.event_id[0],
+        'run_id': event_info.run_id,
+        'particle_type': 0
+    }
     return track
 
 
@@ -76,6 +87,7 @@ def get_mupage_mc(blob):
     Will only take into account muons with at least 1 McHit in the active
     line of the detector.
 
+    Designed for the 2017 run by run mupage simulations.
     e.g. mcv5.1_r3.mupage_10G.km3_AAv1.jterbr00002800.5103.root.h5
 
     Parameters
