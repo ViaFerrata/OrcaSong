@@ -34,6 +34,7 @@ __version__ = '1.0'
 __email__ = 'michael.m.moser@fau.de'
 __status__ = 'Prototype'
 
+import warnings
 import os
 import sys
 #from memory_profiler import profile # for memory profiling, call with @profile; myfunc()
@@ -45,11 +46,15 @@ from docopt import docopt
 mpl.use('Agg')
 from matplotlib.backends.backend_pdf import PdfPages
 
-from orcasong.file_to_hits import EventDataExtractor
-from orcasong.hits_to_histograms import HistogramMaker
-from orcasong.io import load_config, check_user_input, make_output_dirs
-from orcasong.geo_binning import calculate_bin_edges
-from orcasong.utils import get_file_particle_type, EventSkipper
+from legacy.file_to_hits import EventDataExtractor
+from legacy.hits_to_histograms import HistogramMaker
+from legacy.io import load_config, check_user_input, make_output_dirs
+from legacy.geo_binning import calculate_bin_edges
+from legacy.utils import get_file_particle_type, EventSkipper
+
+
+warnings.warn("The original Orcasong is deprecated, and is no longer supported. "
+              "Consider switching to the new orcasong.")
 
 
 def parse_input():

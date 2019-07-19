@@ -24,7 +24,7 @@ necessary information which will help other people to understand the
 situation.
 
 Make a Fork of OrcaSong
-----------------------
+-----------------------
 
 You create a fork (your full own copy of the
 repository), change the code and when you are happy with the changes, you create

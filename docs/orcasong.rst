@@ -1,31 +1,33 @@
-OrcaSong 2
-==========
+.. _orcasong_page:
 
-OrcaSong 2 is an alternative to orcasong, with (hopefully) more
-accessible features.
-It has a slightly reduced functionality (no plots), but apart from that
-does the same job as orcasong.
+Producing images
+================
+
+The main functionality of OrcaSong is to generate multidimensional images
+out of ORCA data.
+
+.. image:: imgs/orcasong_function.PNG
+   :height: 400px
 
 Basic Use
 ---------
 
 Import the main class, the FileBinner (see
-:py:class:`orcasong_2.core.FileBinner`),
+:py:class:`orcasong.core.FileBinner`),
 like this:
 
 .. code-block:: python
 
-    from orcasong_2.core import FileBinner
+    from orcasong.core import FileBinner
 
-The FileBinner allows to make nd histograms ("images") from calibrated and
-h5-converted root files.
+The FileBinner allows to make nd histograms ("images") from h5-converted root files.
 To do this, you can pass a list defining the binning. E.g., the following would
 set up the file binner to generate zt data:
 
 .. code-block:: python
 
     bin_edges_list = [
-        ["pos_z", np.linspace(0, 10, 11)],
+        ["pos_z", np.linspace(0, 200, 11)],
         ["time", np.linspace(-50, 550, 101)],
     ]
 
@@ -46,7 +48,7 @@ Convert a file like this:
 
     fb.run(infile, outfile)
 
-Or event this for multiple files, which will all be saved in the given folder:
+Or convert multiple files, which will all be saved in the given folder:
 
 .. code-block:: python
 
@@ -65,7 +67,7 @@ calibrate the data on the fly:
 Adding mc_info
 --------------
 
-To add info from the mc_tracks (or from wherever), you can define some
+To add info from the mc_tracks (or from anywhere in the blob), you can define some
 function `my_mcinfo_extractor` which takes as an input a km3pipe blob,
 and outputs a dict mapping str to float.
 
@@ -76,3 +78,14 @@ the str being the dtype names. Set up like follows:
 
     fb = FileBinner(bin_edges_list, mc_info_extr=my_mcinfo_extractor)
 
+
+Plotting binning statistics
+---------------------------
+After the binning has succeeded, you can generate a plot which shows the
+distribution of hits among the bins you defined. For this, call the following
+console command::
+
+    plot_binstats my_plotname.pdf file_1_binned.h5 file_2_binned.h5 ...
+
+This will plot the statistics for the files file_1_binned.h5, file_2_binned.h5, ...
+into the file my_plotname.pdf.

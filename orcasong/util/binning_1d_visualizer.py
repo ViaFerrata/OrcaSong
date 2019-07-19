@@ -14,7 +14,7 @@ import numpy as np
 import km3pipe as kp
 import matplotlib.pyplot as plt
 
-from orcasong_2.modules import TimePreproc, DetApplier
+from orcasong.modules import TimePreproc, DetApplier
 
 __author__ = 'Stefan Reck'
 

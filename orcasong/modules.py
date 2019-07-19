@@ -2,9 +2,9 @@
 Custom km3pipe modules for making nn input files.
 """
 
-import warnings
 import numpy as np
 import km3pipe as kp
+import warnings
 
 __author__ = 'Stefan Reck'
 
@@ -273,19 +273,28 @@ class DetApplier(kp.Module):
     """
     def configure(self):
         self.det_file = self.require("det_file")
-        self.assert_t0_is_added = self.get("check_t0", default=False)
 
         self.calib = kp.calib.Calibration(filename=self.det_file)
+        self._calib_checked = False
+
+        # for debugging
+        self._assert_t0_is_added = False
 
     def process(self, blob):
-        if self.assert_t0_is_added:
+        if self._calib_checked is False:
+            if "pos_x" in blob["Hits"]:
+                warnings.warn("pos_x in Hits detected, is the file already "
+                              "calibrated? This might lead to errors with t0.")
+            self._calib_checked = True
+
+        if self._assert_t0_is_added:
             original_time = blob["Hits"].time
 
         blob = self.calib.process(blob, key="Hits", outkey="Hits")
         if "McHits" in blob:
             blob = self.calib.process(blob, key="McHits", outkey="McHits")
 
-        if self.assert_t0_is_added:
+        if self._assert_t0_is_added:
             actual_time = blob["Hits"].time
             t0 = blob["Hits"].t0
             target_time = np.add(original_time, t0)

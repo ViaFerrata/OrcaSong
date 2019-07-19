@@ -11,33 +11,20 @@
 
 |vspace|
 
-Welcome to OrcaSong's documentation!
-====================================
+.. include:: ../Readme.rst
 
-.. image:: https://git.km3net.de/ml/OrcaSong/badges/master/build.svg
-    :target: https://git.km3net.de/ml/OrcaSong/pipelines
+.. toctree::
+    :hidden:
+    :titlesonly:
 
-| OrcaSong is a part of the Deep Learning efforts for the neutrino telescope KM3NeT.
-| Find more information about KM3NeT on http://www.km3net.org.
-
-In this regard, OrcaSong is a project that produces KM3NeT event images based on the raw detector data.
-This means that OrcaSong takes a datafile with (neutrino-) events and based on this data, it produces 2D/3D/4D 'images' (histograms).
-Currently, only simulations with a hdf5 data format are supported as an input.
-These event 'images' are required for some Deep Learning machine learning algorithms, e.g. Convolutional Neural Networks.
-
-As of now, only ORCA detector simulations are supported, but ARCA geometries can be easily implemented as well.
-
-The main code for generating the images is located in orcanet/make_nn_images.py.
-
-As of now, the documentation contains a small introduction to get started and and a complete API documentation.
-Please feel free to contact me or just open an issue on Gitlab / Github if you have any suggestions.
+    self
 
 .. toctree::
    :maxdepth: 2
    :caption: Contents:
 
    getting_started
-   orcasong_2
+   orcasong
    CONTRIBUTING
    Source (Git) <https://git.km3net.de/ml/OrcaSong.git>
 
