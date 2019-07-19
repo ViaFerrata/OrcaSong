@@ -56,6 +56,7 @@ Or convert multiple files, which will all be saved in the given folder:
 
 Calibration
 -----------
+
 You can supply a detx file to the file binner, in order to
 calibrate the data on the fly:
 
@@ -81,6 +82,7 @@ the str being the dtype names. Set up like follows:
 
 Plotting binning statistics
 ---------------------------
+
 After the binning has succeeded, you can generate a plot which shows the
 distribution of hits among the bins you defined. For this, call the following
 console command::
@@ -89,3 +91,10 @@ console command::
 
 This will plot the statistics for the files file_1_binned.h5, file_2_binned.h5, ...
 into the file my_plotname.pdf.
+
+Using existing binnings
+-----------------------
+
+You can use existing bin edges and mc info extractors from ´orcasong.bin_edges´
+and ´orcasong.mc_info_extr´. These were designed for specific detector layouts
+and productions, though, and might not work properly when used on other data.
