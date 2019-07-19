@@ -69,7 +69,7 @@ Adding mc_info
 --------------
 
 To add info from the mc_tracks (or from anywhere in the blob), you can define some
-function `my_mcinfo_extractor` which takes as an input a km3pipe blob,
+function ``my_mcinfo_extractor`` which takes as an input a km3pipe blob,
 and outputs a dict mapping str to float.
 
 This will be saved as a numpy structured array "y" in the output file, with
@@ -95,6 +95,6 @@ into the file my_plotname.pdf.
 Using existing binnings
 -----------------------
 
-You can use existing bin edges and mc info extractors from `orcasong.bin_edges`
-and ´orcasong.mc_info_extr´. These were designed for specific detector layouts
+You can use existing bin edges and mc info extractors from ``orcasong.bin_edges``
+and ``orcasong.mc_info_extr``. These were designed for specific detector layouts
 and productions, though, and might not work properly when used on other data.
