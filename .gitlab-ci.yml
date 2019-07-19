@@ -1,34 +1,67 @@
+variables:
+  PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
+
+
 stages:
-  - install
+  - test
+  - coverage
   - doc
   - release
 
-before_script:
-  - apt-get update -qq && apt-get install -y -qq libhdf5-dev
-  - pip install -U pip setuptools wheel numpy
-  - pip install .
 
-install-os:
-    image: docker.km3net.de/base/python:3
-    stage: install
+cache:
+  paths:
+    - .cache/pip
+    - venv/
+  key: "$CI_COMMIT_REF_SLUG"
+
+
+.virtualenv_template: &virtualenv_definition |
+  python -V
+  pip install virtualenv
+  virtualenv venv
+  source venv/bin/activate
+  make install
+
+
+test:
+    image: docker.km3net.de/base/python:3.6
+    stage: test
     script:
-        - pip install .
+        - *virtualenv_definition
+        - make test
+
+
+coverage:
+    image: docker.km3net.de/base/python:3.6
+    stage: coverage
+    script:
+        - *virtualenv_definition
+        - "make test|grep TOTAL| awk '{printf \"COVERAGE: %.2f%%\", (1-$3/$2)*100 }'"
+    coverage: '/COVERAGE:\s*([0-9]*\.[0-9]*%)/'
+    artifacts:
+        paths:
+            - reports/coverage
+
 
 pages:
-    image: docker.km3net.de/base/python:3
+    image: docker.km3net.de/base/python:3.6
     stage: doc
     script:
+        - *virtualenv_definition
         - cd docs && make html
         - mv _build/html/ ../public/
+        - cd .. && mv reports/coverage public/coverage
     artifacts:
         paths:
             - public
+    cache: {}
     only:
         - tags
         - master
 
 pypi:
-    image: docker.km3net.de/base/python:3
+    image: docker.km3net.de/base/python:3.6
     stage: release
     cache: {}
     script:
@@ -37,4 +70,3 @@ pypi:
         - twine upload dist/*
     only:
         - tags
-
