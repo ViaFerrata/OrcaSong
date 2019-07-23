@@ -77,9 +77,12 @@ class TimePreproc(kp.Module):
         if not self._t0_flag:
             self._t0_flag = True
             print("Adding t0 to hit times")
-        hits_time = blob["Hits"].time
-        hits_t0 = blob["Hits"].t0
-        blob["Hits"].time = np.add(hits_time, hits_t0)
+        blob["Hits"].time = np.add(blob["Hits"].time,
+                                   blob["Hits"].t0)
+
+        if self.has_mchits:
+            blob["McHits"].time = np.add(blob["McHits"].time,
+                                         blob["McHits"].t0)
 
         return blob
 
@@ -106,7 +109,7 @@ class TimePreproc(kp.Module):
 
 class ImageMaker(kp.Module):
     """
-    Make a n-d histogram from the blob.
+    Make a n-d histogram from "Hits" in blob, and store it.
 
     Attributes
     ----------

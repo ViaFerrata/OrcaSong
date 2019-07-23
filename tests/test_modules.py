@@ -109,8 +109,9 @@ class TestTimePreproc(TestCase):
         out_blob = module.process(self.in_blob)
 
         self.assertSetEqual(set(out_blob.keys()), set(target.keys()))
-        np.testing.assert_array_equal(np.array(out_blob["Hits"]),
-                                      np.array(target["Hits"]))
+        np.testing.assert_array_almost_equal(
+            np.array(out_blob["Hits"].view("<f8")),
+            np.array(target["Hits"].view("<f8")))
 
     def test_time_preproc_mchits_t0_and_center(self):
         module = modules.TimePreproc(
@@ -128,9 +129,145 @@ class TestTimePreproc(TestCase):
                 "triggered": [0, 1, 1],
             }),
         }
-
-        out_blob = module.process(self.in_blob)
+        out_blob = module.process(self.in_blob_mc)
 
         self.assertSetEqual(set(out_blob.keys()), set(target.keys()))
-        np.testing.assert_array_equal(np.array(out_blob["McHits"]),
-                                      np.array(target["McHits"]))
+        np.testing.assert_array_almost_equal(
+            np.array(out_blob["McHits"].view("<f8")),
+            np.array(target["McHits"].view("<f8")))
+
+
+class TestImageMaker(TestCase):
+    def test_2d_xt_binning(self):
+        # (3 x 2) x-t binning
+        bin_edges_list = [
+            ["x", [3.5, 4.5, 5.5, 6.5]],
+            ["time", [0.5, 2, 3.5]]
+        ]
+
+        module = modules.ImageMaker(
+            bin_edges_list=bin_edges_list, store_as="histogram")
+        in_blob = {
+            "Hits": Table({
+                "x": [4, 5, 6],
+                'time': [1., 2., 3.],
+                "t0": [0.1, 0.2, 0.3],
+                "triggered": [0, 1, 1],
+            })
+        }
+
+        target = {
+            "Hits": Table({
+                "x": [4, 5, 6],
+                'time': [1., 2., 3.],
+                "t0": [0.1, 0.2, 0.3],
+                "triggered": [0, 1, 1],
+            }),
+            "histogram": np.array([[
+                [1, 0],
+                [0, 1],
+                [0, 1],
+            ]])
+        }
+
+        out_blob = module.process(in_blob)
+        self.assertSetEqual(set(out_blob.keys()), set(target.keys()))
+        np.testing.assert_array_almost_equal(
+            np.array(out_blob["Hits"].view("<f8")),
+            np.array(target["Hits"].view("<f8")))
+        np.testing.assert_array_almost_equal(
+            np.array(out_blob["histogram"]),
+            np.array(target["histogram"]))
+
+    def test_unknown_field(self):
+        # (3 x 2) x-t binning
+        bin_edges_list = [
+            ["aggg", [3.5, 4.5, 5.5, 6.5]],
+            ["time", [0.5, 2, 3.5]]
+        ]
+
+        module = modules.ImageMaker(
+            bin_edges_list=bin_edges_list, store_as="histogram")
+        in_blob = {
+            "Hits": Table({
+                "x": [4, 5, 6],
+                'time': [1., 2., 3.],
+                "t0": [0.1, 0.2, 0.3],
+                "triggered": [0, 1, 1],
+            })
+        }
+
+        with self.assertRaises(ValueError):
+            module.process(in_blob)
+
+    def test_1d_binning(self):
+        # (1, ) t binning
+        bin_edges_list = [
+            ["time", [2.5, 3.5]]
+        ]
+
+        module = modules.ImageMaker(
+            bin_edges_list=bin_edges_list, store_as="histogram")
+        in_blob = {
+            "Hits": Table({
+                'time': [1., 2., 3.],
+                "t0": [0.1, 0.2, 0.3],
+                "triggered": [0, 1, 1],
+            })
+        }
+
+        target = {
+            "Hits": Table({
+                'time': [1., 2., 3.],
+                "t0": [0.1, 0.2, 0.3],
+                "triggered": [0, 1, 1],
+            }),
+            "histogram": np.array([
+                [1, ],
+            ])
+        }
+
+        out_blob = module.process(in_blob)
+        self.assertSetEqual(set(out_blob.keys()), set(target.keys()))
+        np.testing.assert_array_almost_equal(
+            np.array(out_blob["Hits"].view("<f8")),
+            np.array(target["Hits"].view("<f8")))
+        np.testing.assert_array_almost_equal(
+            np.array(out_blob["histogram"]),
+            np.array(target["histogram"]))
+
+    def test_1d_binning_no_hits(self):
+        # (1, ) t binning
+        bin_edges_list = [
+            ["time", [3.5, 4.5]]
+        ]
+
+        module = modules.ImageMaker(
+            bin_edges_list=bin_edges_list, store_as="histogram")
+        in_blob = {
+            "Hits": Table({
+                'time': [1., 2., 3.],
+                "t0": [0.1, 0.2, 0.3],
+                "triggered": [0, 1, 1],
+            })
+        }
+
+        target = {
+            "Hits": Table({
+                'time': [1., 2., 3.],
+                "t0": [0.1, 0.2, 0.3],
+                "triggered": [0, 1, 1],
+            }),
+            "histogram": np.array([
+                [0, ],
+            ])
+        }
+
+        out_blob = module.process(in_blob)
+        self.assertSetEqual(set(out_blob.keys()), set(target.keys()))
+        np.testing.assert_array_almost_equal(
+            np.array(out_blob["Hits"].view("<f8")),
+            np.array(target["Hits"].view("<f8")))
+        np.testing.assert_array_almost_equal(
+            np.array(out_blob["histogram"]),
+            np.array(target["histogram"]))
