@@ -175,10 +175,10 @@ class BinningStatsMaker(kp.Module):
         self.pdf_path = self.get('pdf_path', default=None)
         self.bin_plot_freq = self.get("bin_plot_freq", default=1)
         self.res_increase = self.get('res_increase', default=5)
-        self.plot_bin_edges = self.get('plot_bin_edges', default=True)
 
         self.hists = {}
         for bin_name, org_bin_edges in self.bin_edges_list:
+            # dont space bin edges for time
             if bin_name == "time":
                 bin_edges = org_bin_edges
             else:
@@ -212,7 +212,9 @@ class BinningStatsMaker(kp.Module):
             for bin_name, hists_data in self.hists.items():
                 hist_bin_edges = hists_data["hist_bin_edges"]
 
-                data = blob["Hits"][bin_name]
+                hits = blob["Hits"]
+                # get all hits which are not cut off by other bin edges
+                data = hits[bin_name][self._is_in_limits(hits, excluded=bin_name)]
                 hist = np.histogram(data, bins=hist_bin_edges)[0]
 
                 out_pos = data[data > np.max(hist_bin_edges)].size
@@ -240,6 +242,21 @@ class BinningStatsMaker(kp.Module):
 
         """
         return self.hists
+
+    def _is_in_limits(self, hits, excluded=None):
+        """ Get which hits are in the limits defined by ALL bin edges
+        (except for given one). """
+        inside = None
+        for dfield, edges in self.bin_edges_list:
+            if dfield == excluded:
+                continue
+            is_in = np.logical_and(hits[dfield] >= min(edges),
+                                   hits[dfield] <= max(edges))
+            if inside is None:
+                inside = is_in
+            else:
+                inside = np.logical_and(inside, is_in)
+        return inside
 
 
 class EventSkipper(kp.Module):

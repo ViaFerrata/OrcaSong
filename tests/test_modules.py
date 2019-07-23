@@ -34,6 +34,19 @@ class TestModules(TestCase):
         np.testing.assert_array_equal(out_blob["test"]["time_2"],
                                       np.array([12.3, ]))
 
+    def test_event_skipper(self):
+        def event_skipper(blob):
+            if blob == 42:
+                # skip it
+                return True
+            else:
+                return False
+
+        module = modules.EventSkipper(event_skipper=event_skipper)
+
+        self.assertEqual(module.process(42), None)
+        self.assertEqual(module.process(25), 25)
+
 
 class TestTimePreproc(TestCase):
     def setUp(self):
@@ -271,3 +284,54 @@ class TestImageMaker(TestCase):
         np.testing.assert_array_almost_equal(
             np.array(out_blob["histogram"]),
             np.array(target["histogram"]))
+
+
+class TestBinningStatsMaker(TestCase):
+    def test_it(self):
+        # (3 x 2) x-t binning
+        bin_edges_list = [
+            ["x", [3.5, 4.5, 5.5, 6.5]],
+            ["time", [0.5, 2, 3.5]]
+        ]
+
+        in_blob = {
+            "Hits": Table({
+                "x": [4, 5, 6, 6],
+                'time': [1., 2., 3., 50],
+                "t0": [0.1, 0.2, 0.3, 0.4],
+                "triggered": [0, 1, 1, 1],
+            })
+        }
+
+        target = {
+            'x': {
+                'hist': np.array([0., 1., 0., 1., 0., 1.]),
+                'hist_bin_edges': np.array([3.5, 4., 4.5, 5., 5.5, 6., 6.5]),
+                'bin_edges': [3.5, 4.5, 5.5, 6.5],
+                'cut_off': np.array([0., 0.])
+            },
+            'time': {
+                'hist': np.array([1., 2.]),
+                'hist_bin_edges': [0.5, 2, 3.5],
+                'bin_edges': [0.5, 2, 3.5],
+                'cut_off': np.array([0., 1.])
+            }
+        }
+
+        module = modules.BinningStatsMaker(
+            bin_edges_list=bin_edges_list, res_increase=2)
+        module.process(in_blob)
+
+        check_dicts_n_ray(module.hists, target)
+
+
+def check_dicts_n_ray(a, b):
+    """ Check if dicts with dicts with ndarrays are equal. """
+    if set(a.keys()) != set(b.keys()):
+        raise KeyError("{} != {}".format(a.keys(), b.keys()))
+    for key in a.keys():
+        if set(a[key].keys()) != set(b[key].keys()):
+            raise KeyError("{} != {}".format(a[key].keys(), b[key].keys()))
+        for skey in a[key].keys():
+            np.testing.assert_array_almost_equal(a[key][skey], b[key][skey])
+
