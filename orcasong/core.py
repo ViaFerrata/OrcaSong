@@ -1,7 +1,9 @@
 import os
+import h5py
 import km3pipe as kp
 import km3modules as km
 
+import orcasong
 import orcasong.modules as modules
 import orcasong.plotting.plot_binstats as plot_binstats
 from orcasong.mc_info_extr import get_mc_info_extr
@@ -157,6 +159,8 @@ class FileBinner:
                 save_as = os.path.splitext(outfile)[0] + "_hists.pdf"
                 plot_binstats.plot_hists(hists, save_as)
 
+        add_version_info(outfile)
+
     def run_multi(self, infiles, outfolder, save_plot=False):
         """
         Bin multiple files into their own output files each.
@@ -264,3 +268,8 @@ class FileBinner:
     def __repr__(self):
         name, shape = self.get_names_and_shape()
         return "<FileBinner: {} {}>".format(name, shape)
+
+
+def add_version_info(file):
+    with h5py.File(file, "a") as f:
+        f.attrs.create("orcasong", orcasong.__version__, dtype="S6")
