@@ -291,13 +291,16 @@ class TestBinningStatsMaker(TestCase):
         # (3 x 2) x-t binning
         bin_edges_list = [
             ["x", [3.5, 4.5, 5.5, 6.5]],
-            ["time", [0.5, 2, 3.5]]
+            ["time", [0.5, 2, 3.5]],
+            ["z", [1, 4]]
         ]
 
         in_blob = {
             "Hits": Table({
                 "x": [4, 5, 6, 6],
                 'time': [1., 2., 3., 50],
+                "z": [0, 3, 4, 5],
+
                 "t0": [0.1, 0.2, 0.3, 0.4],
                 "triggered": [0, 1, 1, 1],
             })
@@ -305,24 +308,30 @@ class TestBinningStatsMaker(TestCase):
 
         target = {
             'x': {
-                'hist': np.array([0., 1., 0., 1., 0., 1.]),
+                'hist': np.array([0., 0., 0., 1., 0., 1.]),
                 'hist_bin_edges': np.array([3.5, 4., 4.5, 5., 5.5, 6., 6.5]),
                 'bin_edges': [3.5, 4.5, 5.5, 6.5],
                 'cut_off': np.array([0., 0.])
             },
             'time': {
-                'hist': np.array([1., 2.]),
+                'hist': np.array([0., 2.]),
                 'hist_bin_edges': [0.5, 2, 3.5],
                 'bin_edges': [0.5, 2, 3.5],
                 'cut_off': np.array([0., 1.])
+            },
+            'z': {
+                'hist': np.array([0., 2.]),
+                'hist_bin_edges': np.array([1., 2.5, 4.]),
+                'bin_edges': [1, 4],
+                'cut_off': np.array([1., 1.])
             }
         }
 
         module = modules.BinningStatsMaker(
             bin_edges_list=bin_edges_list, res_increase=2)
         module.process(in_blob)
-
-        check_dicts_n_ray(module.hists, target)
+        output = module.finish()
+        check_dicts_n_ray(output, target)
 
 
 def check_dicts_n_ray(a, b):

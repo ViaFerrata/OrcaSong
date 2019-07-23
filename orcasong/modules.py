@@ -213,12 +213,14 @@ class BinningStatsMaker(kp.Module):
                 hist_bin_edges = hists_data["hist_bin_edges"]
 
                 hits = blob["Hits"]
+                data = hits[bin_name]
+                # get how much is cut off due to these limits
+                out_pos = data[data > np.max(hist_bin_edges)].size
+                out_neg = data[data < np.min(hist_bin_edges)].size
+
                 # get all hits which are not cut off by other bin edges
                 data = hits[bin_name][self._is_in_limits(hits, excluded=bin_name)]
                 hist = np.histogram(data, bins=hist_bin_edges)[0]
-
-                out_pos = data[data > np.max(hist_bin_edges)].size
-                out_neg = data[data < np.min(hist_bin_edges)].size
 
                 self.hists[bin_name]["hist"] += hist
                 self.hists[bin_name]["cut_off"] += np.array([out_neg, out_pos])
