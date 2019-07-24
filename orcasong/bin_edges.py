@@ -26,3 +26,4 @@ def get_edges_2017_ztc():
         ["channel_id", np.linspace(-0.5, 30.5, 31+1)],
     ]
     return bin_edges_list
+

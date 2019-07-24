@@ -305,7 +305,8 @@ class DetApplier(kp.Module):
     def process(self, blob):
         if self._calib_checked is False:
             if "pos_x" in blob["Hits"]:
-                warnings.warn("pos_x in Hits detected, is the file already "
+                warnings.warn("Warning: Using a det file, but pos_x in Hits "
+                              " detected. Is the file already "
                               "calibrated? This might lead to errors with t0.")
             self._calib_checked = True
 
