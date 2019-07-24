@@ -7,6 +7,10 @@ OrcaSong: Generating DL images from KM3NeT data
 .. image:: https://examples.pages.km3net.de/km3badges/docs-latest-brightgreen.svg
     :target: https://ml.pages.km3net.de/OrcaSong
 
+.. image:: https://api.codacy.com/project/badge/Grade/1591b2d2d20e4c06a66cad99dc6aebe3
+    :alt: Codacy Badge
+    :target: https://www.codacy.com/app/sreck/OrcaSong?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=StefReck/OrcaSong&amp;utm_campaign=Badge_Grade
+
 
 The documentation for OrcaSong can be found at https://ml.pages.km3net.de/OrcaSong!
 

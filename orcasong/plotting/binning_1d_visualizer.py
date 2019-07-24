@@ -244,7 +244,7 @@ class FieldPlotter:
         bin_edges = self._get_padded_bin_edges()
 
         fig, ax = plt.subplots()
-        n, bins, patches = plt.hist(data, bins=bin_edges, **self.hist_kwargs)
+        bins = plt.hist(data, bins=bin_edges, **self.hist_kwargs)[1]
         print("Size of first bin: " + str(bins[1] - bins[0]))
 
         plt.grid(True, zorder=0, linestyle='dotted')

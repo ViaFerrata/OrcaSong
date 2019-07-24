@@ -11,9 +11,9 @@ at http://ml.pages.km3net.de/OrcaSong
 
 ### Environment
 
-- OrcaSong version:
-- Python version (`python --version`):
-- OS: (`uname -a`)
+-  OrcaSong version:
+-  Python version (`python --version`):
+-  OS: (`uname -a`)
 
 ### What is the current *bug* behavior?
 
