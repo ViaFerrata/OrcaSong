@@ -58,7 +58,8 @@ def get_real_data(blob):
     event_info = blob['EventInfo']
 
     track = {
-        'event_id': event_info.event_id,  # was .event_id[0] up to km3pipe 8.16.0
+        'event_id': event_info.event_id,
+        # was .event_id[0] up to km3pipe 8.16.0
         'run_id': event_info.run_id,
         'trigger_mask': event_info.trigger_mask,
     }

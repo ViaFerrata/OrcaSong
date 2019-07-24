@@ -21,9 +21,9 @@ def get_edges_2017_ztc():
 
     """
     bin_edges_list = [
-        ["pos_z", np.linspace(26, 198, 18+1)],
-        ["time", np.linspace(-50, 550, 100+1)],
-        ["channel_id", np.linspace(-0.5, 30.5, 31+1)],
+        ["pos_z", np.linspace(26, 198, 18 + 1)],
+        ["time", np.linspace(-50, 550, 100 + 1)],
+        ["channel_id", np.linspace(-0.5, 30.5, 31 + 1)],
     ]
     return bin_edges_list
 
