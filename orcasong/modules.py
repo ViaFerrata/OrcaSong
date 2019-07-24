@@ -2,9 +2,9 @@
 Custom km3pipe modules for making nn input files.
 """
 
+import warnings
 import numpy as np
 import km3pipe as kp
-import warnings
 
 __author__ = 'Stefan Reck'
 

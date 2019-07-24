@@ -1,7 +1,7 @@
 from unittest import TestCase
+import numpy as np
 import orcasong.modules as modules
 from km3pipe.dataclasses import Table
-import numpy as np
 
 
 __author__ = 'Stefan Reck'
@@ -36,11 +36,7 @@ class TestModules(TestCase):
 
     def test_event_skipper(self):
         def event_skipper(blob):
-            if blob == 42:
-                # skip it
-                return True
-            else:
-                return False
+            return blob == 42
 
         module = modules.EventSkipper(event_skipper=event_skipper)
 
@@ -343,4 +339,3 @@ def check_dicts_n_ray(a, b):
             raise KeyError("{} != {}".format(a[key].keys(), b[key].keys()))
         for skey in a[key].keys():
             np.testing.assert_array_almost_equal(a[key][skey], b[key][skey])
-

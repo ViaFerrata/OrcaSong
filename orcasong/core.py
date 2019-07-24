@@ -271,5 +271,6 @@ class FileBinner:
 
 
 def add_version_info(file):
+    """ Add current orcasong version to h5 file. """
     with h5py.File(file, "a") as f:
         f.attrs.create("orcasong", orcasong.__version__, dtype="S6")

@@ -3,13 +3,14 @@ Run with a parser to plot the binning statistics.
 Functions for plotting the bin stats made by the BinningStatsMaker module.
 """
 
+import os
+import warnings
+import argparse
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_pdf import PdfPages
 import h5py
 import numpy as np
-import argparse
-import os
-import warnings
+
 
 __author__ = 'Stefan Reck'
 
