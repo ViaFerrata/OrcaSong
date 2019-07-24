@@ -15,6 +15,8 @@ Options:
 
 """
 
+__author__ = 'Michael Moser'
+
 import os
 import toml
 import docopt

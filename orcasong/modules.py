@@ -22,6 +22,7 @@ class McInfoMaker(kp.Module):
         Store the mcinfo with this name in the blob.
 
     """
+
     def configure(self):
         self.mc_info_extr = self.require('mc_info_extr')
         self.store_as = self.require('store_as')
@@ -29,10 +30,8 @@ class McInfoMaker(kp.Module):
     def process(self, blob):
         track = self.mc_info_extr(blob)
         dtypes = [(key, np.float64) for key in track.keys()]
-        kp_hist = kp.dataclasses.Table(track,
-                                       dtype=dtypes,
-                                       h5loc='y',
-                                       name='event_info')
+        kp_hist = kp.dataclasses.Table(
+            track, dtype=dtypes,  h5loc='y', name='event_info')
 
         blob[self.store_as] = kp_hist
         return blob
@@ -54,6 +53,7 @@ class TimePreproc(kp.Module):
         If true, center hit and mchit times.
 
     """
+
     def configure(self):
         self.add_t0 = self.require('add_t0')
         self.center_time = self.get('center_time', default=True)
@@ -77,9 +77,11 @@ class TimePreproc(kp.Module):
         if not self._t0_flag:
             self._t0_flag = True
             print("Adding t0 to hit times")
-        hits_time = blob["Hits"].time
-        hits_t0 = blob["Hits"].t0
-        blob["Hits"].time = np.add(hits_time, hits_t0)
+        blob["Hits"].time = np.add(blob["Hits"].time, blob["Hits"].t0)
+
+        if self.has_mchits:
+            blob["McHits"].time = np.add(blob["McHits"].time,
+                                         blob["McHits"].t0)
 
         return blob
 
@@ -106,7 +108,7 @@ class TimePreproc(kp.Module):
 
 class ImageMaker(kp.Module):
     """
-    Make a n-d histogram from the blob.
+    Make a n-d histogram from "Hits" in blob, and store it.
 
     Attributes
     ----------
@@ -117,6 +119,7 @@ class ImageMaker(kp.Module):
         Store the images with this name in the blob.
 
     """
+
     def configure(self):
         self.bin_edges_list = self.require('bin_edges_list')
         self.store_as = self.require('store_as')
@@ -133,7 +136,8 @@ class ImageMaker(kp.Module):
         title = name + "event_images"
 
         hist_one_event = histogram[np.newaxis, ...].astype(np.uint8)
-        kp_hist = kp.dataclasses.NDArray(hist_one_event, h5loc='x', title=title)
+        kp_hist = kp.dataclasses.NDArray(
+            hist_one_event, h5loc='x', title=title)
 
         blob[self.store_as] = kp_hist
         return blob
@@ -166,16 +170,17 @@ class BinningStatsMaker(kp.Module):
         for the time binning (field name "time").
 
     """
+
     def configure(self):
         self.bin_edges_list = self.require('bin_edges_list')
 
         self.pdf_path = self.get('pdf_path', default=None)
         self.bin_plot_freq = self.get("bin_plot_freq", default=1)
         self.res_increase = self.get('res_increase', default=5)
-        self.plot_bin_edges = self.get('plot_bin_edges', default=True)
 
         self.hists = {}
         for bin_name, org_bin_edges in self.bin_edges_list:
+            # dont space bin edges for time
             if bin_name == "time":
                 bin_edges = org_bin_edges
             else:
@@ -196,8 +201,8 @@ class BinningStatsMaker(kp.Module):
         Increase resolution of given binning.
         """
         increased_n_bins = (len(bin_edges) - 1) * self.res_increase + 1
-        bin_edges = np.linspace(bin_edges[0], bin_edges[-1],
-                                increased_n_bins)
+        bin_edges = np.linspace(
+            bin_edges[0], bin_edges[-1], increased_n_bins)
 
         return bin_edges
 
@@ -209,11 +214,16 @@ class BinningStatsMaker(kp.Module):
             for bin_name, hists_data in self.hists.items():
                 hist_bin_edges = hists_data["hist_bin_edges"]
 
-                data = blob["Hits"][bin_name]
-                hist = np.histogram(data, bins=hist_bin_edges)[0]
-
+                hits = blob["Hits"]
+                data = hits[bin_name]
+                # get how much is cut off due to these limits
                 out_pos = data[data > np.max(hist_bin_edges)].size
                 out_neg = data[data < np.min(hist_bin_edges)].size
+
+                # get all hits which are not cut off by other bin edges
+                data = hits[bin_name][self._is_in_limits(
+                    hits, excluded=bin_name)]
+                hist = np.histogram(data, bins=hist_bin_edges)[0]
 
                 self.hists[bin_name]["hist"] += hist
                 self.hists[bin_name]["cut_off"] += np.array([out_neg, out_pos])
@@ -238,6 +248,21 @@ class BinningStatsMaker(kp.Module):
         """
         return self.hists
 
+    def _is_in_limits(self, hits, excluded=None):
+        """ Get which hits are in the limits defined by ALL bin edges
+        (except for given one). """
+        inside = None
+        for dfield, edges in self.bin_edges_list:
+            if dfield == excluded:
+                continue
+            is_in = np.logical_and(hits[dfield] >= min(edges),
+                                   hits[dfield] <= max(edges))
+            if inside is None:
+                inside = is_in
+            else:
+                inside = np.logical_and(inside, is_in)
+        return inside
+
 
 class EventSkipper(kp.Module):
     """
@@ -250,6 +275,7 @@ class EventSkipper(kp.Module):
         If the bool is true, the blob will be skipped.
 
     """
+
     def configure(self):
         self.event_skipper = self.require('event_skipper')
 
@@ -271,29 +297,39 @@ class DetApplier(kp.Module):
         Path to a .detx detector geometry file.
 
     """
+
     def configure(self):
         self.det_file = self.require("det_file")
-        self.assert_t0_is_added = self.get("check_t0", default=False)
 
         self.calib = kp.calib.Calibration(filename=self.det_file)
+        self._calib_checked = False
+
+        # for debugging
+        self._assert_t0_is_added = False
 
     def process(self, blob):
-        if self.assert_t0_is_added:
-            original_time = blob["Hits"].time
+        if self._calib_checked is False:
+            if "pos_x" in blob["Hits"]:
+                warnings.warn("Warning: Using a det file, but pos_x in Hits "
+                              " detected. Is the file already "
+                              "calibrated? This might lead to errors with t0.")
+            self._calib_checked = True
+
+        # original_time = blob["Hits"].time
 
         blob = self.calib.process(blob, key="Hits", outkey="Hits")
         if "McHits" in blob:
             blob = self.calib.process(blob, key="McHits", outkey="McHits")
 
-        if self.assert_t0_is_added:
-            actual_time = blob["Hits"].time
-            t0 = blob["Hits"].t0
-            target_time = np.add(original_time, t0)
-            if not np.array_equal(actual_time, target_time):
-                print(actual_time)
-                print(target_time)
-                raise AssertionError("t0 not added!")
-            else:
-                print("t0 was added ok")
-
+        """
+        actual_time = blob["Hits"].time
+        t0 = blob["Hits"].t0
+        target_time = np.add(original_time, t0)
+        if not np.array_equal(actual_time, target_time):
+            print(actual_time)
+            print(target_time)
+            raise AssertionError("t0 not added!")
+        else:
+            print("t0 was added ok")
+        """
         return blob

@@ -3,13 +3,14 @@ Run with a parser to plot the binning statistics.
 Functions for plotting the bin stats made by the BinningStatsMaker module.
 """
 
+import os
+import warnings
+import argparse
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_pdf import PdfPages
 import h5py
 import numpy as np
-import argparse
-import os
-import warnings
+
 
 __author__ = 'Stefan Reck'
 
@@ -168,29 +169,22 @@ def plot_hist_of_files(save_as, files=None):
         Path of files to use instead.
 
     """
+    if files is None:
+        files = get_all_h5_files()
+
     hists_list = []
     opened_files = []
-
-    if not files:
-        all_files = os.listdir(os.getcwd())
-        files = []
-        for file in all_files:
-            if file.endswith(".h5"):
-                files.append(file)
+    print("Plotting stats of {} file(s)".format(len(files)))
 
     try:
-        print("Plotting stats of {} files".format(len(files)))
-        for i, file in enumerate(files):
-            if i % 100 == 0:
-                print("File {}..." .format(i))
-
+        print("Opening files...")
+        for file in files:
             f = h5py.File(file, "r")
             if "bin_stats/" not in f:
                 warnings.warn("ERROR: File {} does not have bin_stats dataset. "
                               "Skipping ...".format(file))
                 f.close()
                 continue
-
             hists_list.append(f["bin_stats/"])
             opened_files.append(f)
 
@@ -203,21 +197,32 @@ def plot_hist_of_files(save_as, files=None):
             file.close()
 
 
+def get_all_h5_files():
+    """ Get a list of all h5 files in the cwd. """
+    files = []
+    for file in os.listdir(os.getcwd()):
+        if file.endswith(".h5"):
+            files.append(file)
+    return files
+
+
 def main():
     parser = argparse.ArgumentParser(
-        description='Plot the bin stats in h5 files. Navigate to the folder '
-                    'where the h5 files are, and then run this script.')
+        description='Generate a plot with statistics of the binning. '
+                    'Can only be used on files generated with the FileBinner when '
+                    'add_bin_stats was set to true (default). ')
 
     parser.add_argument('save_as', type=str, nargs="?",
                         default="bin_stats_plot.pdf",
-                        help='Overwrite the default path or filename where'
-                             'this gets saved to.')
+                        help='Filename of the plot. Default: '
+                             'bin_stats_plot.pdf.')
 
-    parser.add_argument('files', type=str, nargs='*', default=None,
-                        help='List of files to plot. Default: ls.')
+    parser.add_argument('file', type=str, nargs='*', default=None,
+                        help='File(s) to plot. Default: Plot for all h5 '
+                             'files in current dir.')
 
     args = parser.parse_args()
-    plot_hist_of_files(args.save_as, args.files)
+    plot_hist_of_files(args.save_as, args.file)
 
 
 if __name__ == "__main__":

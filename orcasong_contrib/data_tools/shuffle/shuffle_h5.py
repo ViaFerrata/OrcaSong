@@ -22,7 +22,7 @@ import h5py
 import km3pipe as kp
 import km3modules as km
 from orcasong_contrib.data_tools.concatenate.concatenate_h5 import get_f_compression_and_chunking
-from orcasong_2.modules import EventSkipper
+from orcasong.modules import EventSkipper
 
 # from memory_profiler import profile # for memory profiling, call with @profile; myfunc()
 

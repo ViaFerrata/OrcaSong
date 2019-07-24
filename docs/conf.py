@@ -12,26 +12,23 @@
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #
-import os
-import sys
 from datetime import date
 from pkg_resources import get_distribution
 
 import orcasong
-#sys.path.insert(0, os.path.abspath('.'))
+# sys.path.insert(0, os.path.abspath('.'))
 
 
 # -- Project information -----------------------------------------------------
 
 project = "OrcaSong {}".format(orcasong.__version__)
-copyright = u'{0}, Michael Moser'.format(date.today().year)
-author = 'Michael Moser'
+copyright = u'{0}, Stefan Reck, Michael Moser'.format(date.today().year)
+author = 'Stefan Reck, Michael Moser'
 
 # The full version, including alpha/beta/rc tags
 release = get_distribution('orcasong').version
 # The short X.Y version
 version = '.'.join(release.split('.')[:2])
-
 
 
 # -- General configuration ---------------------------------------------------
@@ -57,7 +54,7 @@ autosummary_generate = True
 
 # Document Python Code
 autoapi_type = 'python'
-autoapi_dirs = ['../orcasong', '../orcasong_contrib', '../orcasong_2']
+autoapi_dirs = ['../orcasong', '../orcasong_contrib']
 autoapi_options = [
     'members', 'undoc-members'
     # , 'private-members', 'special-members'
@@ -73,9 +70,9 @@ templates_path = ['_templates']
 # The suffix(es) of source filenames.
 # You can specify multiple suffix as a list of string:
 #
-#source_parsers = {
+# source_parsers = {
 #   '.md': 'recommonmark.parser.CommonMarkParser',}
-#source_suffix = ['.rst', '.md']
+# source_suffix = ['.rst', '.md']
 source_suffix = ['.rst']
 
 # The master toctree document.
@@ -169,7 +166,7 @@ latex_elements = {
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
     (master_doc, 'OrcaSong.tex', 'OrcaSong Documentation',
-     'Michael Moser', 'manual'),
+     'Stefan Reck, Michael Moser', 'manual'),
 ]
 
 
@@ -219,5 +216,7 @@ epub_exclude_files = ['search.html']
 
 # If true, `todo` and `todoList` produce output, else they produce nothing.
 todo_include_todos = True
+
+
 def setup(app):
     app.add_stylesheet('_static/style.css')

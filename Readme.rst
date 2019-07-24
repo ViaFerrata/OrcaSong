@@ -1,13 +1,12 @@
-## OrcaSong: Generating DL images based on KM3NeT data
+OrcaSong: Generating DL images from KM3NeT data
+===============================================
 
-[![alt text][image_1]][hyperlink_1] [![alt text][image_2]][hyperlink_2]
+.. image:: https://git.km3net.de/ml/OrcaSong/badges/master/build.svg
+    :target: https://git.km3net.de/ml/OrcaSong/pipelines
 
-  [hyperlink_1]: https://git.km3net.de/ml/OrcaSong/pipelines
-  [image_1]: https://git.km3net.de/ml/OrcaSong/badges/master/build.svg
+.. image:: https://examples.pages.km3net.de/km3badges/docs-latest-brightgreen.svg
+    :target: https://ml.pages.km3net.de/OrcaSong
 
-  [hyperlink_2]: https://ml.pages.km3net.de/OrcaSong
-  [image_2]: https://examples.pages.km3net.de/km3badges/docs-latest-brightgreen.svg
-  
 
 The documentation for OrcaSong can be found at https://ml.pages.km3net.de/OrcaSong!
 
@@ -19,3 +18,8 @@ This means that OrcaSong takes a datafile with (neutrino-) events and based on t
 Currently, only simulations with a hdf5 data format are supported as an input.
 
 These event 'images' are required for some Deep Learning machine learning algorithms, e.g. Convolutional Neural Networks.
+
+OrcaSong can be installed via pip by running::
+
+    pip install orcasong
+
