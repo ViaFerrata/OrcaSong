@@ -1,16 +1,6 @@
-# sudo singularity build orcasong.simg Singularity
 Bootstrap: docker
-From: python:3.6
-
-%files
-. /orcasong
-
-%post
-cd /orcasong && make install
+From: docker.km3net.de/orcasong:latest
 
 %runscript
-exec /bin/bash "$@"
-
-%startscript
-exec /bin/bash "$@"
+exec "$@"
 
