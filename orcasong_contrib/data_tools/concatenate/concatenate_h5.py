@@ -260,11 +260,11 @@ def concatenate_h5_files(output_filepath, file_list,
                 # we ignore datasets that have been created by pytables, don't need them anymore
                 continue
 
-            if n > 0 and folder_name in ['group_info', 'x_indices', 'y']:
+            if n > 0 and folder_name in ['event_info', 'group_info', 'x_indices', 'y']:
                 folder_data = input_file[folder_name][()]
                 # we need to add the current number of the group_id / index in the file_output
                 # to the group_ids / indices of the file that is to be appended
-                column_name = 'group_id' if folder_name in ['group_info', 'y'] else 'index'
+                column_name = 'group_id' if folder_name in ['event_info', 'group_info', 'y'] else 'index'
                 # add 1 because the group_ids / indices start with 0
                 folder_data[column_name] += np.amax(file_output[folder_name][column_name]) + 1
 
