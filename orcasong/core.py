@@ -208,6 +208,18 @@ class FileBinner:
         pipe.attach(km.common.Keep, keys=['EventInfo', 'Header', 'RawHeader',
                                           'McTracks', 'Hits', 'McHits'])
 
+        self.attach_components(pipe)
+
+        pipe.attach(kp.io.HDF5Sink,
+                    filename=outfile,
+                    complib=self.complib,
+                    complevel=self.complevel,
+                    chunksize=self.chunksize,
+                    flush_frequency=self.flush_frequency)
+        return pipe
+
+    def attach_components(self, pipe):
+        """ Attach the core components of OrcaSong to a pipe. """
         if self.det_file:
             pipe.attach(modules.DetApplier, det_file=self.det_file)
 
@@ -244,14 +256,6 @@ class FileBinner:
         if self.keep_mc_tracks:
             keys_keep.append('McTracks')
         pipe.attach(km.common.Keep, keys=keys_keep)
-
-        pipe.attach(kp.io.HDF5Sink,
-                    filename=outfile,
-                    complib=self.complib,
-                    complevel=self.complevel,
-                    chunksize=self.chunksize,
-                    flush_frequency=self.flush_frequency)
-        return pipe
 
     def get_names_and_shape(self):
         """
