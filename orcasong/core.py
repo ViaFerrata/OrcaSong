@@ -208,7 +208,15 @@ class FileBinner:
         pipe.attach(km.common.Keep, keys=['EventInfo', 'Header', 'RawHeader',
                                           'McTracks', 'Hits', 'McHits'])
 
-        self.attach_components(pipe)
+        keys_keep = ['histogram', 'mc_info']
+        self.attach_components(
+            pipe, name_images=keys_keep[0], name_mc_info=keys_keep[1])
+
+        if self.keep_event_info:
+            keys_keep.append('EventInfo')
+        if self.keep_mc_tracks:
+            keys_keep.append('McTracks')
+        pipe.attach(km.common.Keep, keys=keys_keep)
 
         pipe.attach(kp.io.HDF5Sink,
                     filename=outfile,
@@ -218,8 +226,23 @@ class FileBinner:
                     flush_frequency=self.flush_frequency)
         return pipe
 
-    def attach_components(self, pipe):
-        """ Attach the core components of OrcaSong to a pipe. """
+    def attach_components(self, pipe,
+                          name_histogram="histogram",
+                          name_mc_info="mc_info"):
+        """
+        Attach the core components of OrcaSong to a pipe.
+        Generate images and extract mc_info.
+
+        Parameters
+        ----------
+        pipe : kp Pipe
+            Attach components to this pipe.
+        name_histogram : str
+            The images (histograms) will be saved to blob[name_histogram].
+        name_mc_info : str
+            The extracted mc_info will be saved to blob[name_mc_info].
+
+        """
         if self.det_file:
             pipe.attach(modules.DetApplier, det_file=self.det_file)
 
@@ -238,7 +261,7 @@ class FileBinner:
 
         pipe.attach(modules.ImageMaker,
                     bin_edges_list=self.bin_edges_list,
-                    store_as="histogram")
+                    store_as=name_histogram)
 
         if self.mc_info_extr is not None:
             if isinstance(self.mc_info_extr, str):
@@ -248,14 +271,7 @@ class FileBinner:
 
             pipe.attach(modules.McInfoMaker,
                         mc_info_extr=mc_info_extr,
-                        store_as="mc_info")
-
-        keys_keep = ['histogram', 'mc_info']
-        if self.keep_event_info:
-            keys_keep.append('EventInfo')
-        if self.keep_mc_tracks:
-            keys_keep.append('McTracks')
-        pipe.attach(km.common.Keep, keys=keys_keep)
+                        store_as=name_mc_info)
 
     def get_names_and_shape(self):
         """
