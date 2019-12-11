@@ -210,7 +210,7 @@ class FileBinner:
 
         keys_keep = ['histogram', 'mc_info']
         self.attach_components(
-            pipe, name_images=keys_keep[0], name_mc_info=keys_keep[1])
+            pipe, name_histogram=keys_keep[0], name_mc_info=keys_keep[1])
 
         if self.keep_event_info:
             keys_keep.append('EventInfo')
