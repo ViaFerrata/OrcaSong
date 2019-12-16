@@ -56,7 +56,8 @@ class FileBinner:
                  chunksize=32,
                  keep_event_info=True,
                  keep_mc_tracks=False,
-                 add_t0=False,):
+                 add_t0=False,
+                 use_charge_as_weights=False):
         """
         Parameters
         ----------
@@ -97,6 +98,8 @@ class FileBinner:
         add_t0 : bool
             If true, add t0 to the time of hits. If using a det_file,
             this will already have been done automatically [default: False].
+        use_charge_as_weights : bool
+            If true, uses blob["Hits"]["charge"] as weights for histogram. [default: False]
 
         """
         self.bin_edges_list = bin_edges_list
@@ -120,6 +123,8 @@ class FileBinner:
         self.complib = 'zlib'
         self.complevel = 1
         self.flush_frequency = 1000
+
+        self.use_charge_as_weights = use_charge_as_weights
 
     def run(self, infile, outfile=None, save_plot=False):
         """
@@ -261,7 +266,8 @@ class FileBinner:
 
         pipe.attach(modules.ImageMaker,
                     bin_edges_list=self.bin_edges_list,
-                    store_as=name_histogram)
+                    store_as=name_histogram,
+                    use_charge_as_weights=self.use_charge_as_weights)
 
         if self.mc_info_extr is not None:
             if isinstance(self.mc_info_extr, str):

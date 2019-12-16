@@ -117,12 +117,15 @@ class ImageMaker(kp.Module):
         including the left- and right-most bin edge.
     store_as : str
         Store the images with this name in the blob.
+    use_charge_as_weights : bool
+        If true, uses blob["Hits"]["charge"] as weights for histogram.
 
     """
 
     def configure(self):
         self.bin_edges_list = self.require('bin_edges_list')
         self.store_as = self.require('store_as')
+        self.use_charge_as_weights = self.get('use_charge_as_weights')
 
     def process(self, blob):
         data, bins, name = [], [], ""
@@ -132,7 +135,12 @@ class ImageMaker(kp.Module):
             bins.append(bin_edges)
             name += bin_name + "_"
 
-        histogram = np.histogramdd(data, bins=bins)[0]
+        if self.use_charge_as_weights:
+            weights = blob["Hits"]["charge"]
+        else:
+            weights = None
+
+        histogram = np.histogramdd(data, bins=bins, weights=weights)[0]
         title = name + "event_images"
 
         hist_one_event = histogram[np.newaxis, ...].astype(np.uint8)
