@@ -341,3 +341,45 @@ class DetApplier(kp.Module):
             print("t0 was added ok")
         """
         return blob
+
+
+class HitRotator(kp.Module):
+    """
+        Rotates hits by angle theta.
+        Only keeps events with triggered hits.
+
+        Attributes
+        ----------
+        theta : float
+            Angle by which hits are rotated (radian).
+
+    """
+
+    def configure(self):
+        self.theta = self.require('theta')
+
+    def process(self, blob):
+
+        triggered = blob['Hits']['triggered']
+        if 1 not in triggered:
+            return None
+
+        x = blob['Hits']['x']
+        y = blob['Hits']['y']
+
+        rot_matrix = np.array([[np.cos(self.theta), - np.sin(self.theta)],
+                               [np.sin(self.theta), np.cos(self.theta)]])
+
+        x_rot = []
+        y_rot = []
+
+        for i in range(0, len(x)):
+            vec = np.array([[x[i]], [y[i]]])
+            rot = np.dot(rot_matrix, vec)
+            x_rot.append(rot[0][0])
+            y_rot.append(rot[1][0])
+
+        blob['Hits']['x'] = x_rot
+        blob['Hits']['y'] = y_rot
+
+        return blob
