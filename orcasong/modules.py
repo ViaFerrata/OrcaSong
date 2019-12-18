@@ -117,15 +117,15 @@ class ImageMaker(kp.Module):
         including the left- and right-most bin edge.
     store_as : str
         Store the images with this name in the blob.
-    use_charge_as_weights : bool
-        If true, uses blob["Hits"]["charge"] as weights for histogram.
+    hit_weights : str, optional
+        Use blob["Hits"][hit_weights] as weights for samples in histogram.
 
     """
 
     def configure(self):
         self.bin_edges_list = self.require('bin_edges_list')
         self.store_as = self.require('store_as')
-        self.use_charge_as_weights = self.get('use_charge_as_weights')
+        self.hit_weights = self.get('hit_weights')
 
     def process(self, blob):
         data, bins, name = [], [], ""
@@ -135,8 +135,8 @@ class ImageMaker(kp.Module):
             bins.append(bin_edges)
             name += bin_name + "_"
 
-        if self.use_charge_as_weights:
-            weights = blob["Hits"]["charge"]
+        if self.hit_weights is not None:
+            weights = blob["Hits"][self.hit_weights]
         else:
             weights = None
 
@@ -359,11 +359,6 @@ class HitRotator(kp.Module):
         self.theta = self.require('theta')
 
     def process(self, blob):
-
-        triggered = blob['Hits']['triggered']
-        if 1 not in triggered:
-            return None
-
         x = blob['Hits']['x']
         y = blob['Hits']['y']
 
