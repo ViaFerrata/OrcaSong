@@ -346,7 +346,6 @@ class DetApplier(kp.Module):
 class HitRotator(kp.Module):
     """
         Rotates hits by angle theta.
-        Only keeps events with triggered hits.
 
         Attributes
         ----------
@@ -378,3 +377,4 @@ class HitRotator(kp.Module):
         blob['Hits']['y'] = y_rot
 
         return blob
+
