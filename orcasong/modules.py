@@ -117,12 +117,15 @@ class ImageMaker(kp.Module):
         including the left- and right-most bin edge.
     store_as : str
         Store the images with this name in the blob.
+    hit_weights : str, optional
+        Use blob["Hits"][hit_weights] as weights for samples in histogram.
 
     """
 
     def configure(self):
         self.bin_edges_list = self.require('bin_edges_list')
         self.store_as = self.require('store_as')
+        self.hit_weights = self.get('hit_weights')
 
     def process(self, blob):
         data, bins, name = [], [], ""
@@ -132,7 +135,12 @@ class ImageMaker(kp.Module):
             bins.append(bin_edges)
             name += bin_name + "_"
 
-        histogram = np.histogramdd(data, bins=bins)[0]
+        if self.hit_weights is not None:
+            weights = blob["Hits"][self.hit_weights]
+        else:
+            weights = None
+
+        histogram = np.histogramdd(data, bins=bins, weights=weights)[0]
         title = name + "event_images"
 
         hist_one_event = histogram[np.newaxis, ...].astype(np.uint8)
@@ -333,3 +341,40 @@ class DetApplier(kp.Module):
             print("t0 was added ok")
         """
         return blob
+
+
+class HitRotator(kp.Module):
+    """
+        Rotates hits by angle theta.
+
+        Attributes
+        ----------
+        theta : float
+            Angle by which hits are rotated (radian).
+
+    """
+
+    def configure(self):
+        self.theta = self.require('theta')
+
+    def process(self, blob):
+        x = blob['Hits']['x']
+        y = blob['Hits']['y']
+
+        rot_matrix = np.array([[np.cos(self.theta), - np.sin(self.theta)],
+                               [np.sin(self.theta), np.cos(self.theta)]])
+
+        x_rot = []
+        y_rot = []
+
+        for i in range(0, len(x)):
+            vec = np.array([[x[i]], [y[i]]])
+            rot = np.dot(rot_matrix, vec)
+            x_rot.append(rot[0][0])
+            y_rot.append(rot[1][0])
+
+        blob['Hits']['x'] = x_rot
+        blob['Hits']['y'] = y_rot
+
+        return blob
+
