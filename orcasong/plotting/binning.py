@@ -59,7 +59,7 @@ class TimePlotter:
 
     def hist(self, bins=50, padding=0.5, **kwargs):
         """
-        Plot the hist data.
+        Plot the hits as a histogram.
 
         Parameters
         ----------
@@ -96,7 +96,7 @@ class TimePlotter:
     def print_binstats(self, bin_edges):
         print(f"Cutoff left: {np.mean(self.data < bin_edges[0]):.2%}")
         print(f"Cutoff right: {np.mean(self.data > bin_edges[-1]):.2%}")
-        print(f"Avg. time per bin: {np.mean(np.diff(bin_edges)):.2}")
+        print(f"Avg. time per bin: {np.mean(np.diff(bin_edges)):.2f}")
 
     def _read(self, file, det_file=None):
         if self.det_file is not None:
