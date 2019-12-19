@@ -35,6 +35,9 @@ def plot_hists(hists, save_to, plot_bin_edges=True):
     if isinstance(hists, list):
         hists = combine_hists(hists)
 
+    if os.path.exists(save_to):
+        raise FileExistsError(f"File {save_to} exists already!")
+
     with PdfPages(save_to) as pdf_file:
         for bin_name, hists_data in hists.items():
             hist_bin_edges = hists_data["hist_bin_edges"]
