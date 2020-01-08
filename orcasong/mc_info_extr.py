@@ -14,41 +14,6 @@ import numpy as np
 __author__ = 'Stefan Reck'
 
 
-def get_mc_info_extr(mc_info_extr):
-    """
-    Get an existing mc info extractor function.
-
-    Attributes
-    ----------
-    mc_info_extr : function
-        Function to extract the info. Takes the blob as input, outputs
-        a dict with the desired mc_infos.
-
-    """
-    if mc_info_extr == "mupage":
-        funct = "get_mupage_mc"
-        mc_info_extr = get_mupage_mc
-
-    elif mc_info_extr == "real_data":
-        funct = "get_real_data"
-        mc_info_extr = get_real_data
-
-    elif mc_info_extr == "random_noise":
-        funct = "get_pure_noise"
-        mc_info_extr = get_pure_noise
-
-    else:
-        raise NameError("Unknown mc_info_type " + mc_info_extr)
-
-    # TODO deprecated
-    wrng = "The use of a str for mc_info_extr is deprecated. Import the " \
-           "function {} from orcasong.mc_info_types instead, and use this" \
-           "as mc_info_extr".format(funct)
-    warnings.warn(wrng)
-
-    return mc_info_extr
-
-
 def get_real_data(blob):
     """
     Get info present in real data.

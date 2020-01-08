@@ -2,7 +2,6 @@
 Custom km3pipe modules for making nn input files.
 """
 
-import warnings
 import numpy as np
 import km3pipe as kp
 
@@ -11,7 +10,7 @@ __author__ = 'Stefan Reck'
 
 class McInfoMaker(kp.Module):
     """
-    Get the desired mc_info from the blob.
+    Store mc info as float64 in the blob.
 
     Attributes
     ----------
@@ -76,7 +75,7 @@ class TimePreproc(kp.Module):
     def add_t0_time(self, blob):
         if not self._t0_flag:
             self._t0_flag = True
-            print("Adding t0 to hit times")
+            self.cprint("Adding t0 to hit times")
         blob["Hits"].time = np.add(blob["Hits"].time, blob["Hits"].t0)
 
         if self.has_mchits:
@@ -92,13 +91,13 @@ class TimePreproc(kp.Module):
 
         if self.center_time:
             if not self._cent_hits_flag:
-                print("Centering time of Hits")
+                self.cprint("Centering time of Hits")
                 self._cent_hits_flag = True
             blob["Hits"].time = np.subtract(hits_time, t_first_trigger)
 
         if self.has_mchits:
             if not self._cent_mchits_flag:
-                print("Centering time of McHits")
+                self.cprint("Centering time of McHits")
                 self._cent_mchits_flag = True
             mchits_time = blob["McHits"].time
             blob["McHits"].time = np.subtract(mchits_time, t_first_trigger)
@@ -181,8 +180,6 @@ class BinningStatsMaker(kp.Module):
 
     def configure(self):
         self.bin_edges_list = self.require('bin_edges_list')
-
-        self.pdf_path = self.get('pdf_path', default=None)
         self.bin_plot_freq = self.get("bin_plot_freq", default=1)
         self.res_increase = self.get('res_increase', default=5)
 
@@ -274,11 +271,11 @@ class BinningStatsMaker(kp.Module):
 
 class EventSkipper(kp.Module):
     """
-    Skip events based on some user function.
+    Skip events based on blob content.
 
     Attributes
     ----------
-    event_skipper : func
+    event_skipper : callable
         Function that takes the blob as an input, and returns a bool.
         If the bool is true, the blob will be skipped.
 
@@ -286,18 +283,28 @@ class EventSkipper(kp.Module):
 
     def configure(self):
         self.event_skipper = self.require('event_skipper')
+        self._not_skipped = 0
+        self._skipped = 0
 
     def process(self, blob):
-        skip_event = self.event_skipper(blob)
-        if skip_event:
+        if self.event_skipper(blob):
+            self._skipped += 1
             return
         else:
+            self._not_skipped += 1
             return blob
+
+    def finish(self):
+        tot_events = self._skipped + self._not_skipped
+        self.cprint(
+            f"Skipped {self._skipped}/{tot_events} events "
+            f"({self._skipped/tot_events:.4%})."
+        )
 
 
 class DetApplier(kp.Module):
     """
-    Apply calibration to the Hits with a detx file.
+    Apply calibration to the Hits and McHits with a detx file.
 
     Attributes
     ----------
@@ -312,45 +319,31 @@ class DetApplier(kp.Module):
         self.calib = kp.calib.Calibration(filename=self.det_file)
         self._calib_checked = False
 
-        # for debugging
-        self._assert_t0_is_added = False
-
     def process(self, blob):
         if self._calib_checked is False:
             if "pos_x" in blob["Hits"]:
-                warnings.warn("Warning: Using a det file, but pos_x in Hits "
-                              " detected. Is the file already "
-                              "calibrated? This might lead to errors with t0.")
+                self.log.warn(
+                    "Warning: Using a det file, but pos_x in Hits detected. "
+                    "Is the file already calibrated? This might lead to "
+                    "errors with t0."
+                )
             self._calib_checked = True
-
-        # original_time = blob["Hits"].time
 
         blob = self.calib.process(blob, key="Hits", outkey="Hits")
         if "McHits" in blob:
             blob = self.calib.process(blob, key="McHits", outkey="McHits")
 
-        """
-        actual_time = blob["Hits"].time
-        t0 = blob["Hits"].t0
-        target_time = np.add(original_time, t0)
-        if not np.array_equal(actual_time, target_time):
-            print(actual_time)
-            print(target_time)
-            raise AssertionError("t0 not added!")
-        else:
-            print("t0 was added ok")
-        """
         return blob
 
 
 class HitRotator(kp.Module):
     """
-        Rotates hits by angle theta.
+    Rotates hits by angle theta.
 
-        Attributes
-        ----------
-        theta : float
-            Angle by which hits are rotated (radian).
+    Attributes
+    ----------
+    theta : float
+        Angle by which hits are rotated (radian).
 
     """
 
