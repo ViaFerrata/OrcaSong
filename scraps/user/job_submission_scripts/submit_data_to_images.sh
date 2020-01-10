@@ -25,13 +25,30 @@ python_env_folder=/home/hpc/capn/mppi033h/.virtualenv/python_3_env/
 job_logs_folder=/home/woody/capn/mppi033h/logs/orcasong/cout
 
 detx_filepath=/home/woody/capn/mppi033h/Code/OrcaSong/orcasong_contrib/detx_files/orca_115strings_av23min20mhorizontal_18OMs_alt9mvertical_v1.detx
-#config_file=/home/woody/capn/mppi033h/Code/OrcaSong/scraps/user/config/orca_115l_ts_classifier/conf_ORCA_115l_1-5GeV_xyz-c_tight-1.toml
-#config_file=/home/woody/capn/mppi033h/Code/OrcaSong/scraps/user/config/orca_115l_ts_classifier/conf_ORCA_115l_1-5GeV_xyz-c_tight-2.toml
-#config_file=/home/woody/capn/mppi033h/Code/OrcaSong/scraps/user/config/orca_115l_ts_classifier/conf_ORCA_115l_3-100GeV_xyz-c_tight-1.toml
-config_file=/home/woody/capn/mppi033h/Code/OrcaSong/scraps/user/config/orca_115l_ts_classifier/conf_ORCA_115l_3-100GeV_xyz-c_tight-2.toml
 
 particle_type=tau-CC
 mc_prod=neutr_3-100GeV
+#mc_prod=neutr_1-5GeV
+
+# no cut configs ts
+#config_file=/home/woody/capn/mppi033h/Code/OrcaSong/scraps/user/config/orca_115l_ts_classifier/no_cut/conf_ORCA_115l_1-5GeV_xyz-c_tight-1.toml
+#config_file=/home/woody/capn/mppi033h/Code/OrcaSong/scraps/user/config/orca_115l_ts_classifier/no_cut/conf_ORCA_115l_1-5GeV_xyz-c_tight-2.toml
+#config_file=/home/woody/capn/mppi033h/Code/OrcaSong/scraps/user/config/orca_115l_ts_classifier/no_cut/conf_ORCA_115l_1-5GeV_xyz-t_tight-1.toml
+#config_file=/home/woody/capn/mppi033h/Code/OrcaSong/scraps/user/config/orca_115l_ts_classifier/no_cut/conf_ORCA_115l_1-5GeV_xyz-t_tight-2.toml
+
+#config_file=/home/woody/capn/mppi033h/Code/OrcaSong/scraps/user/config/orca_115l_ts_classifier/no_cut/conf_ORCA_115l_3-100GeV_xyz-c_tight-1.toml
+#config_file=/home/woody/capn/mppi033h/Code/OrcaSong/scraps/user/config/orca_115l_ts_classifier/no_cut/conf_ORCA_115l_3-100GeV_xyz-c_tight-2.toml
+#config_file=/home/woody/capn/mppi033h/Code/OrcaSong/scraps/user/config/orca_115l_ts_classifier/no_cut/conf_ORCA_115l_3-100GeV_xyz-t_tight-1.toml
+config_file=/home/woody/capn/mppi033h/Code/OrcaSong/scraps/user/config/orca_115l_ts_classifier/no_cut/conf_ORCA_115l_3-100GeV_xyz-t_tight-2.toml
+
+
+# cut configs ts
+
+#config_file=/home/woody/capn/mppi033h/Code/OrcaSong/scraps/user/config/orca_115l_ts_classifier/conf_ORCA_115l_1-5GeV_xyz-c_tight-1.toml
+#config_file=/home/woody/capn/mppi033h/Code/OrcaSong/scraps/user/config/orca_115l_ts_classifier/conf_ORCA_115l_1-5GeV_xyz-c_tight-2.toml
+#config_file=/home/woody/capn/mppi033h/Code/OrcaSong/scraps/user/config/orca_115l_ts_classifier/conf_ORCA_115l_3-100GeV_xyz-c_tight-1.toml
+#config_file=/home/woody/capn/mppi033h/Code/OrcaSong/scraps/user/config/orca_115l_ts_classifier/conf_ORCA_115l_3-100GeV_xyz-c_tight-2.toml
+
 
 # total number of files per job
 # For neutrinos 3-100GeV:

@@ -127,7 +127,7 @@ def plot(savestr=''):
     plt.savefig('./plots/' + savestr + '/' + savestr + '_hist_time_minus_mean_all_events_trigg_only_.png')
 
 
-def plot_mc_hits(savestr='', mean='', vert_lines={}, title_ptype=''):
+def plot_mc_hits(savestr='', mean='', vert_lines={}, title_ptype='', overlay=('KM3NeT Preliminary', (0.1, 0.85)), title=True):
     mc_hits_time_mean_all_events = np.load(savestr + '_mc_hits_time_mean' + mean + '_all_events.npy')
 
     # plotting
@@ -145,10 +145,15 @@ def plot_mc_hits(savestr='', mean='', vert_lines={}, title_ptype=''):
     plt.hist(mc_hits_time_mean_all_events, bins=100, range=(-1000, 1500))
     plt.grid(True, zorder=0, linestyle='dotted')
 
-    plt.xlabel('MC-Hit time minus mean time of all triggered hits [ns]')
-    plt.ylabel('Number of hits [#]')
-    title = plt.title('MC-Hit time pattern for ' + title_ptype + ' events')
-    title.set_position([.5, 1.04])
+    plt.xlabel(r'Signal hit time $-$ mean time of all triggered hits [ns]')
+    plt.ylabel('Number of hits')
+
+    if title is True:
+        title = plt.title('Signal hit time distribution for ' + title_ptype + ' events')
+        title.set_position([.5, 1.04])
+
+    ax = plt.gca()
+    plt.text(overlay[1][0], overlay[1][1], overlay[0], transform=ax.transAxes, weight='bold')
 
     for tcut_key in vert_lines:
         plt.axvline(x=vert_lines[tcut_key]['xrange'][0], color=vert_lines[tcut_key]['color'], linestyle='--', label=tcut_key)
@@ -163,15 +168,21 @@ def plot_mc_hits(savestr='', mean='', vert_lines={}, title_ptype=''):
 
 
 if __name__ == '__main__':
-    ptypes = {'mupage': {'vert_lines': {'Timecut 0': {'color': 'black', 'xrange': (-450, 500)}}, 'title_ptype': 'atmospheric muon'},
-              'muon-CC': {'vert_lines': {'Timecut 1': {'color': 'black', 'xrange': (-250, 500)},
-                                         'Timecut 2': {'color': 'firebrick', 'xrange': (-150, 200)}},
-                          'title_ptype': r'$\nu_{\mu}-CC$'},
-              'elec-CC': {'vert_lines': {'Timecut 1': {'color': 'black', 'xrange': (-250, 500)},
-                                         'Timecut 2': {'color': 'firebrick', 'xrange': (-150, 200)}},
+    ptypes = {
+              'mupage': {'vert_lines': {'timecut 0': {'color': 'black', 'xrange': (-450, 500)}}, 'title_ptype': 'atmospheric muon'},
+              # 'muon-CC': {'vert_lines': {'timecut 1': {'color': 'black', 'xrange': (-250, 500)},
+              #                            'timecut 2': {'color': 'firebrick', 'xrange': (-150, 200)}},
+              #             'title_ptype': r'$\nu_{\mu}-CC$'},
+              'muon-CC': {'vert_lines': {'timecut 1': {'color': 'black', 'xrange': (-250, 500)}},
+                                    'title_ptype': r'$\nu_{\mu}-CC$'},
+              'elec-CC': {'vert_lines': {'timecut 1': {'color': 'black', 'xrange': (-250, 500)},
+                                         'timecut 2': {'color': 'firebrick', 'xrange': (-150, 200)}},
                           'title_ptype': r'$\nu_{e}-CC$'},
-              'tau-CC': {'vert_lines': {'Timecut 1': {'color': 'black', 'xrange': (-250, 500)},
-                                         'Timecut 2': {'color': 'firebrick', 'xrange': (-150, 200)}},
+              'elec-NC': {'vert_lines': {'timecut 1': {'color': 'black', 'xrange': (-250, 500)},
+                                         'timecut 2': {'color': 'firebrick', 'xrange': (-150, 200)}},
+                          'title_ptype': r'$\nu_{e}-NC$'},
+              'tau-CC': {'vert_lines': {'timecut 1': {'color': 'black', 'xrange': (-250, 500)},
+                                         'timecut 2': {'color': 'firebrick', 'xrange': (-150, 200)}},
                          'title_ptype': r'$\nu_{\tau}-CC$'},
               }
 
@@ -186,9 +197,10 @@ if __name__ == '__main__':
 
         filenames = {'muon-CC': 'JTE.KM3Sim.gseagen.muon-CC.3-100GeV-9.1E7-1bin-3.0gspec.ORCA115_9m_2016.99.h5',
                      'elec-CC': 'JTE.KM3Sim.gseagen.elec-CC.3-100GeV-1.1E6-1bin-3.0gspec.ORCA115_9m_2016.99.h5',
+                     'elec-NC': 'JTE.KM3Sim.gseagen.elec-NC.3-100GeV-3.4E6-1bin-3.0gspec.ORCA115_9m_2016.99.h5',
                      'tau-CC': 'JTE.KM3Sim.gseagen.tau-CC.3.4-100GeV-2.0E8-1bin-3.0gspec.ORCA115_9m_2016.99.h5',
                      'mupage': 'JTE.ph.ph.mupage.ph.ph.ph.ORCA115_9m_2016.99.h5',
-                     'random_noise': ''}
+                     'random_noise': 'JTE.ph.ph.random_noise.ph.ph.ph.ORCA115_9m_2016.99.h5'}
         filename_input = path + filenames[ptype]
 
         # centered with trigg hits mean
@@ -202,6 +214,7 @@ if __name__ == '__main__':
         # centered mc_hits with trigg hits mean for each event
         mean_triggered_time = np.load(ptype + '_mean_triggered_time_arr_each_event.npy')
         get_time_array_mc_hits(filename_input, savestr=ptype, mean=('trigger', mean_triggered_time))
-        plot_mc_hits(ptype, mean='triggered', vert_lines=ptypes[ptype]['vert_lines'], title_ptype=ptypes[ptype]['title_ptype'])
+        plot_mc_hits(ptype, mean='triggered', vert_lines=ptypes[ptype]['vert_lines'], title_ptype=ptypes[ptype]['title_ptype']
+                     , overlay=('KM3NeT', (0.1, 0.85)), title=True)
 
 

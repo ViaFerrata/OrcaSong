@@ -196,11 +196,19 @@ def get_tracks(event_blob, file_particle_type, event_hits, prod_ident):
         hits_time, triggered = event_hits[:, 3], event_hits[:, 4]
         time_residual_vertex = get_time_residual_nu_interaction_mean_triggered_hits(time_interaction, hits_time, triggered)
 
+        # info for later physics analyses
+        mc_id = event_blob['EventInfo'].mc_id[0]
+        weight_w2 = event_blob['EventInfo'].weight_w2[0]
+        e_range_min, e_range_max = event_blob['Header'].cut_nu.Emin, event_blob['Header'].cut_nu.Emax
+        n_events_gen = event_blob['Header'].genvol.numberOfEvents
+
         track = {'event_id': event_id, 'particle_type': particle_type, 'energy': energy, 'is_cc': is_cc,
                  'bjorkeny': bjorkeny, 'dir_x': dir_x, 'dir_y': dir_y, 'dir_z': dir_z,
                  'time_interaction': time_interaction,  'run_id': run_id, 'vertex_pos_x': vertex_pos_x,
                  'vertex_pos_y': vertex_pos_y, 'vertex_pos_z': vertex_pos_z,
-                 'time_residual_vertex': time_residual_vertex}
+                 'time_residual_vertex': time_residual_vertex,
+                 'mc_id': mc_id, 'weight_w2': weight_w2, 'e_range_min': e_range_min, 'e_range_max': e_range_max,
+                 'n_events_gen': n_events_gen}
 
     else:
         raise ValueError('The file_particle_type "', str(file_particle_type), '" is not known.')
