@@ -1,7 +1,7 @@
 OrcaSong: Generating DL images from KM3NeT data
 ===============================================
 
-.. image:: https://git.km3net.de/ml/OrcaSong/badges/master/build.svg
+.. image:: https://git.km3net.de/ml/OrcaSong/badges/master/pipeline.svg
     :target: https://git.km3net.de/ml/OrcaSong/pipelines
 
 .. image:: https://examples.pages.km3net.de/km3badges/docs-latest-brightgreen.svg
