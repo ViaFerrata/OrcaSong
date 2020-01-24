@@ -99,7 +99,7 @@ class TimePlotter:
         print(f"Avg. time per bin: {np.mean(np.diff(bin_edges)):.2f}")
 
     def _read(self, file, det_file=None):
-        if self.det_file is not None:
+        if det_file is not None:
             cal = modules.DetApplier(det_file=det_file)
         else:
             cal = None
@@ -139,5 +139,5 @@ def _get_padded_bins(bin_edges, padding):
     return np.linspace(
         bin_edges[0] - bins_to_add * bin_width,
         bin_edges[-1] + bins_to_add * bin_width,
-        n_bins + 2 * bins_to_add + 1,
+        int(n_bins + 2 * bins_to_add + 1),
     )

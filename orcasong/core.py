@@ -6,7 +6,6 @@ import km3modules as km
 import orcasong
 import orcasong.modules as modules
 import orcasong.plotting.plot_binstats as plot_binstats
-from orcasong.mc_info_extr import get_mc_info_extr
 
 
 __author__ = 'Stefan Reck'
@@ -85,6 +84,7 @@ class FileBinner:
         event_skipper : func, optional
             Function that takes the blob as an input, and returns a bool.
             If the bool is true, the blob will be skipped.
+            This is placed after the binning and mc_info extractor.
         add_bin_stats : bool
             Add statistics of the binning to the output file. They can be
             plotted with util/bin_stats_plot.py [default: True].
@@ -96,8 +96,11 @@ class FileBinner:
         keep_mc_tracks : bool
             If True, will keep the "McTracks" table [default: False].
         add_t0 : bool
-            If true, add t0 to the time of hits. If using a det_file,
-            this will already have been done automatically [default: False].
+            If true, add t0 to the time of hits and mchits. If using a
+            det_file, this will already have been done automatically.
+            Note: Mchits appear to NOT need t0 added, but its done auto-
+            matically by km3pipe calibration, so results might be
+            wrong for mchits. [default: False].
         hit_weights : str, optional
             Use blob["Hits"][hit_weights] as weights for samples in histogram.
 
@@ -149,8 +152,9 @@ class FileBinner:
         print("Generating {} images with shape {}".format(name, shape))
 
         if outfile is None:
-            infile_basename = os.path.basename(infile)
-            outfile_name = os.path.splitext(infile_basename)[0] + "_binned.h5"
+            outfile_name = "{}_hist.h5".format(
+                os.path.splitext(os.path.basename(infile))[0]
+            )
             outfile = os.path.join(os.getcwd(), outfile_name)
 
         pipe = self.build_pipe(infile, outfile)
@@ -187,8 +191,9 @@ class FileBinner:
 
         outfiles = []
         for infile in infiles:
-            outfile_name = os.path.splitext(os.path.basename(infile))[0] \
-                           + "_hist.h5"
+            outfile_name = "{}_hist.h5".format(
+                os.path.splitext(os.path.basename(infile))[0]
+            )
             outfile = os.path.join(outfolder, outfile_name)
             outfiles.append(outfile)
 
@@ -256,9 +261,6 @@ class FileBinner:
                         add_t0=self.add_t0,
                         center_time=self.center_time)
 
-        if self.event_skipper is not None:
-            pipe.attach(modules.EventSkipper, event_skipper=self.event_skipper)
-
         if self.bin_plot_freq is not None:
             pipe.attach(modules.BinningStatsMaker,
                         bin_plot_freq=self.bin_plot_freq,
@@ -270,14 +272,12 @@ class FileBinner:
                     hit_weights=self.hit_weights)
 
         if self.mc_info_extr is not None:
-            if isinstance(self.mc_info_extr, str):
-                mc_info_extr = get_mc_info_extr(self.mc_info_extr)
-            else:
-                mc_info_extr = self.mc_info_extr
-
             pipe.attach(modules.McInfoMaker,
-                        mc_info_extr=mc_info_extr,
+                        mc_info_extr=self.mc_info_extr,
                         store_as=name_mc_info)
+
+        if self.event_skipper is not None:
+            pipe.attach(modules.EventSkipper, event_skipper=self.event_skipper)
 
     def get_names_and_shape(self):
         """
