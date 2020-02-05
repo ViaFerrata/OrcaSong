@@ -3,6 +3,7 @@
 
 import numpy as np
 import km3pipe as kp
+import km3modules as km
 import matplotlib.pyplot as plt
 
 import orcasong.modules as modules
@@ -42,6 +43,7 @@ class TimePlotter:
                  det_file=None,
                  center_time=True,
                  add_t0=False,
+                 subtract_t0_mchits=False,
                  inactive_du=None):
         if isinstance(files, str):
             self.files = [files]
@@ -50,6 +52,7 @@ class TimePlotter:
         self.do_mchits = do_mchits
         self.det_file = det_file
         self.add_t0 = add_t0
+        self.subtract_t0_mchits = subtract_t0_mchits
         self.center_time = center_time
         self.inactive_du = inactive_du
 
@@ -104,12 +107,18 @@ class TimePlotter:
         else:
             cal = None
         if self.center_time or self.add_t0:
-            time_pp = modules.TimePreproc(add_t0=self.add_t0, center_time=self.center_time)
+            time_pp = modules.TimePreproc(
+                add_t0=self.add_t0,
+                center_time=self.center_time,
+                subtract_t0_mchits=self.subtract_t0_mchits,
+            )
         else:
             time_pp = None
 
         pump = kp.io.hdf5.HDF5Pump(filename=file)
-        for blob in pump:
+        for i, blob in enumerate(pump):
+            if i % 1000 == 0:
+                print("Blob {}".format(i))
             if cal is not None:
                 blob = cal.process(blob)
             if time_pp is not None:
