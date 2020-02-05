@@ -31,36 +31,38 @@ class McInfoMaker(kp.Module):
         dtypes = [(key, np.float64) for key in track.keys()]
         kp_hist = kp.dataclasses.Table(
             track, dtype=dtypes,  h5loc='y', name='event_info')
-
+        if len(kp_hist) != 1:
+            self.cprint(
+                "Warning: Extracted mc_info should have len 1, "
+                "but it has len {}".format(len(kp_hist))
+            )
         blob[self.store_as] = kp_hist
         return blob
 
 
 class TimePreproc(kp.Module):
     """
-    Preprocess the time in the blob.
-
-    Can add t0 to hit times.
-    Times of hits and mchits can be centered with the time of the first
-    triggered hit.
+    Preprocess the time in the blob in various ways.
 
     Attributes
     ----------
     add_t0 : bool
-        If true, t0 will be added.
+        If true, t0 will be added to times of hits and mchits.
     center_time : bool
-        If true, center hit and mchit times.
+        If true, center hit and mchit times with the time of the first
+        triggered hit.
+    subtract_t0_mchits : bool
+        It True, subtract t0 from the times of mchits.
 
     """
 
     def configure(self):
         self.add_t0 = self.require('add_t0')
         self.center_time = self.get('center_time', default=True)
+        self.subtract_t0_mchits = self.get('subtract_t0_mchits', default=False)
 
         self.has_mchits = None
-        self._t0_flag = False
-        self._cent_hits_flag = False
-        self._cent_mchits_flag = False
+        self._print_flags = set()
 
     def process(self, blob):
         if self.has_mchits is None:
@@ -68,20 +70,26 @@ class TimePreproc(kp.Module):
 
         if self.add_t0:
             blob = self.add_t0_time(blob)
+        if self.subtract_t0_mchits and self.has_mchits:
+            blob = self.subtract_t0_mctime(blob)
         blob = self.center_hittime(blob)
 
         return blob
 
     def add_t0_time(self, blob):
-        if not self._t0_flag:
-            self._t0_flag = True
-            self.cprint("Adding t0 to hit times")
+        self._print_once("Adding t0 to hit times")
         blob["Hits"].time = np.add(blob["Hits"].time, blob["Hits"].t0)
-
         if self.has_mchits:
-            blob["McHits"].time = np.add(blob["McHits"].time,
-                                         blob["McHits"].t0)
+            self._print_once("Adding t0 to mchit times")
+            blob["McHits"].time = np.add(
+                blob["McHits"].time, blob["McHits"].t0)
 
+        return blob
+
+    def subtract_t0_mctime(self, blob):
+        self._print_once("Subtracting t0 from mchits")
+        blob["McHits"].time = np.subtract(
+            blob["McHits"].time, blob["McHits"].t0)
         return blob
 
     def center_hittime(self, blob):
@@ -90,19 +98,20 @@ class TimePreproc(kp.Module):
         t_first_trigger = np.min(hits_time[hits_triggered == 1])
 
         if self.center_time:
-            if not self._cent_hits_flag:
-                self.cprint("Centering time of Hits")
-                self._cent_hits_flag = True
+            self._print_once("Centering time of Hits with first triggered hit")
             blob["Hits"].time = np.subtract(hits_time, t_first_trigger)
 
         if self.has_mchits:
-            if not self._cent_mchits_flag:
-                self.cprint("Centering time of McHits")
-                self._cent_mchits_flag = True
+            self._print_once("Centering time of McHits with first triggered hit")
             mchits_time = blob["McHits"].time
             blob["McHits"].time = np.subtract(mchits_time, t_first_trigger)
 
         return blob
+
+    def _print_once(self, text):
+        if text not in self._print_flags:
+            self._print_flags.add(text)
+            self.cprint(text)
 
 
 class ImageMaker(kp.Module):

@@ -203,11 +203,11 @@ class FileBinner:
             plot_binstats.plot_hist_of_files(
                 files=outfiles, save_as=outfolder+"binning_hist.pdf")
 
-    def build_pipe(self, infile, outfile):
+    def build_pipe(self, infile, outfile, timeit=True):
         """
         Build the pipeline to generate images and mc_info for a file.
         """
-        pipe = kp.Pipeline()
+        pipe = kp.Pipeline(timeit=timeit)
 
         if self.n_statusbar is not None:
             pipe.attach(km.common.StatusBar, every=self.n_statusbar)

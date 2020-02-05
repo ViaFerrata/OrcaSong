@@ -195,7 +195,9 @@ def plot_hist_of_files(save_as, files=None):
     hists_list = []
     print("Plotting stats of {} file(s)".format(len(files)))
 
-    for file in files:
+    for i, file in enumerate(files, start=1):
+        if i % 100 == 0:
+            print(f"Reading file {i} / {len(files)} ...")
         try:
             hists_list.append(read_hists_from_h5file(file))
         except KeyError:
