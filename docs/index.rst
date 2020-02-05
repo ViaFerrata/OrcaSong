@@ -25,6 +25,7 @@
 
    getting_started
    orcasong
+   tools
    CONTRIBUTING
    Source (Git) <https://git.km3net.de/ml/OrcaSong.git>
 

@@ -87,7 +87,7 @@ After the binning has succeeded, you can generate a plot which shows the
 distribution of hits among the bins you defined. For this, call the following
 console command::
 
-    plot_binstats my_plotname.pdf file_1_binned.h5 file_2_binned.h5 ...
+    plot_binstats file_1_binned.h5 file_2_binned.h5 ... --save_as my_plotname.pdf
 
 This will plot the statistics for the files file_1_binned.h5, file_2_binned.h5, ...
 into the file my_plotname.pdf.
@@ -97,4 +97,4 @@ Using existing binnings
 
 You can use existing bin edges and mc info extractors from ``orcasong.bin_edges``
 and ``orcasong.mc_info_extr``. These were designed for specific detector layouts
-and productions, though, and might not work properly when used on other data.
+and productions, and might not work properly when used on other data.
