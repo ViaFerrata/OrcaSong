@@ -32,7 +32,7 @@ class McInfoMaker(kp.Module):
         kp_hist = kp.dataclasses.Table(
             track, dtype=dtypes,  h5loc='y', name='event_info')
         if len(kp_hist) != 1:
-            self.cprint(
+            self.log.warning(
                 "Warning: Extracted mc_info should have len 1, "
                 "but it has len {}".format(len(kp_hist))
             )

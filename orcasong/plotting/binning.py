@@ -3,7 +3,6 @@
 
 import numpy as np
 import km3pipe as kp
-import km3modules as km
 import matplotlib.pyplot as plt
 
 import orcasong.modules as modules
