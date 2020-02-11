@@ -135,30 +135,48 @@ class FileConcatenator:
         with h5py.File(self.input_files[0], 'r') as f:
             keys_stripped = strip_keys(list(f.keys()))
 
+        errors = []
         rows_per_file = np.zeros(len(self.input_files) + 1, dtype=int)
         for i, file_name in enumerate(self.input_files, start=1):
-            with h5py.File(file_name, 'r') as f:
-                if not all(k in f.keys() for k in keys_stripped):
-                    raise KeyError(
-                        f"File {file_name} does not have the "
-                        f"keys of the first file! "
-                        f"It has {f.keys()} First file: {keys_stripped}")
-                # length of each dataset
-                rows = [f[k].shape[0] for k in keys_stripped]
-                if not all(row == rows[0] for row in rows):
-                    raise ValueError(
-                        f"Datasets in file {file_name} have varying length! "
-                        f"{dict(zip(keys_stripped, rows))}"
-                    )
-                if not all(k in keys_stripped for k in strip_keys(list(f.keys()))):
-                    warnings.warn(
-                        f"Additional datasets found in file {file_name} compared "
-                        f"to the first file, they wont be in the output! "
-                        f"This file: {strip_keys(list(f.keys()))} "
-                        f"First file {keys_stripped}"
-                    )
-                rows_per_file[i] = rows[0]
+            try:
+                rows_per_file[i] = _get_rows(file_name, keys_stripped)
+            except Exception as e:
+                errors.append(e)
+                warnings.warn(f"Error during check of file {i}: {file_name}")
+                continue
+        if errors:
+            print("\n------- Errors -------\n----------------------")
+            for error in errors:
+                warnings.warn(str(error))
+                print("")
+            raise OSError(
+                f"{len(errors)} error(s) during check of files! See above"
+            )
         return np.cumsum(rows_per_file)
+
+
+def _get_rows(file_name, keys_stripped):
+    with h5py.File(file_name, 'r') as f:
+        if not all(k in f.keys() for k in keys_stripped):
+            raise KeyError(
+                f"File {file_name} does not have the "
+                f"keys of the first file! "
+                f"It has {f.keys()} First file: {keys_stripped}")
+        # length of each dataset
+        rows = [f[k].shape[0] for k in keys_stripped]
+        if not all(row == rows[0] for row in rows):
+            raise ValueError(
+                f"Datasets in file {file_name} have varying length! "
+                f"{dict(zip(keys_stripped, rows))}"
+            )
+        if not all(k in keys_stripped for k in strip_keys(list(f.keys()))):
+            warnings.warn(
+                f"Additional datasets found in file {file_name} compared "
+                f"to the first file, they wont be in the output! "
+                f"This file: {strip_keys(list(f.keys()))} "
+                f"First file {keys_stripped}"
+            )
+    return rows[0]
 
 
 def strip_keys(f_keys):
@@ -209,7 +227,7 @@ def get_compopts(file):
     return comptopts
 
 
-if __name__ == '__main__':
+def main():
     parser = argparse.ArgumentParser(
         description='Concatenate many small h5 files to a single large one. '
                     'Compression options and the datasets to be created in '
@@ -224,3 +242,7 @@ if __name__ == '__main__':
 
     fc = FileConcatenator.from_list(parsed_args.list_file)
     fc.concatenate(parsed_args.output_filepath)
+
+
+if __name__ == '__main__':
+    main()
