@@ -53,15 +53,6 @@ coverage:
             - reports/coverage
 
 
-code-style:
-    image: docker.km3net.de/base/python:3.7
-    stage: test
-    script:
-        - *virtualenv_definition
-        - yapf -r -d -e "venv" .
-    allow_failure: true
-
-
 pages:
     image: docker.km3net.de/base/python:3.6
     stage: doc
