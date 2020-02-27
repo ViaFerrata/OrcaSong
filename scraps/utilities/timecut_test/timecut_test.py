@@ -8,7 +8,7 @@ mpl.use('Agg')
 import matplotlib.pyplot as plt
 
 
-def get_time_array(fname, savestr = ''):
+def get_time_array(fname, savestr = '', mode='mean'):
     event_pump = kp.io.hdf5.HDF5Pump(filename=fname)
 
     time_mean_trigg_all_events = None
@@ -20,7 +20,13 @@ def get_time_array(fname, savestr = ''):
         time = event_blob['Hits'].time
         triggered = event_blob['Hits'].triggered
 
-        mean_triggered_time = np.mean(time[triggered==1])
+        if mode == 'mean':
+            mean_triggered_time = np.mean(time[triggered==1])
+        elif mode == 'first_trigg':
+            mean_triggered_time = np.amin(time[triggered == 1])
+        else:
+            raise ValueError('Mode not known')
+
         mean_triggered_time_list.append(mean_triggered_time)
         time_minus_mean = np.subtract(time, mean_triggered_time)
 
@@ -55,7 +61,7 @@ def get_time_array(fname, savestr = ''):
     event_pump.close_file()
 
 
-def get_time_array_mc_hits(fname, savestr='', mean=('', None)):
+def get_time_array_mc_hits(fname, savestr='', mean=('', None), mode='mean'):
     event_pump = kp.io.hdf5.HDF5Pump(filename=fname)
 
     mc_hits_time_mean_all_events = None
@@ -71,7 +77,13 @@ def get_time_array_mc_hits(fname, savestr='', mean=('', None)):
             time_minus_mean = np.subtract(time, mean_triggered_time_event)
 
         else:
-            mean_time = np.mean(time)
+            if mode == 'mean':
+                mean_time = np.mean(time)
+            elif mode == 'first_trigg':
+                mean_time = np.amin(time)
+            else:
+                raise ValueError('Mode not known')
+
             time_minus_mean = np.subtract(time, mean_time)
 
         if i==0:
@@ -127,8 +139,9 @@ def plot(savestr=''):
     plt.savefig('./plots/' + savestr + '/' + savestr + '_hist_time_minus_mean_all_events_trigg_only_.png')
 
 
-def plot_mc_hits(savestr='', mean='', vert_lines={}, title_ptype='', overlay=('KM3NeT Preliminary', (0.1, 0.85)), title=True):
+def plot_mc_hits(savestr='', savestr2='', mean='', vert_lines={}, title_ptype='', overlay=('KM3NeT Preliminary', (0.1, 0.85)), title=True):
     mc_hits_time_mean_all_events = np.load(savestr + '_mc_hits_time_mean' + mean + '_all_events.npy')
+    if savestr2 != '': mc_hits_time_mean_all_events_2 = np.load(savestr2 + '_mc_hits_time_mean' + mean + '_all_events.npy')
 
     # plotting
 
@@ -142,7 +155,8 @@ def plot_mc_hits(savestr='', mean='', vert_lines={}, title_ptype='', overlay=('K
     # plt.savefig(savestr + '_hist_mc_hits_time_minus_mean_all_events_zoom_-2500_2500.png')
     # plt.cla()
 
-    plt.hist(mc_hits_time_mean_all_events, bins=100, range=(-1000, 1500))
+    plt.hist(mc_hits_time_mean_all_events, bins=100, range=(-1000, 1500), alpha=0.5)
+    if savestr2 != '': plt.hist(mc_hits_time_mean_all_events_2, bins=100, range=(-1000, 1500), alpha=0.5)
     plt.grid(True, zorder=0, linestyle='dotted')
 
     plt.xlabel(r'Signal hit time $-$ mean time of all triggered hits [ns]')
@@ -169,21 +183,22 @@ def plot_mc_hits(savestr='', mean='', vert_lines={}, title_ptype='', overlay=('K
 
 if __name__ == '__main__':
     ptypes = {
-              'mupage': {'vert_lines': {'timecut 0': {'color': 'black', 'xrange': (-450, 500)}}, 'title_ptype': 'atmospheric muon'},
+              # 'mupage': {'vert_lines': {'timecut 0': {'color': 'black', 'xrange': (-450, 500)}}, 'title_ptype': 'atmospheric muon'},
               # 'muon-CC': {'vert_lines': {'timecut 1': {'color': 'black', 'xrange': (-250, 500)},
               #                            'timecut 2': {'color': 'firebrick', 'xrange': (-150, 200)}},
               #             'title_ptype': r'$\nu_{\mu}-CC$'},
-              'muon-CC': {'vert_lines': {'timecut 1': {'color': 'black', 'xrange': (-250, 500)}},
+              'muon-CC': {'vert_lines': {'timecut 1': {'color': 'black', 'xrange': (-250, 500)},
+                                         'timecut 1_new': {'color': 'red', 'xrange': (-100, 650)}},
                                     'title_ptype': r'$\nu_{\mu}-CC$'},
-              'elec-CC': {'vert_lines': {'timecut 1': {'color': 'black', 'xrange': (-250, 500)},
-                                         'timecut 2': {'color': 'firebrick', 'xrange': (-150, 200)}},
-                          'title_ptype': r'$\nu_{e}-CC$'},
-              'elec-NC': {'vert_lines': {'timecut 1': {'color': 'black', 'xrange': (-250, 500)},
-                                         'timecut 2': {'color': 'firebrick', 'xrange': (-150, 200)}},
-                          'title_ptype': r'$\nu_{e}-NC$'},
-              'tau-CC': {'vert_lines': {'timecut 1': {'color': 'black', 'xrange': (-250, 500)},
-                                         'timecut 2': {'color': 'firebrick', 'xrange': (-150, 200)}},
-                         'title_ptype': r'$\nu_{\tau}-CC$'},
+              # 'elec-CC': {'vert_lines': {'timecut 1': {'color': 'black', 'xrange': (-250, 500)},
+              #                            'timecut 2': {'color': 'firebrick', 'xrange': (-150, 200)}},
+              #             'title_ptype': r'$\nu_{e}-CC$'},
+              # 'elec-NC': {'vert_lines': {'timecut 1': {'color': 'black', 'xrange': (-250, 500)},
+              #                            'timecut 2': {'color': 'firebrick', 'xrange': (-150, 200)}},
+              #             'title_ptype': r'$\nu_{e}-NC$'},
+              # 'tau-CC': {'vert_lines': {'timecut 1': {'color': 'black', 'xrange': (-250, 500)},
+              #                            'timecut 2': {'color': 'firebrick', 'xrange': (-150, 200)}},
+              #            'title_ptype': r'$\nu_{\tau}-CC$'},
               }
 
     for ptype in ptypes:
@@ -203,18 +218,24 @@ if __name__ == '__main__':
                      'random_noise': 'JTE.ph.ph.random_noise.ph.ph.ph.ORCA115_9m_2016.99.h5'}
         filename_input = path + filenames[ptype]
 
-        # centered with trigg hits mean
-        get_time_array(filename_input, savestr=ptype)
-        plot(savestr=ptype)
-
-        # centered with mc_hits mean
-        get_time_array_mc_hits(filename_input, savestr=ptype)
-        plot_mc_hits(savestr=ptype, vert_lines=ptypes[ptype]['vert_lines'], title_ptype=ptypes[ptype]['title_ptype'])
+        # # centered with trigg hits mean
+        # get_time_array(filename_input, savestr=ptype, mode='mean')
+        # get_time_array(filename_input, savestr='first_trigg_' + ptype, mode='first_trigg')
+        # plot(savestr=ptype)
+        #
+        # # centered with mc_hits mean
+        # get_time_array_mc_hits(filename_input, savestr=ptype, mode='mean')
+        # get_time_array_mc_hits(filename_input, savestr='first_trigg_' + ptype, mode='first_trigg')
+        # plot_mc_hits(savestr=ptype, vert_lines=ptypes[ptype]['vert_lines'], title_ptype=ptypes[ptype]['title_ptype'])
 
         # centered mc_hits with trigg hits mean for each event
-        mean_triggered_time = np.load(ptype + '_mean_triggered_time_arr_each_event.npy')
-        get_time_array_mc_hits(filename_input, savestr=ptype, mean=('trigger', mean_triggered_time))
-        plot_mc_hits(ptype, mean='triggered', vert_lines=ptypes[ptype]['vert_lines'], title_ptype=ptypes[ptype]['title_ptype']
+        # mean_triggered_time = np.load(ptype + '_mean_triggered_time_arr_each_event.npy')
+        # get_time_array_mc_hits(filename_input, savestr=ptype, mean=('trigger', mean_triggered_time))
+        #
+        # mean_triggered_time_first = np.load('first_trigg_' + ptype + '_mean_triggered_time_arr_each_event.npy')
+        # get_time_array_mc_hits(filename_input, savestr='first_trigg_' + ptype, mean=('trigger', mean_triggered_time_first))
+
+        plot_mc_hits(ptype, 'first_trigg_' + ptype, mean='triggered', vert_lines=ptypes[ptype]['vert_lines'], title_ptype=ptypes[ptype]['title_ptype']
                      , overlay=('KM3NeT', (0.1, 0.85)), title=True)
 
 
