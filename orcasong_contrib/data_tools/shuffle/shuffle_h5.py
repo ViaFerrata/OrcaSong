@@ -22,7 +22,7 @@ import h5py
 import km3pipe as kp
 import km3modules as km
 from orcasong_contrib.data_tools.concatenate.concatenate_h5 import get_f_compression_and_chunking
-from orcasong.modules import EventSkipper
+import orcasong.modules as os_modules
 
 # from memory_profiler import profile # for memory profiling, call with @profile; myfunc()
 
@@ -220,9 +220,8 @@ def shuffle_h5(filepath_input, tool=False, seed=42, delete=False, chunksize=None
         pipe.attach(km.common.StatusBar, every=200)
         pipe.attach(km.common.MemoryObserver, every=200)
         pipe.attach(kp.io.hdf5.HDF5Pump, filename=filepath_input, shuffle=shuffle, reset_index=True)
-
         if event_skipper is not None:
-            pipe.attach(EventSkipper, event_skipper=event_skipper)
+            pipe.attach(os_modules.EventSkipper, event_skipper=event_skipper)
 
         pipe.attach(kp.io.hdf5.HDF5Sink, filename=filepath_output, complib=complib, complevel=complevel, chunksize=chunksize, flush_frequency=1000)
         pipe.drain()
