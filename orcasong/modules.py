@@ -95,7 +95,7 @@ class TimePreproc(kp.Module):
     def center_hittime(self, blob):
         hits_time = blob["Hits"].time
         hits_triggered = blob["Hits"].triggered
-        t_first_trigger = np.min(hits_time[hits_triggered == 1])
+        t_first_trigger = np.min(hits_time[hits_triggered != 0])
 
         if self.center_time:
             self._print_once("Centering time of Hits with first triggered hit")
