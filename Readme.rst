@@ -1,5 +1,5 @@
-OrcaSong: Generating DL images from KM3NeT data
-===============================================
+OrcaSong: Preprocessing KM3NeT data for DL
+==========================================
 
 .. image:: https://git.km3net.de/ml/OrcaSong/badges/master/pipeline.svg
     :target: https://git.km3net.de/ml/OrcaSong/pipelines
@@ -20,11 +20,14 @@ The documentation for OrcaSong can be found at https://ml.pages.km3net.de/OrcaSo
 OrcaSong is a part of the Deep Learning efforts of the neutrino telescope KM3NeT.  
 Find more information about KM3NeT on http://www.km3net.org.
 
-In this regard, OrcaSong is a project that produces KM3NeT event images based on the raw detector data.
-This means that OrcaSong takes a datafile with (neutrino-) events and based on this data, it produces 2D/3D/4D 'images' (histograms).
-Currently, only simulations with a hdf5 data format are supported as an input.
+In this regard, OrcaSong is a project that preprocesses raw KM3NeT detector data
+for the use with deep neural networks, making use of km3nets data processing
+pipline km3pipe. Two different modes are available:
 
-These event 'images' are required for some Deep Learning machine learning algorithms, e.g. Convolutional Neural Networks.
+- For convolutional networks: produce n-dimensional 'images' (histograms)
+- For graph networks: produce a list of nodes, each node representing infos about a hit in the detector
+
+Currently, only simulations with a hdf5 data format are supported as an input.
 
 OrcaSong can be installed via pip by running::
 

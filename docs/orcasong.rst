@@ -1,10 +1,9 @@
 .. _orcasong_page:
 
-Producing images
-================
+Mode 1: Producing images
+========================
 
-The main functionality of OrcaSong is to generate multidimensional images
-out of ORCA data.
+Generate multidimensional images out of ORCA data.
 
 .. image:: imgs/orcasong_function.PNG
    :height: 400px
@@ -54,6 +53,59 @@ Or convert multiple files, which will all be saved in the given folder:
 
     fb.run_multi(infiles, outfolder)
 
+
+Plotting binning statistics
+---------------------------
+
+After the binning has succeeded, you can generate a plot which shows the
+distribution of hits among the bins you defined. For this, call the following
+console command::
+
+    plot_binstats file_1_binned.h5 file_2_binned.h5 ... --save_as my_plotname.pdf
+
+This will plot the statistics for the files file_1_binned.h5, file_2_binned.h5, ...
+into the file my_plotname.pdf.
+
+Using existing binnings
+-----------------------
+
+You can use existing bin edges and mc info extractors from ``orcasong.bin_edges``
+and ``orcasong.mc_info_extr``. These were designed for specific detector layouts
+and productions, and might not work properly when used on other data.
+
+
+Mode 2: Producing Graphs
+========================
+
+Generate the nodes of graphs from ORCA data.
+
+Basic Use
+---------
+
+Import the main class, the FileGraph (see
+:py:class:`orcasong.core.FileGraph`),
+like this:
+
+.. code-block:: python
+
+    from orcasong.core import FileGraph
+
+The FileGraph produces a list of nodes, each representing a hit.
+The length of this list has to be fixed, i.e. be the same for each event.
+Since the number of hits varies from event to event, some events will have to get
+padded, while others might get hits removed. The parameter ``max_n_hits``
+of FileGraph determines this fixed length:
+
+.. code-block:: python
+
+    fg = FileGraph(max_n_hits=2000)
+
+
+General usage
+=============
+
+Functionality that both modes have in common.
+
 Calibration
 -----------
 
@@ -79,22 +131,3 @@ the str being the dtype names. Set up like follows:
 
     fb = FileBinner(bin_edges_list, mc_info_extr=my_mcinfo_extractor)
 
-
-Plotting binning statistics
----------------------------
-
-After the binning has succeeded, you can generate a plot which shows the
-distribution of hits among the bins you defined. For this, call the following
-console command::
-
-    plot_binstats file_1_binned.h5 file_2_binned.h5 ... --save_as my_plotname.pdf
-
-This will plot the statistics for the files file_1_binned.h5, file_2_binned.h5, ...
-into the file my_plotname.pdf.
-
-Using existing binnings
------------------------
-
-You can use existing bin edges and mc info extractors from ``orcasong.bin_edges``
-and ``orcasong.mc_info_extr``. These were designed for specific detector layouts
-and productions, and might not work properly when used on other data.
