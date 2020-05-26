@@ -24,7 +24,7 @@ class FileConcatenator:
         input .h5 files (i.e. [0,100,200,300,...] if each file has 100 rows).
 
     """
-    def __init__(self, input_files, comptopts_update=None):
+    def __init__(self, input_files, skip_errors=False, comptopts_update=None):
         """
         Check the files to concatenate.
 
@@ -35,12 +35,14 @@ class FileConcatenator:
         comptopts_update : dict, optional
             Overwrite the compression options that get read from the
             first file. E.g. {'chunksize': 10} to get a chunksize of 10.
+        skip_errors : bool
+            If true, ignore files that can't be concatenated.
 
         """
-        self.input_files = input_files
-        print(f"Checking {len(self.input_files)} files ...")
+        self.skip_errors = skip_errors
+        print(f"Checking {len(input_files)} files ...")
 
-        self.cumu_rows = self._get_cumu_rows()
+        self.input_files, self.cumu_rows = self._get_cumu_rows(input_files)
         print(f"Total rows:\t{self.cumu_rows[-1]}")
 
         # Get compression options from first file in the list
@@ -172,7 +174,7 @@ class FileConcatenator:
     def _modify(self, input_file, folder_data, folder_name):
         raise NotImplementedError
 
-    def _get_cumu_rows(self):
+    def _get_cumu_rows(self, input_files):
         """
         Get the cumulative number of rows of the input_files.
         Also checks if all the files can be safely concatenated to the
@@ -180,28 +182,34 @@ class FileConcatenator:
 
         """
         # names of datasets that will be in the output; read from first file
-        with h5py.File(self.input_files[0], 'r') as f:
+        with h5py.File(input_files[0], 'r') as f:
             keys_stripped = strip_keys(list(f.keys()))
 
-        errors = []
-        rows_per_file = np.zeros(len(self.input_files) + 1, dtype=int)
-        for i, file_name in enumerate(self.input_files, start=1):
+        errors, rows_per_file, valid_input_files = [], [0], []
+        for i, file_name in enumerate(input_files, start=1):
             try:
-                rows_per_file[i] = _get_rows(file_name, keys_stripped)
+                rows_this_file = _get_rows(file_name, keys_stripped)
             except Exception as e:
                 errors.append(e)
                 warnings.warn(f"Error during check of file {i}: {file_name}")
                 continue
+            valid_input_files.append(file_name)
+            rows_per_file.append(rows_this_file)
+
         if errors:
             print("\n------- Errors -------\n----------------------")
             for error in errors:
                 warnings.warn(str(error))
                 print("")
-            raise OSError(
-                f"{len(errors)} error(s) during check of files! See above"
-            )
+            err_str = f"{len(errors)} error(s) during check of files! See above"
+            if self.skip_errors:
+                warnings.warn(err_str)
+            else:
+                raise OSError(err_str)
+
+        print(f"Valid input files: {len(valid_input_files)}/{len(input_files)}")
         print("Datasets:\t" + ", ".join(keys_stripped))
-        return np.cumsum(rows_per_file)
+        return valid_input_files, np.cumsum(rows_per_file)
 
 
 def _get_rows(file_name, target_datasets):
@@ -248,7 +256,8 @@ def is_folder_ignored(folder_name):
     Also remove bin_stats.
 
     """
-    return '_i_' in folder_name or "bin_stats" in folder_name
+    return any([s in folder_name for s in (
+        '_i_', "bin_stats", "raw_header", "header")])
 
 
 def get_compopts(file):
@@ -304,6 +313,9 @@ def get_parser():
         help="Per default, the paths of the input files are added "
              "as their own datagroup in the output file. Use this flag to "
              "disable. ")
+    parser.add_argument(
+        '--skip_errors', action='store_true',
+        help="If true, ignore files that can't be concatenated. ")
     return parser
 
 
@@ -312,11 +324,19 @@ def main():
     parsed_args = parser.parse_args()
 
     if len(parsed_args.file) == 1:
-        fc = FileConcatenator.from_list(parsed_args.file[0])
+        fc = FileConcatenator.from_list(
+            parsed_args.file[0],
+            skip_errors=parsed_args.skip_errors
+        )
     else:
-        fc = FileConcatenator(input_files=parsed_args.file)
-    fc.concatenate(parsed_args.outfile,
-                   append_used_files=not parsed_args.no_used_files)
+        fc = FileConcatenator(
+            input_files=parsed_args.file,
+            skip_errors=parsed_args.skip_errors
+        )
+    fc.concatenate(
+        parsed_args.outfile,
+        append_used_files=not parsed_args.no_used_files,
+    )
 
 
 if __name__ == '__main__':

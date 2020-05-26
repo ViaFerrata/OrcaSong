@@ -64,7 +64,7 @@ class TestFileConcatenator(TestCase):
         fc = conc.FileConcatenator(self.dummy_files)
         with tempfile.TemporaryFile() as tf:
             fc.concatenate(tf)
-            with h5py.File(tf) as f:
+            with h5py.File(tf, "r") as f:
                 self.assertSequenceEqual(
                     f["used_files"][()].tolist(),
                     [n.encode("ascii", "ignore") for n in self.dummy_files],
@@ -74,7 +74,7 @@ class TestFileConcatenator(TestCase):
         fc = conc.FileConcatenator(self.dummy_files)
         with tempfile.TemporaryFile() as tf:
             fc.concatenate(tf)
-            with h5py.File(tf) as f:
+            with h5py.File(tf, "r") as f:
                 target = np.ones((25, 7, 3))
                 target[10:, :, :] = 2.
                 np.testing.assert_array_equal(
@@ -86,7 +86,7 @@ class TestFileConcatenator(TestCase):
         fc = conc.FileConcatenator(self.dummy_files)
         with tempfile.TemporaryFile() as tf:
             fc.concatenate(tf)
-            with h5py.File(tf) as f:
+            with h5py.File(tf, "r") as f:
                 target = np.array(
                     [(1, 3, 1)] * 25,
                     dtype=[('x', '<f8'), ('y', '<i8'), ("group_id", "<i8")]

@@ -150,7 +150,7 @@ def combine_hists(hists_list):
     return combined_hists
 
 
-def add_hists_to_h5file(hists, file):
+def add_hists_to_h5file(hists, f):
     """
     Add the binning stats as groups to a h5 file.
 
@@ -158,22 +158,20 @@ def add_hists_to_h5file(hists, file):
     ----------
     hists : dict
         The histst from the BinningStatsMaker module.
-    file : str
-        Path to the h5 file.
+    f
+        The opened h5 file.
 
     """
-    with h5py.File(file, "a") as f:
-        for bin_name, hists_data in hists.items():
-            for key, val in hists_data.items():
-                f.create_dataset(f"bin_stats/{bin_name}/{key}", data=val)
+    for bin_name, hists_data in hists.items():
+        for key, val in hists_data.items():
+            f.create_dataset(f"bin_stats/{bin_name}/{key}", data=val)
 
 
-def read_hists_from_h5file(file):
+def read_hists_from_h5file(f):
     """ Read the binning stats from the file, put it in dicts. """
     data = {}
-    with h5py.File(file, "r") as f:
-        for bin_name, hists_data in f["bin_stats/"].items():
-            data[bin_name] = {k: v[()] for k, v in hists_data.items()}
+    for bin_name, hists_data in f["bin_stats/"].items():
+        data[bin_name] = {k: v[()] for k, v in hists_data.items()}
     return data
 
 
@@ -199,7 +197,8 @@ def plot_hist_of_files(save_as, files=None):
         if i % 100 == 0:
             print(f"Reading file {i} / {len(files)} ...")
         try:
-            hists_list.append(read_hists_from_h5file(file))
+            with h5py.File(file, "r") as f:
+                hists_list.append(read_hists_from_h5file(f))
         except KeyError:
             warnings.warn(f"ERROR: No bin_stats in {file}. Skipping ...")
             continue
