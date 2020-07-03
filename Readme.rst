@@ -1,6 +1,9 @@
 OrcaSong: Preprocessing KM3NeT data for DL
 ==========================================
 
+.. image:: https://badge.fury.io/py/orcasong.svg
+    :target: https://badge.fury.io/py/orcasong
+
 .. image:: https://git.km3net.de/ml/OrcaSong/badges/master/pipeline.svg
     :target: https://git.km3net.de/ml/OrcaSong/pipelines
 
