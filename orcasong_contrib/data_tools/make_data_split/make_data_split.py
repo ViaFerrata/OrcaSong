@@ -22,7 +22,7 @@ import toml
 import docopt
 import natsort as ns
 import h5py
-
+import random
 
 def parse_input():
     """
@@ -92,7 +92,9 @@ def get_h5_filepaths(dirpath):
         if f.endswith('.h5'):
             filepaths.append(dirpath + '/' + f)
 
-    filepaths = ns.natsorted(filepaths)  # TODO should not be necessary actually!
+    #randomize order
+    random.Random(42).shuffle(filepaths)
+    
     return filepaths
 
 
