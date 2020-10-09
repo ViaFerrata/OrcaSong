@@ -10,12 +10,21 @@ __author__ = 'Stefan Reck, Michael Moser'
 
 class FileConcatenator:
     """
-    For concatenating many small h5 files to a single large one.
+    For concatenating many small h5 files to a single large one in
+    km3pipe-compatible format.
+
+    Parameters
+    ----------
+    input_files : List
+        List that contains all filepaths of the input files.
+    skip_errors : bool
+        If true, ignore files that can't be concatenated.
+    comptopts_update : dict, optional
+        Overwrite the compression options that get read from the
+        first file. E.g. {'chunksize': 10} to get a chunksize of 10.
 
     Attributes
     ----------
-    input_files : list
-        List that contains all filepaths of the input files.
     comptopts : dict
         Options for compression. They are read from the first input file,
         but they can be updated as well during init.
@@ -25,20 +34,6 @@ class FileConcatenator:
 
     """
     def __init__(self, input_files, skip_errors=False, comptopts_update=None):
-        """
-        Check the files to concatenate.
-
-        Parameters
-        ----------
-        input_files : List
-            List that contains all filepaths of the input files.
-        comptopts_update : dict, optional
-            Overwrite the compression options that get read from the
-            first file. E.g. {'chunksize': 10} to get a chunksize of 10.
-        skip_errors : bool
-            If true, ignore files that can't be concatenated.
-
-        """
         self.skip_errors = skip_errors
         print(f"Checking {len(input_files)} files ...")
 
@@ -101,12 +96,13 @@ class FileConcatenator:
             elapsed_time = time.time() - start_time
 
             if append_used_files:
-                # include the used filepaths in the file
                 print("Adding used files to output")
                 f_out.create_dataset(
                     "used_files",
                     data=[n.encode("ascii", "ignore") for n in self.input_files]
                 )
+
+        copy_attrs(self.input_files[0], output_filepath)
 
         print(f"\nConcatenation complete!"
               f"\nElapsed time: {elapsed_time/60:.2f} min "
@@ -114,16 +110,12 @@ class FileConcatenator:
 
     def _conc_file(self, f_in, f_out, input_file, input_file_nmbr):
         """ Conc one file to the output. """
-        # create metadata
-        if input_file_nmbr == 0 and 'format_version' in list(f_in.attrs.keys()):
-            f_out.attrs['format_version'] = f_in.attrs['format_version']
-
         for folder_name in f_in:
             if is_folder_ignored(folder_name):
                 # we dont need datasets created by pytables anymore
                 continue
-
-            folder_data = f_in[folder_name][()]
+            input_dataset = f_in[folder_name]
+            folder_data = input_dataset[()]
 
             if input_file_nmbr > 0:
                 # we need to add the current number of the
@@ -153,14 +145,12 @@ class FileConcatenator:
             if input_file_nmbr == 0:
                 # first file; create the dataset
                 dset_shape = (self.cumu_rows[-1],) + folder_data.shape[1:]
-                print(f"\tCreating dataset '{folder_name}' with shape "
-                      f"{dset_shape}")
+                print(f"\tCreating dataset '{folder_name}' with shape {dset_shape}")
                 output_dataset = f_out.create_dataset(
                     folder_name,
                     data=folder_data,
                     maxshape=dset_shape,
-                    chunks=(self.comptopts["chunksize"],) + folder_data.shape[
-                                                            1:],
+                    chunks=(self.comptopts["chunksize"],) + folder_data.shape[1:],
                     compression=self.comptopts["complib"],
                     compression_opts=self.comptopts["complevel"],
                     shuffle=self.comptopts["shuffle"],
@@ -288,6 +278,29 @@ def get_compopts(file):
         comptopts["chunksize"] = dset.chunks[0]
         comptopts["shuffle"] = dset.shuffle
     return comptopts
+
+
+def copy_attrs(source_file, target_file):
+    """
+    Copy file and dataset attributes from one h5 file to another.
+    """
+    print("Copying attributes")
+    with h5py.File(source_file, "r") as src:
+        with h5py.File(target_file, "a") as trg:
+            _copy_attrs(src, trg)
+            for dset_name, target_dataset in trg.items():
+                if dset_name in src:
+                    _copy_attrs(src[dset_name], target_dataset)
+
+
+def _copy_attrs(src_datset, target_dataset):
+    for k in src_datset.attrs.keys():
+        try:
+            if k not in target_dataset.attrs:
+                target_dataset.attrs[k] = src_datset.attrs[k]
+        except TypeError as e:
+            # above can fail if attr is bool and created using pt
+            warnings.warn(f"Error: Can not copy attribute {k}: {e}")
 
 
 def get_parser():

@@ -27,10 +27,19 @@ class McInfoMaker(kp.Module):
     def configure(self):
         self.mc_info_extr = self.require('mc_info_extr')
         self.store_as = self.require('store_as')
+        self.to_float64 = self.get("to_float64", default=True)
 
     def process(self, blob):
         track = self.mc_info_extr(blob)
-        dtypes = [(key, np.float64) for key in track.keys()]
+        if self.to_float64:
+            dtypes = []
+            for key, v in track.items():
+                if key in ("group_id", "event_id"):
+                    dtypes.append((key, type(v)))
+                else:
+                    dtypes.append((key, np.float64))
+        else:
+            dtypes = [(k, type(v)) for k, v in track.items()]
         kp_hist = kp.dataclasses.Table(
             track, dtype=dtypes,  h5loc='y', name='event_info')
         if len(kp_hist) != 1:
@@ -80,7 +89,8 @@ class TimePreproc(kp.Module):
             blob = self.timeslew(blob)
         if self.subtract_t0_mchits and self._has_mchits:
             blob = self.subtract_t0_mctime(blob)
-        blob = self.center_hittime(blob)
+        if self.center_time:
+            blob = self.center_hittime(blob)
 
         return blob
 
@@ -110,9 +120,8 @@ class TimePreproc(kp.Module):
         hits_triggered = blob["Hits"].triggered
         t_first_trigger = np.min(hits_time[hits_triggered != 0])
 
-        if self.center_time:
-            self._print_once("Centering time of Hits with first triggered hit")
-            blob["Hits"].time = np.subtract(hits_time, t_first_trigger)
+        self._print_once("Centering time of Hits with first triggered hit")
+        blob["Hits"].time = np.subtract(hits_time, t_first_trigger)
 
         if self._has_mchits:
             self._print_once("Centering time of McHits with first triggered hit")
@@ -318,16 +327,13 @@ class PointMaker(kp.Module):
         self.time_window = self.get("time_window", default=None)
         self.dset_n_hits = self.get("dset_n_hits", default=None)
         self.store_as = "samples"
-        self._dset_name = None
 
     def process(self, blob):
         if self.hit_infos is None:
             self.hit_infos = blob["Hits"].dtype.names
-        if self._dset_name is None:
-            self._dset_name = ", ".join(tuple(self.hit_infos) + ("is_valid", ))
         points, n_hits = self.get_points(blob)
         blob[self.store_as] = kp.NDArray(
-            np.expand_dims(points, 0), h5loc="x", title=self._dset_name)
+            np.expand_dims(points, 0), h5loc="x", title="nodes")
         if self.dset_n_hits:
             blob[self.dset_n_hits] = blob[self.dset_n_hits].append_columns(
                 "n_hits_intime", n_hits)
@@ -375,6 +381,9 @@ class PointMaker(kp.Module):
         points[:n_hits, -1] = 1.
         return points, n_hits
 
+    def finish(self):
+        return {"hit_infos": tuple(self.hit_infos) + ("is_valid", )}
+
 
 class EventSkipper(kp.Module):
     """
@@ -403,7 +412,10 @@ class EventSkipper(kp.Module):
             return blob
 
     def _remove_groupid(self, blob):
-        """ Workaround until bug in km3pipe is fixed: Drop all group_ids """
+        """
+        Workaround until bug https://git.km3net.de/km3py/km3pipe/-/issues/203
+        in km3pipe is fixed: Drop all group_ids
+        """
         if "GroupInfo" in blob:
             del blob["GroupInfo"]
         for key in blob.keys():
@@ -419,18 +431,6 @@ class EventSkipper(kp.Module):
             f"Skipped {self._skipped}/{tot_events} events "
             f"({self._skipped/tot_events:.4%})."
         )
-
-
-def _remove_groupid(blob):
-    """ Workaround until bug in km3pipe is fixed: Drop all group_ids """
-    if "GroupInfo" in blob:
-        del blob["GroupInfo"]
-    for key in blob.keys():
-        try:
-            blob[key] = blob[key].drop_columns("group_id")
-        except AttributeError:
-            continue
-    return blob
 
 
 class DetApplier(kp.Module):

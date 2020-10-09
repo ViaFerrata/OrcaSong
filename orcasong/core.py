@@ -53,6 +53,11 @@ class BaseProcessor:
         If True, will keep the "event_info" table [default: True].
     keep_mc_tracks : bool
         If True, will keep the "McTracks" table. It's large! [default: False]
+    overwrite : bool
+        If True, overwrite the output file if it exists already.
+        If False, throw an error instead.
+    mc_info_to_float64 : bool
+        Convert everything in the mcinfo array to float 64 (Default: True).
 
     Attributes
     ----------
@@ -85,7 +90,9 @@ class BaseProcessor:
                  event_skipper=None,
                  chunksize=32,
                  keep_event_info=True,
-                 keep_mc_tracks=False):
+                 keep_mc_tracks=False,
+                 overwrite=True,
+                 mc_info_to_float64=True):
         self.mc_info_extr = mc_info_extr
         self.det_file = det_file
         self.center_time = center_time
@@ -95,6 +102,8 @@ class BaseProcessor:
         self.chunksize = chunksize
         self.keep_event_info = keep_event_info
         self.keep_mc_tracks = keep_mc_tracks
+        self.overwrite = overwrite
+        self.mc_info_to_float64 = mc_info_to_float64
 
         self.n_statusbar = 1000
         self.n_memory_observer = 1000
@@ -119,6 +128,9 @@ class BaseProcessor:
         if outfile is None:
             outfile = os.path.join(os.getcwd(), "{}_hist.h5".format(
                 os.path.splitext(os.path.basename(infile))[0]))
+        if not self.overwrite:
+            if os.path.isfile(outfile):
+                raise FileExistsError(f"File exists: {outfile}")
         if self.seed:
             km.GlobalRandomState(seed=self.seed)
         pipe = self.build_pipe(infile, outfile)
@@ -166,10 +178,7 @@ class BaseProcessor:
 
     def get_cmpts_pre(self, infile):
         """ Modules that read and calibrate the events. """
-        cmpts = []
-        cmpts.append((kp.io.hdf5.HDF5Pump, {"filename": infile}))
-        cmpts.append((km.common.Keep, {"keys": [
-            'EventInfo', 'Header', 'RawHeader', 'McTracks', 'Hits', 'McHits']}))
+        cmpts = [(kp.io.hdf5.HDF5Pump, {"filename": infile})]
 
         if self.det_file:
             cmpts.append((modules.DetApplier, {"det_file": self.det_file}))
@@ -192,6 +201,7 @@ class BaseProcessor:
         if self.mc_info_extr is not None:
             cmpts.append((modules.McInfoMaker, {
                 "mc_info_extr": self.mc_info_extr,
+                "to_float64": self.mc_info_to_float64,
                 "store_as": "mc_info"}))
 
         if self.event_skipper is not None:
@@ -331,8 +341,9 @@ class FileGraph(BaseProcessor):
     Turn km3 events to graph data.
 
     The resulting file will have a dataset "x" of shape
-    (?, max_n_hits, len(hit_infos) + 1), and its title (x.attrs["TITLE"])
-    is the column names of the last axis, seperated by ', ' (= hit_infos).
+    (?, max_n_hits, len(hit_infos) + 1).
+    The column names of the last axis (i.e. hit_infos) are saved
+    as attributes of the dataset (f["x"].attrs).
     The last column will always be called 'is_valid', and its 0 if
     the entry is padded, and 1 otherwise.
 
@@ -366,3 +377,8 @@ class FileGraph(BaseProcessor):
             "time_window": self.time_window,
             "hit_infos": self.hit_infos,
             "dset_n_hits": "EventInfo"}))]
+
+    def finish_file(self, f, summary):
+        super().finish_file(f, summary)
+        for i, hit_info in enumerate(summary["PointMaker"]["hit_infos"]):
+            f["x"].attrs.create(f"hit_info_{i}", hit_info)
