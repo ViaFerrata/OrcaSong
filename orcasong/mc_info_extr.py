@@ -1,6 +1,6 @@
 """
 Functions that extract info from a blob for the mc_info / y datafield
-in the h5 files.
+in the h5 files. Very much WIP.
 
 These are made for the specific given runs. They might not be
 applicable to other data, and could cause errors or produce unexpected
@@ -20,11 +20,9 @@ def get_real_data(blob):
     Designed for the 2017 one line runs.
 
     """
-    event_info = blob['EventInfo']
-
+    event_info = blob['EventInfo'][0]
     track = {
         'event_id': event_info.event_id,
-        # was .event_id[0] up to km3pipe 8.16.0
         'run_id': event_info.run_id,
         'trigger_mask': event_info.trigger_mask,
     }

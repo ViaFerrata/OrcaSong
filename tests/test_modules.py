@@ -30,9 +30,31 @@ class TestModules(TestCase):
         self.assertSequenceEqual(list(out_blob["test"].dtype.names),
                                  ('dom_id_0', 'time_2'))
         np.testing.assert_array_equal(out_blob["test"]["dom_id_0"],
-                                      np.array([2, ]))
+                                      np.array([2, ], dtype="float64"))
         np.testing.assert_array_equal(out_blob["test"]["time_2"],
-                                      np.array([12.3, ]))
+                                      np.array([12.3, ], dtype="float64"))
+
+    def test_mc_info_maker_dtype(self):
+        """ Test the mcinfo maker on some dummy data. """
+        def mc_info_extr(blob):
+            hits = blob["Hits"]
+            return {"dom_id_0": hits.dom_id[0],
+                    "time_2": hits.time[2]}
+
+        in_blob = {
+            "Hits": Table({
+                'dom_id': np.array([2, 3, 3], dtype="int8"),
+                'time': np.array([10.1, 11.2, 12.3], dtype="float32"),
+            })
+        }
+        module = modules.McInfoMaker(
+            mc_info_extr=mc_info_extr, store_as="test", to_float64=False)
+        out_blob = module.process(in_blob)
+
+        np.testing.assert_array_equal(
+            out_blob["test"]["dom_id_0"], np.array([2, ], dtype="int8"))
+        np.testing.assert_array_equal(
+            out_blob["test"]["time_2"], np.array([12.3, ], dtype="float32"))
 
     def test_event_skipper(self):
         def event_skipper(blob):
@@ -160,9 +182,11 @@ class TestPointMaker(TestCase):
         }
 
     def test_default_settings(self):
-        result = modules.PointMaker(
-            max_n_hits=4).process(self.input_blob_1)["samples"]
-        self.assertEqual(result.title, 't0, time, x, is_valid')
+        pm = modules.PointMaker(
+            max_n_hits=4)
+        result = pm.process(self.input_blob_1)["samples"]
+        self.assertTupleEqual(
+            pm.finish()["hit_infos"], ("t0", "time", "x", "is_valid"))
         target = np.array(
             [[[0.1, 1, 4, 1],
               [0.2, 2, 5, 1],
@@ -171,13 +195,15 @@ class TestPointMaker(TestCase):
         np.testing.assert_array_equal(result, target)
 
     def test_input_blob_1(self):
-        result = modules.PointMaker(
+        pm = modules.PointMaker(
             max_n_hits=4,
             hit_infos=("x", "time"),
             time_window=None,
             dset_n_hits=None,
-        ).process(self.input_blob_1)["samples"]
-        self.assertEqual(result.title, 'x, time, is_valid')
+        )
+        result = pm.process(self.input_blob_1)["samples"]
+        self.assertTupleEqual(
+            pm.finish()["hit_infos"], ("x", "time", "is_valid"))
         target = np.array(
             [[[4, 1, 1],
               [5, 2, 1],

@@ -105,8 +105,16 @@ class TestFileGraph(TestCase):
             '_i_event_info', '_i_group_info', '_i_y',
             'event_info', 'group_info', 'x', 'x_indices', 'y'})
 
-    def test_x_title(self):
-        self.assertEqual(self.f["x"].attrs["TITLE"].decode(), "pos_z, time, channel_id, is_valid")
+    def test_x_attrs(self):
+        to_check = {
+            "hit_info_0": "pos_z",
+            "hit_info_1": "time",
+            "hit_info_2": "channel_id",
+            "hit_info_3": "is_valid",
+        }
+        attrs = dict(self.f["x"].attrs)
+        for k, v in to_check.items():
+            self.assertTrue(attrs[k] == v)
 
     def test_x(self):
         target = np.array([

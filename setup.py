@@ -27,11 +27,11 @@ setup(
                      'tag_regex': r'^(?P<prefix>v)?(?P<version>[^\+]+)(?P<suffix>.*)?$', },
 
     entry_points={'console_scripts': [
-        'make_nn_images=legacy.make_nn_images:main',
-        'shuffle=orcasong_contrib.data_tools.shuffle.shuffle_h5:main',
         'concatenate=orcasong.tools.concatenate:main',
-        'make_dsplit=orcasong_contrib.data_tools.make_data_split.make_data_split:main',
-        'plot_binstats=orcasong.plotting.plot_binstats:main']}
+        'h5shuffle=orcasong.tools.postproc:h5shuffle',
+        'plot_binstats=orcasong.plotting.plot_binstats:main',
+        'make_nn_images=legacy.make_nn_images:main',
+        'make_dsplit=orcasong_contrib.data_tools.make_data_split.make_data_split:main']}
 
 )
 

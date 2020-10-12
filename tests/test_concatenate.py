@@ -70,6 +70,20 @@ class TestFileConcatenator(TestCase):
                     [n.encode("ascii", "ignore") for n in self.dummy_files],
                 )
 
+    def test_concatenate_attrs(self):
+        fc = conc.FileConcatenator(self.dummy_files)
+        with tempfile.TemporaryFile() as tf:
+            fc.concatenate(tf)
+            with h5py.File(tf, "r") as f:
+                target_attrs = dict(f.attrs)
+                target_dset_attrs = dict(f["numpy_array"].attrs)
+            with h5py.File(self.dummy_files[0], "r") as f:
+                source_attrs = dict(f.attrs)
+                source_dset_attrs = dict(f["numpy_array"].attrs)
+
+            self.assertDictEqual(source_attrs, target_attrs)
+            self.assertDictEqual(source_dset_attrs, target_dset_attrs)
+
     def test_concatenate_array(self):
         fc = conc.FileConcatenator(self.dummy_files)
         with tempfile.TemporaryFile() as tf:
@@ -103,13 +117,15 @@ class TestFileConcatenator(TestCase):
 def _create_dummy_file(filepath, columns=10, val_array=1, val_recarray=(1, 3)):
     """ Create a dummy h5 file with an array and a recarray in it. """
     with h5py.File(filepath, "w") as f:
-        f.create_dataset(
+        dset = f.create_dataset(
             "numpy_array",
             data=np.ones(shape=(columns, 7, 3))*val_array,
             chunks=(5, 7, 3),
             compression="gzip",
             compression_opts=1
         )
+        dset.attrs.create("test_dset", "ok")
+
         rec_array = np.array(
             [val_recarray + (1, )] * columns,
             dtype=[('x', '<f8'), ('y', '<i8'), ("group_id", "<i8")]
@@ -122,3 +138,4 @@ def _create_dummy_file(filepath, columns=10, val_array=1, val_recarray=(1, 3)):
             compression="gzip",
             compression_opts=1
         )
+        f.attrs.create("test_file", "ok")
