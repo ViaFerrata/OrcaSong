@@ -2,17 +2,11 @@ PKGNAME=orcasong
 ALLNAMES = $(PKGNAME)
 ALLNAMES += orcasong_contrib
 
-default: build
-
-all: install
-
-build:
-	@echo "No need to build anymore :)"
 
 install:
 	pip install .
 
-install-dev:
+install-dev: dependencies
 	pip install -e .
 
 clean:
@@ -38,6 +32,7 @@ lint:
 
 dependencies:
 	pip install -Ur requirements.txt
+	pip install -Ur requirements_dev.txt
 
 .PHONY: yapf
 yapf:

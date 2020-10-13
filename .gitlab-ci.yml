@@ -32,6 +32,7 @@ cache:
   source venv/bin/activate
   pip install -U pip setuptools
   make install
+  make dependencies
 
 
 test:

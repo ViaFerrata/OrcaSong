@@ -1,15 +1,25 @@
 .. _orcasong_page:
 
-Mode 1: Producing images
-========================
+Producing DL files from h5
+==========================
 
-Generate multidimensional images out of ORCA data.
+Describes how to use OrcaSong to produce files for Deep Learning
+from h5 files. These files can contain either images (for convolutional
+networks), or graphs (for Graph networks).
+
+.. contents:: :local:
+
+
+Mode 1: Producing images
+------------------------
+
+Generate multidimensional images out of km3net data.
 
 .. image:: imgs/orcasong_function.PNG
    :height: 400px
 
 Basic Use
----------
+^^^^^^^^^
 
 Import the main class, the FileBinner (see
 :py:class:`orcasong.core.FileBinner`),
@@ -55,7 +65,7 @@ Or convert multiple files, which will all be saved in the given folder:
 
 
 Plotting binning statistics
----------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 After the binning has succeeded, you can generate a plot which shows the
 distribution of hits among the bins you defined. For this, call the following
@@ -67,7 +77,7 @@ This will plot the statistics for the files file_1_binned.h5, file_2_binned.h5, 
 into the file my_plotname.pdf.
 
 Using existing binnings
------------------------
+^^^^^^^^^^^^^^^^^^^^^^^
 
 You can use existing bin edges and mc info extractors from ``orcasong.bin_edges``
 and ``orcasong.mc_info_extr``. These were designed for specific detector layouts
@@ -75,12 +85,12 @@ and productions, and might not work properly when used on other data.
 
 
 Mode 2: Producing Graphs
-========================
+------------------------
 
-Generate the nodes of graphs from ORCA data.
+Generate the nodes of graphs from km3net data.
 
 Basic Use
----------
+^^^^^^^^^
 
 Import the main class, the FileGraph (see
 :py:class:`orcasong.core.FileGraph`),
@@ -102,12 +112,12 @@ of FileGraph determines this fixed length:
 
 
 General usage
-=============
+-------------
 
 Functionality that both modes have in common.
 
 Calibration
------------
+^^^^^^^^^^^
 
 You can supply a detx file to the file binner, in order to
 calibrate the data on the fly:
@@ -118,11 +128,12 @@ calibrate the data on the fly:
 
 
 Adding mc_info
---------------
+^^^^^^^^^^^^^^
 
-To add info from the mc_tracks (or from anywhere in the blob), you can define some
-function ``my_mcinfo_extractor`` which takes as an input a km3pipe blob,
+Define a function ``my_mcinfo_extractor``, which takes as an input a km3pipe blob,
 and outputs a dict mapping str to float.
+It should contain everything you need later down the pipeline, e.g. labels,
+event identifiers, ...
 
 This will be saved as a numpy structured array "y" in the output file, with
 the str being the dtype names. Set up like follows:

@@ -2,11 +2,4 @@ numpy
 h5py
 matplotlib
 km3pipe
-docopt
-toml
 setuptools_scm
-sphinx
-sphinx-rtd-theme
-sphinx-autoapi
-twine
-numpydoc==0.9.2
