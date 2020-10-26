@@ -39,7 +39,7 @@ class McInfoMaker(kp.Module):
                 else:
                     dtypes.append((key, np.float64))
         else:
-            dtypes = [(k, type(v)) for k, v in track.items()]
+            dtypes = None
         kp_hist = kp.dataclasses.Table(
             track, dtype=dtypes,  h5loc='y', name='event_info')
         if len(kp_hist) != 1:
