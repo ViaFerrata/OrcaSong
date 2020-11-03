@@ -59,22 +59,15 @@ class TimePreproc(kp.Module):
     ----------
     add_t0 : bool
         If true, t0 will be added to times of hits and mchits.
-    correct_timeslew : bool
-        If true, the time slewing of hits depending on their tot
-        will be corrected.
     center_time : bool
         If true, center hit and mchit times with the time of the first
         triggered hit.
-    subtract_t0_mchits : bool
-        It True, subtract t0 from the times of mchits.
 
     """
 
     def configure(self):
         self.add_t0 = self.get('add_t0', default=False)
-        self.correct_timeslew = self.get("correct_timeslew", default=False)
         self.center_time = self.get('center_time', default=True)
-        self.subtract_t0_mchits = self.get('subtract_t0_mchits', default=False)
 
         self._has_mchits = None
         self._print_flags = set()
@@ -82,21 +75,11 @@ class TimePreproc(kp.Module):
     def process(self, blob):
         if self._has_mchits is None:
             self._has_mchits = "McHits" in blob
-
         if self.add_t0:
             blob = self.add_t0_time(blob)
-        if self.correct_timeslew:
-            blob = self.timeslew(blob)
-        if self.subtract_t0_mchits and self._has_mchits:
-            blob = self.subtract_t0_mctime(blob)
         if self.center_time:
             blob = self.center_hittime(blob)
 
-        return blob
-
-    def timeslew(self, blob):
-        self._print_once("Subtracting time slew of hit times")
-        blob["Hits"]["time"] -= km.mc.slew(blob["Hits"]["tot"])
         return blob
 
     def add_t0_time(self, blob):
@@ -107,12 +90,6 @@ class TimePreproc(kp.Module):
             blob["McHits"].time = np.add(
                 blob["McHits"].time, blob["McHits"].t0)
 
-        return blob
-
-    def subtract_t0_mctime(self, blob):
-        self._print_once("Subtracting t0 from mchits")
-        blob["McHits"].time = np.subtract(
-            blob["McHits"].time, blob["McHits"].t0)
         return blob
 
     def center_hittime(self, blob):
@@ -459,11 +436,17 @@ class DetApplier(kp.Module):
                     "errors with t0."
                 )
             self._calib_checked = True
-        # TODO use built-in time slewing of km3pipe 9 once released
-        blob = self.calib.process(blob, key="Hits", outkey="Hits")
+        blob["Hits"] = self.calib.apply(blob["Hits"], correct_slewing=True)
         if "McHits" in blob:
-            blob = self.calib.process(blob, key="McHits", outkey="McHits")
+            blob["McHits"] = self.calib.apply(blob["McHits"])
+            # TODO remove once https://git.km3net.de/km3py/km3pipe/-/issues/239 is solved
+            self.subtract_t0_mctime(blob)
 
+        return blob
+
+    def subtract_t0_mctime(self, blob):
+        blob["McHits"].time = np.subtract(
+            blob["McHits"].time, blob["McHits"].t0)
         return blob
 
 

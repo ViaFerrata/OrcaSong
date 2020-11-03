@@ -58,6 +58,7 @@ class BaseProcessor:
         If False, throw an error instead.
     mc_info_to_float64 : bool
         Convert everything in the mcinfo array to float 64 (Default: True).
+        Hint: int dtypes can not store nan!
 
     Attributes
     ----------
@@ -86,7 +87,6 @@ class BaseProcessor:
                  det_file=None,
                  center_time=True,
                  add_t0=False,
-                 correct_timeslew=False,
                  event_skipper=None,
                  chunksize=32,
                  keep_event_info=True,
@@ -97,7 +97,6 @@ class BaseProcessor:
         self.det_file = det_file
         self.center_time = center_time
         self.add_t0 = add_t0
-        self.correct_timeslew = correct_timeslew
         self.event_skipper = event_skipper
         self.chunksize = chunksize
         self.keep_event_info = keep_event_info
@@ -126,7 +125,7 @@ class BaseProcessor:
 
         """
         if outfile is None:
-            outfile = os.path.join(os.getcwd(), "{}_hist.h5".format(
+            outfile = os.path.join(os.getcwd(), "{}_dl.h5".format(
                 os.path.splitext(os.path.basename(infile))[0]))
         if not self.overwrite:
             if os.path.isfile(outfile):
@@ -155,7 +154,7 @@ class BaseProcessor:
         for infile in infiles:
             outfile = os.path.join(
                 outfolder,
-                f"{os.path.splitext(os.path.basename(infile))[0]}_hist.h5")
+                f"{os.path.splitext(os.path.basename(infile))[0]}_dl.h5")
             outfiles.append(outfile)
             self.run(infile, outfile)
         return outfiles
@@ -183,11 +182,10 @@ class BaseProcessor:
         if self.det_file:
             cmpts.append((modules.DetApplier, {"det_file": self.det_file}))
 
-        if any((self.center_time, self.add_t0, self.correct_timeslew)):
+        if any((self.center_time, self.add_t0)):
             cmpts.append((modules.TimePreproc, {
                 "add_t0": self.add_t0,
-                "center_time": self.center_time,
-                "correct_timeslew": self.correct_timeslew}))
+                "center_time": self.center_time}))
         return cmpts
 
     @abstractmethod
