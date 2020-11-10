@@ -47,9 +47,7 @@ class BaseProcessor:
         Chunksize (along axis_0) used for saving the output
         to a .h5 file [default: 32].
     keep_event_info : bool
-        If True, will keep the "event_info" table [default: True].
-    keep_mc_tracks : bool
-        If True, will keep the "McTracks" table. It's large! [default: False]
+        If True, will keep the "event_info" table [default: False].
     overwrite : bool
         If True, overwrite the output file if it exists already.
         If False, throw an error instead.
@@ -87,8 +85,7 @@ class BaseProcessor:
                  add_t0=False,
                  event_skipper=None,
                  chunksize=32,
-                 keep_event_info=True,
-                 keep_mc_tracks=False,
+                 keep_event_info=False,
                  overwrite=True,
                  mc_info_to_float64=True):
         self.mc_info_extr = mc_info_extr
@@ -99,7 +96,6 @@ class BaseProcessor:
         self.event_skipper = event_skipper
         self.chunksize = chunksize
         self.keep_event_info = keep_event_info
-        self.keep_mc_tracks = keep_mc_tracks
         self.overwrite = overwrite
         self.mc_info_to_float64 = mc_info_to_float64
 
@@ -210,8 +206,6 @@ class BaseProcessor:
         keys_keep = ['samples', 'mc_info', "header", "raw_header"]
         if self.keep_event_info:
             keys_keep.append('EventInfo')
-        if self.keep_mc_tracks:
-            keys_keep.append('McTracks')
         cmpts.append((km.common.Keep, {"keys": keys_keep}))
 
         cmpts.append((kp.io.HDF5Sink, {
