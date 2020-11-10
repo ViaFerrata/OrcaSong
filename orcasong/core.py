@@ -21,12 +21,12 @@ class BaseProcessor:
 
     Parameters
     ----------
-    mc_info_extr : function, optional
-        Function that extracts desired mc_info from a blob, which is then
+    extractor : function, optional
+        Function that extracts desired info from a blob, which is then
         stored as the "y" datafield in the .h5 file.
         The function takes the km3pipe blob as an input, and returns
         a dict mapping str to floats.
-        Some examples can be found in orcasong.mc_info_extr.
+        Examples can be found in orcasong.extractors.
     det_file : str, optional
         Path to a .detx detector geometry file, which can be used to
         calibrate the hits.
@@ -82,7 +82,7 @@ class BaseProcessor:
         each pipeline.
 
     """
-    def __init__(self, mc_info_extr=None,
+    def __init__(self, extractor=None,
                  det_file=None,
                  center_time=True,
                  add_t0=False,
@@ -93,7 +93,7 @@ class BaseProcessor:
                  keep_mc_tracks=False,
                  overwrite=True,
                  mc_info_to_float64=True):
-        self.mc_info_extr = mc_info_extr
+        self.extractor = extractor
         self.det_file = det_file
         self.center_time = center_time
         self.add_t0 = add_t0
@@ -198,9 +198,9 @@ class BaseProcessor:
     def get_cmpts_post(self, outfile):
         """ Modules that postproc and save the events. """
         cmpts = []
-        if self.mc_info_extr is not None:
+        if self.extractor is not None:
             cmpts.append((modules.McInfoMaker, {
-                "mc_info_extr": self.mc_info_extr,
+                "extractor": self.extractor,
                 "to_float64": self.mc_info_to_float64,
                 "store_as": "mc_info"}))
 

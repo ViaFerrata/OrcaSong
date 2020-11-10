@@ -10,7 +10,7 @@ __author__ = 'Stefan Reck'
 class TestModules(TestCase):
     def test_mc_info_maker(self):
         """ Test the mcinfo maker on some dummy data. """
-        def mc_info_extr(blob):
+        def extractor(blob):
             hits = blob["Hits"]
             return {"dom_id_0": hits.dom_id[0],
                     "time_2": hits.time[2]}
@@ -23,7 +23,7 @@ class TestModules(TestCase):
             })
         }
         module = modules.McInfoMaker(
-            mc_info_extr=mc_info_extr, store_as="test")
+            extractor=extractor, store_as="test")
         out_blob = module.process(in_blob)
 
         self.assertSequenceEqual(list(out_blob.keys()), ["Hits", "test"])
@@ -36,7 +36,7 @@ class TestModules(TestCase):
 
     def test_mc_info_maker_dtype(self):
         """ Test the mcinfo maker on some dummy data. """
-        def mc_info_extr(blob):
+        def extractor(blob):
             hits = blob["Hits"]
             return {"dom_id_0": hits.dom_id[0],
                     "time_2": hits.time[2]}
@@ -48,7 +48,7 @@ class TestModules(TestCase):
             })
         }
         module = modules.McInfoMaker(
-            mc_info_extr=mc_info_extr, store_as="test", to_float64=False)
+            extractor=extractor, store_as="test", to_float64=False)
         out_blob = module.process(in_blob)
 
         np.testing.assert_array_equal(
