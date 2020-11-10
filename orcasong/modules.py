@@ -12,11 +12,11 @@ __author__ = 'Stefan Reck'
 
 class McInfoMaker(kp.Module):
     """
-    Store mc info as float64 in the blob.
+    Stores info as float64 in the blob.
 
     Attributes
     ----------
-    mc_info_extr : function
+    extractor : function
         Function to extract the info. Takes the blob as input, outputs
         a dict with the desired mc_infos.
     store_as : str
@@ -25,12 +25,12 @@ class McInfoMaker(kp.Module):
     """
 
     def configure(self):
-        self.mc_info_extr = self.require('mc_info_extr')
+        self.extractor = self.require('extractor')
         self.store_as = self.require('store_as')
         self.to_float64 = self.get("to_float64", default=True)
 
     def process(self, blob):
-        track = self.mc_info_extr(blob)
+        track = self.extractor(blob)
         if self.to_float64:
             dtypes = []
             for key, v in track.items():

@@ -130,7 +130,7 @@ calibrate the data on the fly:
 Adding mc_info
 ^^^^^^^^^^^^^^
 
-Define a function ``my_mcinfo_extractor``, which takes as an input a km3pipe blob,
+Define a function ``my_extractor``, which takes as an input a km3pipe blob,
 and outputs a dict mapping str to float.
 It should contain everything you need later down the pipeline, e.g. labels,
 event identifiers, ...
@@ -140,5 +140,5 @@ the str being the dtype names. Set up like follows:
 
 .. code-block:: python
 
-    fb = FileBinner(bin_edges_list, mc_info_extr=my_mcinfo_extractor)
+    fb = FileBinner(bin_edges_list, extractor=my_extractor)
 
