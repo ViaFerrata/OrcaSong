@@ -1,7 +1,7 @@
 from unittest import TestCase
 import numpy as np
 import orcasong.modules as modules
-from km3pipe.dataclasses import Table
+import km3pipe as kp
 
 
 __author__ = 'Stefan Reck'
@@ -16,7 +16,7 @@ class TestModules(TestCase):
                     "time_2": hits.time[2]}
 
         in_blob = {
-            "Hits": Table({
+            "Hits": kp.Table({
                 'dom_id': [2, 3, 3],
                 'channel_id': [0, 1, 2],
                 'time': [10.1, 11.2, 12.3]
@@ -42,7 +42,7 @@ class TestModules(TestCase):
                     "time_2": hits.time[2]}
 
         in_blob = {
-            "Hits": Table({
+            "Hits": kp.Table({
                 'dom_id': np.array([2, 3, 3], dtype="int8"),
                 'time': np.array([10.1, 11.2, 12.3], dtype="float32"),
             })
@@ -70,7 +70,7 @@ class TestModules(TestCase):
 class TestTimePreproc(TestCase):
     def setUp(self):
         self.in_blob = {
-            "Hits": Table({
+            "Hits": kp.Table({
                 'time': [1., 2., 3.],
                 "t0": [0.1, 0.2, 0.3],
                 "triggered": [0, 1, 1],
@@ -78,12 +78,12 @@ class TestTimePreproc(TestCase):
         }
 
         self.in_blob_mc = {
-            "Hits": Table({
+            "Hits": kp.Table({
                 'time': [1., 2., 3.],
                 "t0": [0.1, 0.2, 0.3],
                 "triggered": [0, 1, 1],
             }),
-            "McHits": Table({
+            "McHits": kp.Table({
                 'time': [1., 2., 3.],
                 "t0": [0.1, 0.2, 0.3],
                 "triggered": [0, 1, 1],
@@ -95,7 +95,7 @@ class TestTimePreproc(TestCase):
             add_t0=True, center_time=False)
 
         target = {
-            "Hits": Table({
+            "Hits": kp.Table({
                 'time': [1.1, 2.2, 3.3],
                 "t0": [0.1, 0.2, 0.3],
                 "triggered": [0, 1, 1],
@@ -113,7 +113,7 @@ class TestTimePreproc(TestCase):
             add_t0=False, center_time=True)
 
         target = {
-            "Hits": Table({
+            "Hits": kp.Table({
                 'time': [-1., 0., 1.],
                 "t0": [0.1, 0.2, 0.3],
                 "triggered": [0, 1, 1],
@@ -131,7 +131,7 @@ class TestTimePreproc(TestCase):
             add_t0=True, center_time=True)
 
         target = {
-            "Hits": Table({
+            "Hits": kp.Table({
                 'time': [-1.1, 0., 1.1],
                 "t0": [0.1, 0.2, 0.3],
                 "triggered": [0, 1, 1],
@@ -150,13 +150,13 @@ class TestTimePreproc(TestCase):
             add_t0=True, center_time=True)
 
         target = {
-            "Hits": Table({
+            "Hits": kp.Table({
                 'time': [-1.1, 0., 1.1],
                 "t0": [0.1, 0.2, 0.3],
                 "triggered": [0, 1, 1],
             }),
-            "McHits": Table({
-                'time': [-1.1, 0., 1.1],
+            "McHits": kp.Table({
+                'time': [-1.2, -0.2, 0.8],
                 "t0": [0.1, 0.2, 0.3],
                 "triggered": [0, 1, 1],
             }),
@@ -172,11 +172,11 @@ class TestTimePreproc(TestCase):
 class TestPointMaker(TestCase):
     def setUp(self):
         self.input_blob_1 = {
-            "Hits": Table({
+            "Hits": kp.Table({
                 "x": [4, 5, 6],
                 'time': [1., 2., 3.],
                 "t0": [0.1, 0.2, 0.3],}),
-            "EventInfo": Table({
+            "EventInfo": kp.Table({
                 "pad": 1.
             })
         }
@@ -213,7 +213,7 @@ class TestPointMaker(TestCase):
 
     def test_input_blob_1_max_n_hits(self):
         input_blob_long = {
-            "Hits": Table({
+            "Hits": kp.Table({
                 "x": np.random.rand(1000).astype("float32"),
         })}
         result = modules.PointMaker(
@@ -262,7 +262,7 @@ class TestImageMaker(TestCase):
 
         module = modules.ImageMaker(bin_edges_list=bin_edges_list)
         in_blob = {
-            "Hits": Table({
+            "Hits": kp.Table({
                 "x": [4, 5, 6],
                 'time': [1., 2., 3.],
                 "t0": [0.1, 0.2, 0.3],
@@ -271,7 +271,7 @@ class TestImageMaker(TestCase):
         }
 
         target = {
-            "Hits": Table({
+            "Hits": kp.Table({
                 "x": [4, 5, 6],
                 'time': [1., 2., 3.],
                 "t0": [0.1, 0.2, 0.3],
@@ -303,7 +303,7 @@ class TestImageMaker(TestCase):
         module = modules.ImageMaker(
             bin_edges_list=bin_edges_list)
         in_blob = {
-            "Hits": Table({
+            "Hits": kp.Table({
                 "x": [4, 5, 6],
                 'time': [1., 2., 3.],
                 "t0": [0.1, 0.2, 0.3],
@@ -322,7 +322,7 @@ class TestImageMaker(TestCase):
 
         module = modules.ImageMaker(bin_edges_list=bin_edges_list)
         in_blob = {
-            "Hits": Table({
+            "Hits": kp.Table({
                 'time': [1., 2., 3.],
                 "t0": [0.1, 0.2, 0.3],
                 "triggered": [0, 1, 1],
@@ -330,7 +330,7 @@ class TestImageMaker(TestCase):
         }
 
         target = {
-            "Hits": Table({
+            "Hits": kp.Table({
                 'time': [1., 2., 3.],
                 "t0": [0.1, 0.2, 0.3],
                 "triggered": [0, 1, 1],
@@ -357,7 +357,7 @@ class TestImageMaker(TestCase):
 
         module = modules.ImageMaker(bin_edges_list=bin_edges_list)
         in_blob = {
-            "Hits": Table({
+            "Hits": kp.Table({
                 'time': [1., 2., 3.],
                 "t0": [0.1, 0.2, 0.3],
                 "triggered": [0, 1, 1],
@@ -365,7 +365,7 @@ class TestImageMaker(TestCase):
         }
 
         target = {
-            "Hits": Table({
+            "Hits": kp.Table({
                 'time': [1., 2., 3.],
                 "t0": [0.1, 0.2, 0.3],
                 "triggered": [0, 1, 1],
@@ -395,7 +395,7 @@ class TestBinningStatsMaker(TestCase):
         ]
 
         in_blob = {
-            "Hits": Table({
+            "Hits": kp.Table({
                 "x": [4, 5, 6, 6],
                 'time': [1., 2., 3., 50],
                 "z": [0, 3, 4, 5],

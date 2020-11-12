@@ -29,6 +29,7 @@ class TestFileBinner(TestCase):
             mc_info_extr=orcasong.mc_info_extr.get_real_data,
             det_file=DET_FILE,
             add_t0=True,
+            keep_event_info=True,
         )
         cls.tmpdir = tempfile.TemporaryDirectory()
         cls.outfile = os.path.join(cls.tmpdir.name, "binned.h5")
@@ -48,7 +49,7 @@ class TestFileBinner(TestCase):
     def test_x(self):
         target = np.array([
             [[[4, 1], [6, 3]],
-                [[11, 5], [7, 7]]],
+                [[12, 5], [6, 7]]],
             [[[4, 2], [1, 3]],
                 [[5, 7], [8, 5]]],
             [[[3, 3], [2, 4]],
@@ -72,7 +73,7 @@ class TestFileBinner(TestCase):
         target_hists = {
             "channel_id": np.array([20.0, 8.0, 10.0, 8.0, 16.0, 13.0, 11.0, 9.0, 10.0, 11.0]),
             "pos_z": np.array([0.0, 0.0, 0.0, 36.0, 0.0, 19.0, 30.0, 0.0, 31.0, 0.0]),
-            "time": np.array([56.0, 60.0]),
+            "time": np.array([57.0, 59.0]),
         }
         for dim, infos in bin_stats.items():
             np.testing.assert_equal(infos["hist"], target_hists[dim])
@@ -88,7 +89,8 @@ class TestFileGraph(TestCase):
             hit_infos=["pos_z", "time", "channel_id"],
             mc_info_extr=orcasong.mc_info_extr.get_real_data,
             det_file=DET_FILE,
-            add_t0=True,
+            add_t0=False,
+            keep_event_info=True,
         )
         cls.tmpdir = tempfile.TemporaryDirectory()
         cls.outfile = os.path.join(cls.tmpdir.name, "binned.h5")
