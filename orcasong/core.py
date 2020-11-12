@@ -35,6 +35,9 @@ class BaseProcessor:
     center_time : bool
         Subtract time of first triggered hit from all hit times. Will
         also be done for McHits if they are in the blob [default: True].
+    correct_timeslew : bool
+        If true, the time slewing of hits depending on their tot
+        will be corrected.
     add_t0 : bool
         If true, add t0 to the time of hits and mchits. If using a
         det_file, this will already have been done automatically
@@ -83,6 +86,7 @@ class BaseProcessor:
                  correct_mc_time=True,
                  center_time=True,
                  add_t0=False,
+                 correct_timeslew=True,
                  event_skipper=None,
                  chunksize=32,
                  keep_event_info=False,
@@ -93,6 +97,7 @@ class BaseProcessor:
         self.correct_mc_time = correct_mc_time
         self.center_time = center_time
         self.add_t0 = add_t0
+        self.correct_timeslew = correct_timeslew
         self.event_skipper = event_skipper
         self.chunksize = chunksize
         self.keep_event_info = keep_event_info
@@ -175,7 +180,9 @@ class BaseProcessor:
         cmpts = [(kp.io.hdf5.HDF5Pump, {"filename": infile})]
 
         if self.det_file:
-            cmpts.append((modules.DetApplier, {"det_file": self.det_file}))
+            cmpts.append((modules.DetApplier, {
+                "det_file": self.det_file,
+                "correct_timeslew": self.correct_timeslew}))
         if self.correct_mc_time:
             cmpts.append((km.mc.MCTimeCorrector, {}))
 

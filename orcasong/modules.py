@@ -394,11 +394,16 @@ class DetApplier(kp.Module):
     ----------
     det_file : str
         Path to a .detx detector geometry file.
+    correct_timeslew : bool
+        If true, the time slewing of hits depending on their tot
+        will be corrected.
 
     """
 
     def configure(self):
         self.det_file = self.require("det_file")
+        self.correct_timeslew = self.get("correct_timeslew", default=True)
+
         self.cprint(f"Calibrating with {self.det_file}")
         self.calib = kp.calib.Calibration(filename=self.det_file)
         self._calib_checked = False
@@ -412,7 +417,8 @@ class DetApplier(kp.Module):
                     "errors with t0."
                 )
             self._calib_checked = True
-        blob["Hits"] = self.calib.apply(blob["Hits"], correct_slewing=True)
+        blob["Hits"] = self.calib.apply(
+            blob["Hits"], correct_slewing=self.correct_timeslew)
         if "McHits" in blob:
             blob["McHits"] = self.calib.apply(blob["McHits"])
         return blob

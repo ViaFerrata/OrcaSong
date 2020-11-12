@@ -91,6 +91,7 @@ class TestFileGraph(TestCase):
             det_file=DET_FILE,
             add_t0=False,
             keep_event_info=True,
+            correct_timeslew=False,
         )
         cls.tmpdir = tempfile.TemporaryDirectory()
         cls.outfile = os.path.join(cls.tmpdir.name, "binned.h5")
