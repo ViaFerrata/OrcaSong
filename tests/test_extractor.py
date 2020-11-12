@@ -27,6 +27,7 @@ class TestStdRecoExtractor(TestCase):
             extractor=extractors.get_neutrino_mc_info_extr(NEUTRINO_FILE),
             det_file=DET_FILE_NEUTRINO,
             add_t0=True,
+            keep_event_info=True,
         )
         cls.tmpdir = tempfile.TemporaryDirectory()
         cls.outfile = os.path.join(cls.tmpdir.name, "binned.h5")
