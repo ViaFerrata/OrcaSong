@@ -1,5 +1,5 @@
 numpy
 h5py
 matplotlib
-km3pipe
+km3pipe>=9
 setuptools_scm

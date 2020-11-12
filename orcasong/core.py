@@ -30,18 +30,18 @@ class BaseProcessor:
     det_file : str, optional
         Path to a .detx detector geometry file, which can be used to
         calibrate the hits.
+    correct_mc_time : bool
+        Converts MC hit times to JTE times.
     center_time : bool
         Subtract time of first triggered hit from all hit times. Will
         also be done for McHits if they are in the blob [default: True].
     correct_timeslew : bool
         If true, the time slewing of hits depending on their tot
-        will be corrected [default: False].
+        will be corrected.
     add_t0 : bool
         If true, add t0 to the time of hits and mchits. If using a
-        det_file, this will already have been done automatically.
-        Note: Mchits appear to NOT need t0 added, but its done auto-
-        matically by km3pipe calibration, so results might be
-        wrong for mchits. [default: False].
+        det_file, this will already have been done automatically
+        [default: False].
     event_skipper : func, optional
         Function that takes the blob as an input, and returns a bool.
         If the bool is true, the blob will be skipped.
@@ -50,14 +50,13 @@ class BaseProcessor:
         Chunksize (along axis_0) used for saving the output
         to a .h5 file [default: 32].
     keep_event_info : bool
-        If True, will keep the "event_info" table [default: True].
-    keep_mc_tracks : bool
-        If True, will keep the "McTracks" table. It's large! [default: False]
+        If True, will keep the "event_info" table [default: False].
     overwrite : bool
         If True, overwrite the output file if it exists already.
         If False, throw an error instead.
     mc_info_to_float64 : bool
         Convert everything in the mcinfo array to float 64 (Default: True).
+        Hint: int dtypes can not store nan!
 
     Attributes
     ----------
@@ -84,24 +83,24 @@ class BaseProcessor:
     """
     def __init__(self, extractor=None,
                  det_file=None,
+                 correct_mc_time=True,
                  center_time=True,
                  add_t0=False,
-                 correct_timeslew=False,
+                 correct_timeslew=True,
                  event_skipper=None,
                  chunksize=32,
-                 keep_event_info=True,
-                 keep_mc_tracks=False,
+                 keep_event_info=False,
                  overwrite=True,
                  mc_info_to_float64=True):
         self.extractor = extractor
         self.det_file = det_file
+        self.correct_mc_time = correct_mc_time
         self.center_time = center_time
         self.add_t0 = add_t0
         self.correct_timeslew = correct_timeslew
         self.event_skipper = event_skipper
         self.chunksize = chunksize
         self.keep_event_info = keep_event_info
-        self.keep_mc_tracks = keep_mc_tracks
         self.overwrite = overwrite
         self.mc_info_to_float64 = mc_info_to_float64
 
@@ -126,7 +125,7 @@ class BaseProcessor:
 
         """
         if outfile is None:
-            outfile = os.path.join(os.getcwd(), "{}_hist.h5".format(
+            outfile = os.path.join(os.getcwd(), "{}_dl.h5".format(
                 os.path.splitext(os.path.basename(infile))[0]))
         if not self.overwrite:
             if os.path.isfile(outfile):
@@ -155,7 +154,7 @@ class BaseProcessor:
         for infile in infiles:
             outfile = os.path.join(
                 outfolder,
-                f"{os.path.splitext(os.path.basename(infile))[0]}_hist.h5")
+                f"{os.path.splitext(os.path.basename(infile))[0]}_dl.h5")
             outfiles.append(outfile)
             self.run(infile, outfile)
         return outfiles
@@ -181,13 +180,16 @@ class BaseProcessor:
         cmpts = [(kp.io.hdf5.HDF5Pump, {"filename": infile})]
 
         if self.det_file:
-            cmpts.append((modules.DetApplier, {"det_file": self.det_file}))
+            cmpts.append((modules.DetApplier, {
+                "det_file": self.det_file,
+                "correct_timeslew": self.correct_timeslew}))
+        if self.correct_mc_time:
+            cmpts.append((km.mc.MCTimeCorrector, {}))
 
-        if any((self.center_time, self.add_t0, self.correct_timeslew)):
+        if any((self.center_time, self.add_t0)):
             cmpts.append((modules.TimePreproc, {
                 "add_t0": self.add_t0,
-                "center_time": self.center_time,
-                "correct_timeslew": self.correct_timeslew}))
+                "center_time": self.center_time}))
         return cmpts
 
     @abstractmethod
@@ -211,8 +213,6 @@ class BaseProcessor:
         keys_keep = ['samples', 'mc_info', "header", "raw_header"]
         if self.keep_event_info:
             keys_keep.append('EventInfo')
-        if self.keep_mc_tracks:
-            keys_keep.append('McTracks')
         cmpts.append((km.common.Keep, {"keys": keys_keep}))
 
         cmpts.append((kp.io.HDF5Sink, {
