@@ -27,19 +27,17 @@ cache:
 
 .virtualenv_template: &virtualenv_definition |
   python -V
-  pip install virtualenv
+  pip install -U pip setuptools wheel virtualenv
   virtualenv venv
   source venv/bin/activate
-  pip install -U pip setuptools
-  make install
-  make dependencies
-
+  make install-dev
 
 test:
     image: docker.km3net.de/base/python:3.6
     stage: test
     script:
         - *virtualenv_definition
+        - pip list
         - make test
 
 
