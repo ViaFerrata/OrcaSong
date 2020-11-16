@@ -179,12 +179,12 @@ class BaseProcessor:
         """ Modules that read and calibrate the events. """
         cmpts = [(kp.io.hdf5.HDF5Pump, {"filename": infile})]
 
+        if self.correct_mc_time:
+            cmpts.append((km.mc.MCTimeCorrector, {}))
         if self.det_file:
             cmpts.append((modules.DetApplier, {
                 "det_file": self.det_file,
                 "correct_timeslew": self.correct_timeslew}))
-        if self.correct_mc_time:
-            cmpts.append((km.mc.MCTimeCorrector, {}))
 
         if any((self.center_time, self.add_t0)):
             cmpts.append((modules.TimePreproc, {
@@ -236,7 +236,7 @@ class BaseProcessor:
 
         """
         # Add current orcasong version to h5 file
-        f.attrs.create("orcasong", orcasong.__version__, dtype="S6")
+        f.attrs.create("orcasong", orcasong.__version__)
 
 
 class FileBinner(BaseProcessor):
