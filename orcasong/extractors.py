@@ -368,7 +368,7 @@ def get_neutrino_mc_info_extr(input_file):
             "weight_w3": weight_w3,
             "n_gen": n_gen,
         }
-        print(is_cc)
+
         # get all the std reco info
         if has_std_reco:
 
