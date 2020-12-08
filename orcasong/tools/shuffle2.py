@@ -9,18 +9,16 @@ import h5py
 from orcasong.tools.postproc import get_filepath_output, copy_used_files
 from orcasong.tools.concatenate import copy_attrs
 
-# neu max_ram = 1e9: 2:41 (161s)
-# neu max_ram = 6e9: 0:25 (25s)
-# alt:  3:38 (218s)
 
-# chunks max_ram = 1e9:
+__author__ = "Stefan Reck"
 
 
 def shuffle_v2(
         input_file,
         datasets=("x", "y"),
         output_file=None,
-        max_ram=1e9,
+        max_ram=None,
+        max_ram_fraction=0.9,
         chunks=False,
         seed=42):
     """
@@ -36,9 +34,14 @@ def shuffle_v2(
         If given, this will be the name of the output file.
         Otherwise, a name is auto generated.
     max_ram : int, optional
-        Available ram in bytes. Default: Use 90% of maximum available.
+        Available ram in bytes. Default: Use fraction of
+        maximum available (see max_ram_fraction).
+    max_ram_fraction : float
+        in [0, 1]. Fraction of ram to use when max_ram is None.
     chunks : bool
-        Chunk-wise shuffle.
+        Use chunk-wise readout. Up to x8 speed boost, but will
+        only quasi-randomize order! Needs lots of ram
+        to be accurate!
     seed : int
         Sets a fixed random seed for the shuffling.
 
@@ -54,8 +57,8 @@ def shuffle_v2(
     if os.path.exists(output_file):
         raise FileExistsError(output_file)
     if max_ram is None:
-        max_ram = 0.9 * psutil.virtual_memory().total
-        print(f"Using 90% of max available ram: {max_ram} bytes")
+        max_ram = max_ram_fraction * psutil.virtual_memory().total
+        print(f"Using {max_ram_fraction:.2%} of max available ram = {max_ram} bytes")
 
     with h5py.File(input_file, "r") as f_in:
         dset_infos, n_lines = get_dset_infos(f_in, datasets, max_ram)
@@ -157,7 +160,7 @@ def get_dset_infos(f, datasets, max_ram):
 
 def make_dset(f_out, dset_info, indices):
     """ Create a shuffled dataset in the output file. """
-    for batch_index in range(dset_info["n_batches"]):
+    for batch_index in range(dset_info["n_batches_linewise"]):
         print(f"Processing batch {batch_index+1}/{dset_info['n_batches_linewise']}")
 
         slc = slice(
@@ -196,11 +199,15 @@ def make_dset_chunked(f_out, dset_info, indices_chunked):
         # remove indices outside of dset
         to_read = to_read[to_read < len(dset_info["dset"])]
 
-        # reading has to be done with linearly increasing index,
-        #  so sort -> read -> undo sorting
+        # reading has to be done with linearly increasing index
+        #  fancy indexing is super slow
+        #  so sort -> turn to slices -> read -> conc -> undo sorting
         sort_ix = np.argsort(to_read)
         unsort_ix = np.argsort(sort_ix)
-        data = dset_info["dset"][to_read[sort_ix]][unsort_ix]
+        fancy_indices = to_read[sort_ix]
+        slices = slicify(fancy_indices)
+        data = np.concatenate([dset_info["dset"][slc] for slc in slices])
+        data = data[unsort_ix]
 
         if batch_index == 0:
             in_dset = dset_info["dset"]
@@ -224,12 +231,24 @@ def make_dset_chunked(f_out, dset_info, indices_chunked):
         print(f"Warning: last index was {start_idx} not {len(dset_info['dset'])}")
 
 
+def slicify(fancy_indices):
+    """ [0,1,2, 6,7,8] --> [0:3, 6:9] """
+    steps = np.diff(fancy_indices) != 1
+    slice_starts = np.concatenate([fancy_indices[:1], fancy_indices[1:][steps]])
+    slice_ends = np.concatenate([fancy_indices[:-1][steps], fancy_indices[-1:]]) + 1
+    return [slice(slice_starts[i], slice_ends[i]) for i in range(len(slice_starts))]
+
+
 def h5shuffle():
     parser = argparse.ArgumentParser(description='Shuffle an h5 file using h5py.')
-    parser.add_argument('input_file', type=str, help='File to shuffle.')
+    parser.add_argument('input_file', type=str,
+                        help='File to shuffle.')
     parser.add_argument('--output_file', type=str,
                         help='Name of output file. Default: Auto generate name.')
-    parser.add_argument('--chunks', action='store_true')
+    parser.add_argument('--chunks', action='store_true',
+                        help="Use chunk-wise readout. Up to 8x speed boost, but will "
+                             "only quasi-randomize order! Needs lots of ram "
+                             "to be accurate!")
     shuffle_v2(**vars(parser.parse_args()))
 
 
