@@ -18,7 +18,7 @@ def shuffle_v2(
         datasets=("x", "y"),
         output_file=None,
         max_ram=None,
-        max_ram_fraction=0.9,
+        max_ram_fraction=0.45,
         chunks=False,
         seed=42):
     """
@@ -37,11 +37,13 @@ def shuffle_v2(
         Available ram in bytes. Default: Use fraction of
         maximum available (see max_ram_fraction).
     max_ram_fraction : float
-        in [0, 1]. Fraction of ram to use when max_ram is None.
+        in [0, 1]. Fraction of ram to use for reading data when max_ram
+        is None. Note: when using chunks, this should be <=0.45, since
+        lots of ram is needed for in-memory shuffling.
     chunks : bool
         Use chunk-wise readout. Up to x8 speed boost, but will
         only quasi-randomize order! Needs lots of ram
-        to be accurate!
+        to be accurate! (use a node with at least 32gb, the more the better)
     seed : int
         Sets a fixed random seed for the shuffling.
 
@@ -57,8 +59,8 @@ def shuffle_v2(
     if os.path.exists(output_file):
         raise FileExistsError(output_file)
     if max_ram is None:
-        max_ram = max_ram_fraction * psutil.virtual_memory().total
-        print(f"Using {max_ram_fraction:.2%} of max available ram = {max_ram} bytes")
+        max_ram = max_ram_fraction * psutil.virtual_memory().available
+        print(f"Using {max_ram_fraction:.2%} of available ram = {max_ram} bytes")
 
     with h5py.File(input_file, "r") as f_in:
         dset_infos, n_lines = get_dset_infos(f_in, datasets, max_ram)
