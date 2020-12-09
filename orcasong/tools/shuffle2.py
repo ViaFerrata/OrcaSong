@@ -256,7 +256,7 @@ def slicify(fancy_indices):
 def h5shuffle2():
     parser = argparse.ArgumentParser(
         description='Shuffle datasets in a h5file that have the same length.'
-                    'Uses chunkwise readout for a pseudo-shuffle, so shuffling'
+                    'Uses chunkwise readout for a pseudo-shuffle, so shuffling '
                     'multiple times is recommended for larger files.')
     parser.add_argument('input_file', type=str,
                         help='Path of the file that will be shuffled.')
@@ -266,29 +266,43 @@ def h5shuffle2():
     parser.add_argument('--datasets', type=str, nargs="*", default=("x", "y"),
                         help='Which datasets to include in output. Default: x, y')
     parser.add_argument('--max_ram_fraction', type=float, default=0.25,
-                        help="in [0, 1]. Fraction of ram to use for reading one batch of data"
-                             "when max_ram is None. Note: this should"
+                        help="in [0, 1]. Fraction of ram to use for reading one batch of data "
+                             "when max_ram is None. Note: this should "
                              "be <=~0.25 or so, since lots of ram is needed for in-memory shuffling.")
     parser.add_argument('--iterations', type=int, default=2,
                         help="Shuffle the file this many times. Default: 2")
     kwargs = vars(parser.parse_args())
 
-    outfile = kwargs.pop("output_file")
+    input_file = kwargs.pop("input_file")
+    output_file = kwargs.pop("output_file")
+    if output_file is None:
+        output_file = get_filepath_output(input_file, shuffle=True)
     iterations = kwargs.pop("iterations")
+
     for i in range(iterations):
         print(f"Iteration {i}")
-        # temp filenames for anything but last iteration
-        if i+1 == iterations:
-            outf = outfile
-        else:
-            outf = f"{outfile}_temp_{i}"
-        # delete temp files
         if i == 0:
-            delete = False
+            # first iteration
+            stgs = {
+                "input_file": input_file,
+                "output_file": f"{output_file}_temp_{i}",
+                "delete": False
+            }
+        elif i == iterations-1:
+            # last iteration
+            stgs = {
+                "input_file": f"{output_file}_temp_{i-1}",
+                "output_file": output_file,
+                "delete": True
+            }
         else:
-            delete = True
-
-        outfile = shuffle_v2(**kwargs, output_file=outf, chunks=True, delete=delete)
+            # intermediate iterations
+            stgs = {
+                "input_file": f"{output_file}_temp_{i-1}",
+                "output_file": f"{output_file}_temp_{i}",
+                "delete": True
+            }
+        shuffle_v2(**kwargs, **stgs, chunks=True)
 
 
 if __name__ == '__main__':
