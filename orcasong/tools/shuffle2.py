@@ -303,7 +303,3 @@ def h5shuffle2():
                 "delete": True
             }
         shuffle_v2(**kwargs, **stgs, chunks=True)
-
-
-if __name__ == '__main__':
-    h5shuffle2()
