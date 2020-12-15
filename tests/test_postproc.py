@@ -40,13 +40,13 @@ class TestShuffleV2(TestCase):
         self.temp_output = "temp_output.h5"
 
         self.x, self.y = _make_shuffle_dummy_file(self.temp_input)
+        np.random.seed(42)
         shuffle_v2(
             input_file=self.temp_input,
             output_file=self.temp_output,
             datasets=("x", "y"),
             chunks=True,
             max_ram=400,  # -> 2 batches
-            seed=42,
         )
 
     def tearDown(self):
