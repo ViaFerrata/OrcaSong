@@ -38,6 +38,11 @@ class BaseProcessor:
     correct_timeslew : bool
         If true, the time slewing of hits depending on their tot
         will be corrected.
+    center_hits_to : tuple, optional
+        Translate the xyz positions of the hits (and mchits), as if
+        the detector was centered at the given position.
+        E.g., if its (0, 0, None), the hits and mchits will be
+        centered at xy = 00, and z will be left untouched.
     add_t0 : bool
         If true, add t0 to the time of hits and mchits. If using a
         det_file, this will already have been done automatically
@@ -87,6 +92,7 @@ class BaseProcessor:
                  center_time=True,
                  add_t0=False,
                  correct_timeslew=True,
+                 center_hits_to=None,
                  event_skipper=None,
                  chunksize=32,
                  keep_event_info=False,
@@ -98,6 +104,7 @@ class BaseProcessor:
         self.center_time = center_time
         self.add_t0 = add_t0
         self.correct_timeslew = correct_timeslew
+        self.center_hits_to = center_hits_to
         self.event_skipper = event_skipper
         self.chunksize = chunksize
         self.keep_event_info = keep_event_info
@@ -184,7 +191,9 @@ class BaseProcessor:
         if self.det_file:
             cmpts.append((modules.DetApplier, {
                 "det_file": self.det_file,
-                "correct_timeslew": self.correct_timeslew}))
+                "correct_timeslew": self.correct_timeslew,
+                "center_hits_to": self.center_hits_to,
+            }))
 
         if any((self.center_time, self.add_t0)):
             cmpts.append((modules.TimePreproc, {

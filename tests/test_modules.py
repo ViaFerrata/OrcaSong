@@ -1,3 +1,4 @@
+import os
 from unittest import TestCase
 import numpy as np
 import orcasong.modules as modules
@@ -5,6 +6,11 @@ import km3pipe as kp
 
 
 __author__ = 'Stefan Reck'
+
+
+test_dir = os.path.dirname(os.path.realpath(__file__))
+MUPAGE_FILE = os.path.join(test_dir, "data", "mupage.root.h5")
+DET_FILE = os.path.join(test_dir, "data", "KM3NeT_-00000001_20171212.detx")
 
 
 class TestModules(TestCase):
@@ -383,6 +389,36 @@ class TestImageMaker(TestCase):
         np.testing.assert_array_almost_equal(
             np.array(out_blob["samples"]),
             np.array(target["samples"]))
+
+
+class TestDetApplier(TestCase):
+    def setUp(self):
+        self.deta = modules.DetApplier(
+            det_file=DET_FILE,
+            center_hits_to=(0, 5, None),
+        )
+        # self.pump = kp.io.HDF5Pump(filename=MUPAGE_FILE)
+        # self.blob = self.pump[0]
+
+    def test_cache_center(self):
+        target = {"pos_x": 58.75166782379619, "pos_y": -21.5, "pos_z": 0}
+        for d in ("pos_x", "pos_y", "pos_z"):
+            np.testing.assert_array_almost_equal(target[d], self.deta._vector_shift[d])
+
+    def test_shift_is_applied_to_hits(self):
+        blob = {"Hits": {
+            "pos_x": np.ones(3),
+            "pos_y": np.ones(3)*2,
+            "pos_z": np.ones(3)*3,
+        }}
+        target = {
+            "pos_x": np.ones(3) * 59.75166782379619,
+            "pos_y": np.ones(3) * -19.5,
+            "pos_z": np.ones(3) * 3,
+        }
+        self.deta.shift_hits(blob)
+        for d in ("pos_x", "pos_y", "pos_z"):
+            np.testing.assert_array_almost_equal(target[d], blob["Hits"][d])
 
 
 class TestBinningStatsMaker(TestCase):
