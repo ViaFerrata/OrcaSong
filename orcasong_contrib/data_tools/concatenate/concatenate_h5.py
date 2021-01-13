@@ -287,6 +287,7 @@ def concatenate_h5_files(output_filepath, file_list,
                 file_output[folder_name][cum_rows_list[n]:cum_rows_list[n+1]] = folder_data
 
         file_output.flush()
+        input_file.close()
 
     print('Output information:')
     print('-------------------')
