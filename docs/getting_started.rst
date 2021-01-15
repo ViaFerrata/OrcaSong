@@ -31,7 +31,7 @@ The resulting DL files can already be used as input for networks!
 Step 2.2: Quickly define which files to concatenate
 ---------------------------------------------------
 If wanted, a list with all DL files that should go into one specific file
-can be produced with `make_data_split`. Here, the directories and run_ids
+can be produced with :ref:`make_data_split`. Here, the directories and run_ids
 making up the train and validation sets can be set in a config.
 
 Step 3: Concatenate
