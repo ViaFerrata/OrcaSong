@@ -248,7 +248,7 @@ def concatenate_h5_files(output_filepath, file_list,
     file_output = h5py.File(output_filepath, 'w')
 
     for n, input_file_name in enumerate(file_list):
-        print('Processing file ' + file_list[n])
+        #print('Processing file ' + file_list[n])
         input_file = h5py.File(input_file_name, 'r')
 
         # create metadata
@@ -271,7 +271,7 @@ def concatenate_h5_files(output_filepath, file_list,
             else:
                 folder_data = input_file[folder_name]
 
-            print('Shape and dtype of dataset ' + folder_name + ': ' + str(folder_data.shape) + ' ; ' + str(folder_data.dtype))
+            #print('Shape and dtype of dataset ' + folder_name + ': ' + str(folder_data.shape) + ' ; ' + str(folder_data.dtype))
 
             if n == 0:
                 # first file; create the dummy dataset with no max shape

@@ -3,6 +3,8 @@ OrcaSong Tools
 
 Orcasong comes with some tools to further process data.
 
+.. _concatenate:
+
 Concatenate
 -----------
 
@@ -20,6 +22,8 @@ or import as:
 
     from orcasong.tools import FileConcatenator
 
+
+.. _shuffle:
 
 Shuffle
 -------
