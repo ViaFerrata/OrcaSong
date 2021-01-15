@@ -36,3 +36,6 @@ OrcaSong can be installed via pip by running::
 
     pip install orcasong
 
+A Singularity image of the latest stable version of OrcaSong is also provided.
+You can download it from the km3net sftp server ``pi1139.physik.uni-erlangen.de``
+in ``singularity/orcasong.sif``.
