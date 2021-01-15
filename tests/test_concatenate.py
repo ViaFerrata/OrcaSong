@@ -9,7 +9,7 @@ __author__ = 'Stefan Reck'
 
 class TestFileConcatenator(TestCase):
     """
-    Test concatenation on pre-generated h5 files. They are in test/data.
+    Test concatenation on pre-generated h5 files. They are in tests/data.
 
     """
     @classmethod

@@ -167,10 +167,6 @@ def get_real_data_info_extr(input_file):
     f = File(input_file, "r")
     has_std_reco = "reco" in f.keys()
     
-    #get the lifetime of the run (calculated from summary slices)
-    header = HDF5Header.from_hdf5(input_file)
-    lifetime = header.DAQ.livetime  
-
     def mc_info_extr(blob):
 
         """
@@ -200,7 +196,6 @@ def get_real_data_info_extr(input_file):
             "run_id": event_info.run_id,
             "trigger_mask": event_info.trigger_mask,
             "n_hits": n_hits,
-            "lifetime": lifetime,
         }
 
         # get all the std reco info
@@ -237,9 +232,6 @@ def get_random_noise_mc_info_extr(input_file):
     f = File(input_file, "r")
     has_std_reco = "reco" in f.keys()
     
-    #get the simulated lifetime
-    header = HDF5Header.from_hdf5(input_file)
-    sim_lifetime = header.DAQ.livetime
 
     def mc_info_extr(blob):
 
@@ -265,7 +257,6 @@ def get_random_noise_mc_info_extr(input_file):
             "event_id": event_info.event_id[0],
             "run_id": event_info.run_id[0],
             "particle_type": 0,
-            "sim_lifetime":sim_lifetime,
         }
 
         # get all the std reco info
@@ -307,8 +298,6 @@ def get_neutrino_mc_info_extr(input_file):
     header = HDF5Header.from_hdf5(input_file)
     n_gen = header.genvol.numberOfEvents
     
-    #get the simulated lifetime
-    sim_lifetime = header.DAQ.livetime
     
     def mc_info_extr(blob):
 
@@ -380,7 +369,6 @@ def get_neutrino_mc_info_extr(input_file):
             "weight_w2": weight_w2,
             "weight_w3": weight_w3,
             "n_gen": n_gen,
-            "sim_lifetime":sim_lifetime,
         }
 
         # get all the std reco info
@@ -395,7 +383,7 @@ def get_neutrino_mc_info_extr(input_file):
     return mc_info_extr
 
 
-def get_muon_mc_info_extr(input_file,prod_identifier):
+def get_muon_mc_info_extr(input_file,prod_identifier=2):
 
     """
     Wrapper function that includes the actual mc_info_extr
@@ -422,10 +410,6 @@ def get_muon_mc_info_extr(input_file,prod_identifier):
 
     # no n_gen here, but needed for concatenation
     n_gen = 1
-
-    #get the simulated lifetime
-    header = HDF5Header.from_hdf5(input_file)
-    sim_lifetime = header.livetime.numberOfSeconds
     
     def mc_info_extr(blob):
 
@@ -506,7 +490,6 @@ def get_muon_mc_info_extr(input_file,prod_identifier):
             "weight_w2": weight_w2,
             "weight_w3": weight_w3,
             "n_gen": n_gen,
-            "sim_lifetime":sim_lifetime,
             "prod_identifier": prod_identifier,
         }
 
