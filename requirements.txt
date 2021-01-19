@@ -4,4 +4,3 @@ matplotlib
 km3pipe>=9
 psutil
 setuptools_scm
-natsort

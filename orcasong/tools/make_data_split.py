@@ -1,49 +1,16 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-"""
-Utility script that makes .list files for the concatenate_h5.py tool.
 
-Usage:
-    make_data_split.py CONFIG
-    make_data_split.py (-h | --help)
-
-Arguments:
-    CONFIG  A .toml file which contains the configuration options.
-
-Options:
-    -h --help  Show this screen.
-
-"""
 
 __author__ = 'Michael Moser, Daniel Guderian'
 
 import os
 import toml
-import docopt
-import natsort as ns
+import argparse
 import h5py
 import random
 import numpy as np
 
-   
-def parse_input():
-    """
-    Parses the config of the .toml file, specified by the user.
-
-    Returns
-    -------
-    cfg : dict
-        Dict that contains all configuration options from the input .toml file.
-
-    """
-
-    args = docopt.docopt(__doc__)
-    config_file = args['CONFIG']
-
-    cfg = toml.load(config_file)
-    cfg['toml_filename'] = config_file
-
-    return cfg
 
 
 def get_all_ip_group_keys(cfg):
@@ -315,14 +282,34 @@ def make_dsplit_list_files(cfg):
        
         print("----------------------------------------------")
         
-        
+   
+def get_parser():
+    parser = argparse.ArgumentParser(
+        description="Create datasets based on the run_id's."
+                    "Use the config to add input folder and set the ranges."
+                    "Outputs a list in an txt file that can be used to "
+                    "concatenate the files specfied")
+    parser.add_argument(
+        'config', type=str,
+        help="See example config for detailed information")
+    
+    return parser
+         
 def main():
     """
     Main function to make the data split.
     """
 
-    cfg = parse_input()
+    #load the config
+    parser = get_parser()
+    parsed_args = parser.parse_args()
 
+    config_file = parsed_args.config
+    
+    #decode config
+    cfg = toml.load(config_file)
+    cfg['toml_filename'] = config_file
+    
     ip_group_keys = get_all_ip_group_keys(cfg)
 
     n_evts_total = 0
@@ -349,5 +336,9 @@ def main():
 
 
 if __name__ == '__main__':
-    print("well, i am oin here")
     main()
+
+
+
+
+
