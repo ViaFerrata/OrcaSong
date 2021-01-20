@@ -38,11 +38,11 @@
 
 # --- Main options ---#
 
-n_files_train = 3
+n_files_train = 1
 n_files_validate = 1
 n_files_rest = 0
 
-output_file_folder = "/sps/km3net/users/guderian/NN_stuff/split_data_output/ORCA4/graph/ts/"
+output_file_folder = "data_split_test_output"
 
 output_file_name = "test_list"
 
@@ -54,16 +54,16 @@ print_only = false # only print information of your input_groups, don't make any
 # --- Input groups : these are the datafiles, that should be concatenated somehow --- #
 
 
-[elec_cc] 
-dir = "/sps/km3net/users/guderian/NN_stuff/graphs/ORCA4/base/gsg_elecCC-CC_1-500GeV.km3sim/test/"
-run_ids_train = [6763, 6767]
-run_ids_validate = [6768, 6769]
+[neutrino] 
+dir = "processed_data_neutrino"
+run_ids_train = [1, 6767]
+run_ids_validate = [1, 6769]
 
 
-[muon_nc] 
-dir = "/sps/km3net/users/guderian/NN_stuff/graphs/ORCA4/base/gsg_muonNC-NC_1-500GeV.km3sim/test/"
-run_ids_train = [6763, 6767]
-run_ids_validate = [6768, 6769]
+[muon] 
+dir = "processed_data_muon"
+run_ids_train = [1, 6767]
+run_ids_validate = [9999, 6769]
 
 
 # --- Input groups : these are the datafiles, that should be concatenated somehow --- #
