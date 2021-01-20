@@ -1,2 +1,0 @@
-processed_data_neutrino/processed_graph_neutrino.h5
-processed_data_muon/processed_graph_muon.h5
