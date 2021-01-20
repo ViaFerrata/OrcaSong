@@ -57,13 +57,5 @@ or import function for general postprocessing:
     
     postproc_file(output_filepath_concat)
 
-There is also a newer, faster version 2:
-
-.. code-block:: python
-
-    from orcasong.tools.shuffle2 import shuffle_v2
-    
-    shuffle_v2(output_filepath_concat)
-    
 
 
