@@ -17,8 +17,15 @@ config_file = os.path.join(test_data_dir, "test_make_data_split_config.toml")
 #the list files that will be created
 list_file_dir = os.path.join(test_data_dir, "data_split_test_output", "conc_list_files")
 list_output_val = os.path.join(list_file_dir, "test_list_validate_0.txt")
-list_output_train = os.path.join(list_file_dir, "test_list_train_0.txt")
-
+list_output_train = os.path.join("data_split_test_output", "conc_list_files", "test_list_train_0.txt")
+#the scripts outputs
+scripts_output_dir = os.path.join(test_data_dir, "data_split_test_output", "job_scripts")
+concatenate_bash_script_train = os.path.join(scripts_output_dir, "concatenate_h5_test_list_train_0.sh")
+concatenate_bash_script_val = os.path.join(scripts_output_dir, "concatenate_h5_test_list_validate_0.sh")
+shuffle_bash_script_train = os.path.join(scripts_output_dir, "shuffle_h5_test_list_train_0.sh")
+shuffle_bash_script_val = os.path.join(scripts_output_dir, "shuffle_h5_test_list_validate_0.sh")
+#and the files that will be created from these scripts
+concatenate_file = os.path.join("data_split_test_output", "data_split", "test_list_train_0.h5")
 
 class TestMakeDataSplit(TestCase):
 	
@@ -33,18 +40,28 @@ class TestMakeDataSplit(TestCase):
 							  'processed_data_muon/processed_graph_muon.h5\n','processed_data_neutrino/processed_graph_neutrino.h5\n']
 		cls.file_path_list_val = ['processed_data_neutrino/processed_graph_neutrino.h5','processed_data_neutrino/processed_graph_neutrino.h5\n']
 		cls.n_events_list = [18,3]
+		cls.contents_concatenate_script = ['concatenate ' + list_output_train + ' --outfile ' + concatenate_file]
+		cls.contents_shuffle_script = ['postproc ' + concatenate_file + ' --delete']
+		
 		#create list_file_dir
 		if not os.path.exists(list_file_dir):
 			os.makedirs(list_file_dir)
-		
-
-		
+	
 	@classmethod
 	def tearDownClass(cls):
 		#remove the lists created
 		os.remove(list_output_val)
 		os.remove(list_output_train)
+		os.remove(concatenate_bash_script_train)
+		os.remove(concatenate_bash_script_val)
+		os.remove(shuffle_bash_script_train)
+		os.remove(shuffle_bash_script_val)
+		os.removedirs(scripts_output_dir)
 		os.removedirs(list_file_dir)
+		os.removedirs(os.path.join(test_data_dir, "data_split_test_output", "logs"))
+		os.removedirs(os.path.join(test_data_dir, "data_split_test_output", "data_split"))
+
+		
 
 	def test_read_keys_off_config(self):
 		self.cfg = read_config(config_file)
@@ -77,14 +94,50 @@ class TestMakeDataSplit(TestCase):
 		mds.make_dsplit_list_files(self.cfg)
 		
 		#assert the single output lists
+		assert os.path.exists(list_output_val) == 1
 		with open(list_output_val) as f:
 			for line in f:
 				self.assertIn(line,self.file_path_list_val)
 		f.close
+		
+		assert os.path.exists(list_output_train) == 1
 		with open(list_output_train) as f2:
 			for line in f2:
 				self.assertIn(line,self.file_path_list)
+		f2.close
+		
+	def test_make_concatenate_and_shuffle_scripts(self):
+		#main
+		#repeat first 4 steps
+		self.cfg = read_config(config_file)
+		self.ip_group_keys = mds.get_all_ip_group_keys(self.cfg)
+		self.cfg,self.n_evts_total = update_cfg(self.cfg)
+		
+		self.cfg['n_evts_total'] = self.n_evts_total
+		mds.print_input_statistics(self.cfg, self.ip_group_keys)
+		for key in self.ip_group_keys:
+			mds.add_fpaths_for_data_split_to_cfg(self.cfg, key)
+		mds.make_dsplit_list_files(self.cfg)
+			
+		#create the bash job scripts and test their content		
+		mds.make_concatenate_and_shuffle_scripts(self.cfg)
+		
+		assert os.path.exists(concatenate_bash_script_train) == 1
+		with open(concatenate_bash_script_train) as f:
+			for line in f:
+				pass		#yay, awesome style! ^^
+			last_line = line
+			self.assertIn(last_line,self.contents_concatenate_script)
 		f.close
+
+		assert os.path.exists(shuffle_bash_script_train) == 1
+		with open(shuffle_bash_script_train) as f2:
+			for line in f2:
+				pass
+			last_line = line
+			self.assertIn(last_line,self.contents_shuffle_script)
+		f2.close
+
 		
 def update_cfg(cfg):
 	

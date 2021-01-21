@@ -12,6 +12,17 @@ import random
 import numpy as np
 
 
+def get_parser():
+    parser = argparse.ArgumentParser(
+        description="Create datasets based on the run_id's."
+                    "Use the config to add input folder and set the ranges."
+                    "Outputs a list in an txt file that can be used to "
+                    "concatenate the files specfied")
+    parser.add_argument(
+        'config', type=str,
+        help="See example config for detailed information")
+    
+    return parser
 
 def get_all_ip_group_keys(cfg):
     """
@@ -283,18 +294,79 @@ def make_dsplit_list_files(cfg):
         print("----------------------------------------------")
         
    
-def get_parser():
-    parser = argparse.ArgumentParser(
-        description="Create datasets based on the run_id's."
-                    "Use the config to add input folder and set the ranges."
-                    "Outputs a list in an txt file that can be used to "
-                    "concatenate the files specfied")
-    parser.add_argument(
-        'config', type=str,
-        help="See example config for detailed information")
+
+def make_concatenate_and_shuffle_scripts(cfg):
+    """
+    Function that writes qsub .sh files which concatenates all files inside the list files.
+
+    Parameters
+    ----------
+    cfg : dict
+        Dict that contains all configuration options and additional information.
+
+    """
+
+    dirpath = cfg['output_file_folder']
+     
+    if not os.path.exists(dirpath + '/logs'):  # check if /logs folder exists, if not create it.
+        os.makedirs(dirpath + '/logs')
+    if not os.path.exists(dirpath + '/job_scripts'):  # check if /job_scripts folder exists, if not create it.
+        os.makedirs(dirpath + '/job_scripts')
+    if not os.path.exists(dirpath + '/data_split'):  # check if /data_split folder exists, if not create it.
+        os.makedirs(dirpath + '/data_split')
     
-    return parser
-         
+    #not available atm...
+    #chunksize = '' if cfg['chunksize'] is None else ' --chunksize ' + str(cfg['chunksize'])
+    #complib = '' if cfg['complib'] is None else ' --complib ' + str(cfg['complib'])
+    #complevel = '' if cfg['complevel'] is None else ' --complevel ' + str(cfg['complevel'])
+
+    # make qsub .sh file for concatenating
+    for listfile_fpath in cfg['output_lists']:
+        listfile_fname = os.path.basename(listfile_fpath)
+        listfile_fname_wout_ext = os.path.splitext(listfile_fname)[0]
+        conc_outputfile_fpath = cfg['output_file_folder'] + '/data_split/' + listfile_fname_wout_ext + '.h5'
+
+        fpath_bash_script = dirpath + '/job_scripts/concatenate_h5_' + listfile_fname_wout_ext + '.sh'
+        
+        with open(fpath_bash_script, 'w') as f:
+            f.write('#!/usr/bin/env bash\n')
+            f.write('\n')
+            f.write('source ' + cfg['venv_path'] + 'activate' + '\n')
+            f.write('\n')
+            f.write('# Concatenate the files in the list\n')
+
+            f.write('concatenate ' + listfile_fpath + ' --outfile ' +  conc_outputfile_fpath) 
+                    # at the moment it is not possible to set the comp opts like this+ chunksize + complib + complevel
+                             
+    
+    # make qsub .sh file for shuffling
+    if cfg['shuffle_delete']:
+        delete_concatenate  = ' --delete'
+    else:
+        delete_concatenate  = ''
+
+    for listfile_fpath in cfg['output_lists']:
+        listfile_fname = os.path.basename(listfile_fpath)
+        listfile_fname_wout_ext = os.path.splitext(listfile_fname)[0]
+
+        # This is the input for the shuffle tool!
+        conc_outputfile_fpath = cfg['output_file_folder'] + '/data_split/' + listfile_fname_wout_ext + '.h5'
+
+        fpath_bash_script = dirpath + '/job_scripts/shuffle_h5_' + listfile_fname_wout_ext + '.sh'
+
+        with open(fpath_bash_script, 'w') as f:
+            f.write('#!/usr/bin/env bash\n')
+            f.write('\n')
+            f.write('source ' + cfg['venv_path'] + 'activate' + '\n')
+            f.write('\n')
+            f.write('# Shuffle the h5 file \n')
+
+            f.write('postproc ' + conc_outputfile_fpath + delete_concatenate)
+                     #time python shuffle/shuffle_h5.py'
+                    #+ delete_flag_shuffle_tool
+                    #+ chunksize + complib + complevel
+
+
 def main():
     """
     Main function to make the data split.
@@ -310,8 +382,15 @@ def main():
     cfg = toml.load(config_file)
     cfg['toml_filename'] = config_file
     
-    ip_group_keys = get_all_ip_group_keys(cfg)
+    #set some defaults/Nones - at the moment setting of the com opts is not available!
+    #if 'chunksize' not in cfg: cfg['chunksize'] = None
+    #if 'complib' not in cfg: cfg['complib'] = None
+    #if 'complevel' not in cfg: cfg['complevel'] = None
 
+    #read out all the input groups
+    ip_group_keys = get_all_ip_group_keys(cfg)
+    
+    #and now loop over input groups extracting info
     n_evts_total = 0
     for key in ip_group_keys:
         print('Collecting information from input group ' + key)
@@ -322,18 +401,22 @@ def main():
         n_evts_total += cfg[key]['n_evts']
 
     cfg['n_evts_total'] = n_evts_total
+    #print the extracted statistics
     print_input_statistics(cfg, ip_group_keys)
 
     if cfg['print_only'] is True:
         from sys import exit
         exit()
-
+    
     for key in ip_group_keys:
         add_fpaths_for_data_split_to_cfg(cfg, key)
-
+    
+    #create the list files
     make_dsplit_list_files(cfg)
 
-
+    #create bash scripts that can be submitted to do the concatenation and shuffle
+    if cfg['make_qsub_bash_files'] is True:
+        make_concatenate_and_shuffle_scripts(cfg)
 
 if __name__ == '__main__':
     main()

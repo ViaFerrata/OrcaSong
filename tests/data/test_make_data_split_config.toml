@@ -48,6 +48,12 @@ output_file_name = "test_list"
 
 print_only = false # only print information of your input_groups, don't make any .list files
 
+make_qsub_bash_files = true
+
+venv_path = "/sps/km3net/users/guderian/NN_stuff/deep_learning_source/venv_song/bin/"
+
+shuffle_delete = true
+
 # --- Main options ---#
 
 

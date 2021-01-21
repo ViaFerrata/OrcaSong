@@ -21,8 +21,16 @@
 #       xyzc_tight_0_train_0.list, xyzc_tight_0_validate_0.list, ...
 #    print_only : bool
 #       If only informationa about the input_groups should be printed, and no .list files should be made.
-#
-#
+#	shuffle_delete : bool
+#		True = the input file that will be deleted after the shuffling is finished.
+# 		Option for the shuffle_h5 tool.
+#	venv_path : str
+#		Path to a virtualenv, e.g. "/home/hpc/capn/mppi033h/.virtualenv/python_3_env/"
+#	make_qsub_bash_files : bool		
+#		true = Makes the cluster submission bash files needed to actually
+# 		concatenate the files in the list files.
+
+
 #    Input Group Parameters
 #    ----------------------
 #    dir : str
@@ -47,6 +55,12 @@ output_file_folder = "/sps/km3net/users/guderian/NN_stuff/split_data_output/ORCA
 output_file_name = "test_list"
 
 print_only = false # only print information of your input_groups, don't make any .list files
+
+shuffle_delete = true
+
+venv_path = "/sps/km3net/users/guderian/NN_stuff/deep_learning_source/venv_song/bin/"
+
+make_qsub_bash_files = true
 
 # --- Main options ---#
 
