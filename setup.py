@@ -29,7 +29,7 @@ setup(
     entry_points={'console_scripts': [
         'concatenate=orcasong.tools.concatenate:main',
         'h5shuffle=orcasong.tools.postproc:h5shuffle',
-        'h5shuffle2=orcasong.tools.shuffle2:h5shuffle2',
+        'h5shuffle2=orcasong.tools.shuffle2:run_parser',
         'plot_binstats=orcasong.plotting.plot_binstats:main',
         'make_nn_images=legacy.make_nn_images:main',
         'make_dsplit=orcasong_contrib.data_tools.make_data_split.make_data_split:main']}

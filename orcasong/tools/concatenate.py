@@ -1,3 +1,4 @@
+import os
 import time
 import h5py
 import numpy as np
@@ -177,6 +178,7 @@ class FileConcatenator:
 
         errors, rows_per_file, valid_input_files = [], [0], []
         for i, file_name in enumerate(input_files, start=1):
+            file_name = os.path.abspath(file_name)
             try:
                 rows_this_file = _get_rows(file_name, keys_stripped)
             except Exception as e:

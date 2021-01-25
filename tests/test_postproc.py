@@ -3,7 +3,7 @@ import os
 import h5py
 import numpy as np
 import orcasong.tools.postproc as postproc
-from orcasong.tools.shuffle2 import shuffle_v2
+import orcasong.tools.shuffle2 as shuffle2
 
 __author__ = 'Stefan Reck'
 
@@ -41,11 +41,10 @@ class TestShuffleV2(TestCase):
 
         self.x, self.y = _make_shuffle_dummy_file(self.temp_input)
         np.random.seed(42)
-        shuffle_v2(
+        shuffle2.h5shuffle2(
             input_file=self.temp_input,
             output_file=self.temp_output,
             datasets=("x", "y"),
-            chunks=True,
             max_ram=400,  # -> 2 batches
         )
 
@@ -75,6 +74,20 @@ class TestShuffleV2(TestCase):
             np.testing.assert_array_equal(
                 f["x"][:, 0], target_order
             )
+
+    def test_run_3_iterations(self):
+        # just check if it goes through without errors
+        fname = "temp_output_triple.h5"
+        try:
+            shuffle2.h5shuffle2(
+                input_file=self.temp_input,
+                output_file=fname,
+                datasets=("x", "y"),
+                iterations=3,
+            )
+        finally:
+            if os.path.exists(fname):
+                os.remove(fname)
 
 
 def _make_shuffle_dummy_file(filepath):
