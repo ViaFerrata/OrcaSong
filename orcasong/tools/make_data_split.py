@@ -340,10 +340,6 @@ def make_concatenate_and_shuffle_scripts(cfg):
                              
     
     # make qsub .sh file for shuffling
-    if cfg['shuffle_delete']:
-        delete_concatenate  = ' --delete'
-    else:
-        delete_concatenate  = ''
 
     for listfile_fpath in cfg['output_lists']:
         listfile_fname = os.path.basename(listfile_fpath)
@@ -357,15 +353,20 @@ def make_concatenate_and_shuffle_scripts(cfg):
         with open(fpath_bash_script, 'w') as f:
             f.write('#!/usr/bin/env bash\n')
             f.write('\n')
-            f.write('source ' + cfg['venv_path'] + 'activate' + '\n')
+            f.write('source ' + cfg['venv_path'] + 'activate \n')
             f.write('\n')
             f.write('# Shuffle the h5 file \n')
 
-            f.write('postproc ' + conc_outputfile_fpath + delete_concatenate)
+            f.write('h5shuffle2 ' + conc_outputfile_fpath + ' --max_ram 2000000000 \n') #fix to 2GB ram; in lyon using a fraction
+                                                                                  #is difficult...
                      #time python shuffle/shuffle_h5.py'
                     #+ delete_flag_shuffle_tool
                     #+ chunksize + complib + complevel
-
+           
+            if cfg['shuffle_delete']:
+                f.write('\n')
+                f.write('rm ' + conc_outputfile_fpath + '\n')
+        
 
 def main():
     """
