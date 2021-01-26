@@ -20,7 +20,7 @@ def h5shuffle2(
     iterations=None,
     datasets=("x", "y"),
     max_ram_fraction=0.25,
-    **kwargs,
+    max_ram=None,
 ):
     if output_file is None:
         output_file = get_filepath_output(input_file, shuffle=True)
@@ -29,6 +29,7 @@ def h5shuffle2(
             input_file,
             datasets=datasets,
             max_ram_fraction=max_ram_fraction,
+            max_ram=max_ram,
         )
     np.random.seed(42)
     for i in range(iterations):
@@ -63,10 +64,10 @@ def h5shuffle2(
             }
         shuffle_file(
             datasets=datasets,
+            max_ram=max_ram,
             max_ram_fraction=max_ram_fraction,
             chunks=True,
             **stgs,
-            **kwargs,
         )
 
 
@@ -369,5 +370,12 @@ def run_parser():
         type=int,
         default=None,
         help="Shuffle the file this many times. Default: Auto choose best number.",
+    )
+    parser.add_argument(
+        "--max_ram",
+        type=int,
+        default=None,
+        help="Available ram in bytes. Default: Use fraction of maximum "
+             "available instead (see max_ram_fraction).",
     )
     h5shuffle2(**vars(parser.parse_args()))
