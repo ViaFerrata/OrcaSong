@@ -41,7 +41,7 @@ class TestMakeDataSplit(TestCase):
 		cls.file_path_list_val = ['processed_data_neutrino/processed_graph_neutrino.h5','processed_data_neutrino/processed_graph_neutrino.h5\n']
 		cls.n_events_list = [18,3]
 		cls.contents_concatenate_script = ['concatenate ' + list_output_train + ' --outfile ' + concatenate_file]
-		cls.contents_shuffle_script = ['h5shuffle2 ' + concatenate_file + ' --max_ram 2000000000 \n']
+		cls.contents_shuffle_script = ['h5shuffle2 ' + concatenate_file + ' --max_ram 1000000000 \n']
 
 		
 		#create list_file_dir

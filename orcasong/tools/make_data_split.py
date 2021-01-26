@@ -357,7 +357,7 @@ def make_concatenate_and_shuffle_scripts(cfg):
             f.write('\n')
             f.write('# Shuffle the h5 file \n')
 
-            f.write('h5shuffle2 ' + conc_outputfile_fpath + ' --max_ram 2000000000 \n') #fix to 2GB ram; in lyon using a fraction
+            f.write('h5shuffle2 ' + conc_outputfile_fpath + ' --max_ram 1000000000 \n') #fix to 1GB ram; in lyon using a fraction
                                                                                   #is difficult...
                      #time python shuffle/shuffle_h5.py'
                     #+ delete_flag_shuffle_tool
