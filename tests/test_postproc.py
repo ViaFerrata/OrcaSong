@@ -68,8 +68,8 @@ class TestShuffleV2(TestCase):
 
     def test_seed_produces_this_shuffled_order(self):
         target_order = np.array(
-            [5.,  6., 20.,  8., 13., 14., 10., 11.,  7., 21.,  9., 12., 19.,
-             2.,  0., 16., 18., 15.,  3., 17.,  1.,  4.])
+            [12.,  5.,  0., 20.,  6.,  2., 19., 13.,  1.,  9.,  8.,  4.,  3.,
+             11., 16., 15.,  7., 10., 17., 14., 21., 18.])
         with h5py.File(self.temp_output, "r") as f:
             np.testing.assert_array_equal(
                 f["x"][:, 0], target_order
