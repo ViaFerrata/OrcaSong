@@ -14,8 +14,7 @@ stages:
   - doc
   - docker
   - release
-  - build-singularity
-  - upload-singularity
+  - singularity
 
 
 cache:
@@ -113,34 +112,16 @@ release-image:
     - tags
 
 
-build-singularity:
+singularity:
   image: docker.km3net.de/base/singularity:3.1
-  stage: build-singularity
+  stage: singularity
   script:
     - singularity --version
     - singularity build $SINGULARITY_IMAGE Singularity
-  artifacts:
-    paths:
-      - $SINGULARITY_IMAGE
-    expire_in: 10 days
+    - apt-get update -qy
+    - apt-get install -qy lftp
+    - lftp -u $KM3NET_SFTP_USER,$KM3NET_SFTP_PASSWORD sftp://$KM3NET_SFTP_HOST -e "set sftp:auto-confirm yes; set ssl:verify-certificate no; cd singularity/; put $SINGULARITY_IMAGE; bye"
   tags:
     - docker
-  only:
-    - tags
-
-
-upload-singularity:
-  image: ubuntu:latest
-  stage: upload-singularity
-  before_script:
-    - apt-get update -qy
-    - apt-get install -y lftp
-  script:
-    - mkdir -p ~/.ssh/
-    - touch ~/.ssh/known_hosts
-    - ssh-keyscan -H $KM3NET_SFTP_HOST >> ~/.ssh/known_hosts
-    - lftp -u $KM3NET_SFTP_USER,$KM3NET_SFTP_PASSWORD sftp://$KM3NET_SFTP_HOST -e "set ssl:verify-certificate no; cd singularity/; put $SINGULARITY_IMAGE; bye"
-  dependencies:
-    - build-singularity
   only:
     - tags
