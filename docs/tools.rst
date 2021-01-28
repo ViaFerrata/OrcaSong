@@ -8,9 +8,18 @@ Orcasong comes with some tools to further process data.
 Make_data_split
 ---------------
 
-Create datasets for different tasks (like classification or regression) from the files resulting from OrcaSong, based on the run_id. This is particularly helpful for a run-by-run data analysis or to generate equally large datasets per class. A toml config is used, in which the directories and ranges of runs to be considered can be specified, as well as the subdivision into training and validation sets. Detailed descriptions for the options available can be found in the example config in the subfolder make_data_split_configs. As output, a list in txt format with the filepaths belonging to one set is created that can be passed to the concatenate for creating one single file out of the many. 
+Create datasets for different tasks (like classification or regression) from the files
+resulting from OrcaSong, based on the run_id. This is particularly helpful
+for a run-by-run data analysis or to generate equally large datasets per class.
+A toml config is used, in which the directories and ranges of runs to be considered
+can be specified, as well as the subdivision into training and validation sets.
+Detailed descriptions for the options available can be found in examples/make_data_split_config.toml.
+As output, a list in txt format with
+the filepaths belonging to one set is created that can be passed to the concatenate
+for creating one single file out of the many.
 
-In fact, with the option make_qsub_bash_files, scripts for the concatenation and shuffle, to be directly submitted on computing clusters, are created.
+In fact, with the option make_qsub_bash_files, scripts for the concatenation
+and shuffle, to be directly submitted on computing clusters, are created.
 
 Can be used via the commandline::
 
@@ -60,4 +69,4 @@ or import function for general postprocessing:
     postproc_file(output_filepath_concat)
 
 
-
+Theres also a faster (beta) version available called h5shuffle2.

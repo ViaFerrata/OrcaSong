@@ -28,12 +28,6 @@ instructions on how to do this.
 
 The resulting DL files can already be used as input for networks!
 
-Step 2.2: Quickly define which files to concatenate
----------------------------------------------------
-If wanted, a list with all DL files that should go into one specific file
-can be produced with :ref:`make_data_split`. Here, the directories and run_ids
-making up the train and validation sets can be set in a config.
-
 Step 3: Concatenate
 -------------------
 Mandatory for training files, recommended for everything else.
@@ -47,6 +41,10 @@ See :ref:`concatenate` for details.
     X runs for your training set. Instead, choose runs randomly over
     the whole period.
 
+.. note::
+    For mixing e.g. neutrinos and muon, a list with all DL files that should
+    go into one specific file
+    can be produced with :ref:`make_data_split`.
 
 Step 4: Shuffle
 ---------------
