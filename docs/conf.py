@@ -54,7 +54,7 @@ autosummary_generate = True
 
 # Document Python Code
 autoapi_type = 'python'
-autoapi_dirs = ['../orcasong', '../orcasong_contrib']
+autoapi_dirs = ['../orcasong', ]
 autoapi_options = [
     'members', 'undoc-members'
     # , 'private-members', 'special-members'
