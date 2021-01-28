@@ -16,7 +16,7 @@ DET_FILE_NEUTRINO = os.path.join(test_dir, "data", "neutrino_detector_file.detx"
 
 
 class TestStdRecoExtractor(TestCase):
-    """ Assert that the neutrino info is extracted correctly File has 18 events. """
+    """ Assert that the neutrino info is extracted correctly. File has 18 events. """
 
     @classmethod
     def setUpClass(cls):
@@ -33,7 +33,7 @@ class TestStdRecoExtractor(TestCase):
         cls.outfile = os.path.join(cls.tmpdir.name, "binned.h5")
         cls.proc.run(infile=NEUTRINO_FILE, outfile=cls.outfile)
         cls.f = h5py.File(cls.outfile, "r")
-
+        
     @classmethod
     def tearDownClass(cls):
         cls.f.close()
@@ -192,3 +192,5 @@ class TestStdRecoExtractor(TestCase):
         }
         for k, v in target.items():
             np.testing.assert_equal(y[k], v)
+
+    

@@ -1,6 +1,5 @@
 PKGNAME=orcasong
 ALLNAMES = $(PKGNAME)
-ALLNAMES += orcasong_contrib
 
 
 install:

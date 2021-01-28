@@ -1,0 +1,75 @@
+# Example configuration file for make_data_split.py
+
+# --- Documentation for every config parameter that is available --- #
+#
+#    Main Parameters
+#    ----------
+#    n_files_train : int
+#       Into how many files the training dataset should be split.
+#       If you don't want to have this dataset, comment out the line or delete it!
+#    n_files_validate : int
+#       Into how many files the validation dataset should be split.
+#       If you don't want to have this dataset, comment out the line or delete it!
+#    n_files_rest : int
+#       Into how many files the "rest" dataset should be split.
+#       If you don't want to have this dataset, comment out the line or delete it!
+#    output_file_folder : str
+#       Path to the folder, where all the output .list files (and the bash job scripts) should be stored.
+#    output_file_name : str
+#       String, that specifies the prefix of the filename of the output .list files.
+#       E.g. if = "xyzc_tight_0":
+#       xyzc_tight_0_train_0.list, xyzc_tight_0_validate_0.list, ...
+#    print_only : bool
+#       If only informationa about the input_groups should be printed, and no .list files should be made.
+#
+#
+#    Input Group Parameters
+#    ----------------------
+#    dir : str
+#       Path of the directory, where the files for this input group are located.
+#    run_ids_train/run_ids_validate/run_ids_rest : array
+#       Array, which specifies the range of the run_ids, that should be used for the training/validation.rest
+#       dataset of this input group.
+#       E.g. if [1,5], the script will put files from this input group with run_ids from 1 to 5 (including 1 and 5)
+#       to the training/validation/rest dataset.
+#       If you don't want to use a specific dataset for this input group, comment out the line or delete it!
+#
+# --- Documentation for every config parameter that is available --- #
+
+# --- Main options ---#
+
+n_files_train = 1
+n_files_validate = 1
+n_files_rest = 0
+
+output_file_folder = "data_split_test_output"
+
+output_file_name = "test_list"
+
+print_only = false # only print information of your input_groups, don't make any .list files
+
+make_qsub_bash_files = true
+
+venv_path = "/sps/km3net/users/guderian/NN_stuff/deep_learning_source/venv_song/bin/"
+
+shuffle_delete = false
+
+# --- Main options ---#
+
+
+# --- Input groups : these are the datafiles, that should be concatenated somehow --- #
+
+
+[neutrino] 
+dir = "processed_data_neutrino"
+run_ids_train = [1, 6767]
+run_ids_validate = [1, 6769]
+
+
+[muon] 
+dir = "processed_data_muon"
+run_ids_train = [1, 6767]
+run_ids_validate = [9999, 6769]
+
+
+# --- Input groups : these are the datafiles, that should be concatenated somehow --- #

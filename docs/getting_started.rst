@@ -41,6 +41,10 @@ See :ref:`concatenate` for details.
     X runs for your training set. Instead, choose runs randomly over
     the whole period.
 
+.. note::
+    For mixing e.g. neutrinos and muon, a list with all DL files that should
+    go into one specific file
+    can be produced with :ref:`make_data_split`.
 
 Step 4: Shuffle
 ---------------

@@ -1,0 +1,83 @@
+# Example configuration file for make_data_split.py
+
+# --- Documentation for every config parameter that is available --- #
+#
+#    Main Parameters
+#    ----------
+#    n_files_train : int
+#       Into how many files the training dataset should be split.
+#       If you don't want to have this dataset, comment out the line or delete it!
+#    n_files_validate : int
+#       Into how many files the validation dataset should be split.
+#       If you don't want to have this dataset, comment out the line or delete it!
+#    n_files_rest : int
+#       Into how many files the "rest" dataset should be split.
+#       If you don't want to have this dataset, comment out the line or delete it!
+#    output_file_folder : str
+#       Path to the folder, where all the output .list files (and the bash job scripts) should be stored.
+#    output_file_name : str
+#       String, that specifies the prefix of the filename of the output .list files.
+#       E.g. if = "xyzc_tight_0":
+#       xyzc_tight_0_train_0.list, xyzc_tight_0_validate_0.list, ...
+#    print_only : bool
+#       If only informationa about the input_groups should be printed, and no .list files should be made.
+#	shuffle_delete : bool
+#		True = the input file that will be deleted after the shuffling is finished.
+# 		Option for the shuffle_h5 tool.
+#	venv_path : str
+#		Path to a virtualenv, e.g. "/home/hpc/capn/mppi033h/.virtualenv/python_3_env/"
+#	make_qsub_bash_files : bool		
+#		true = Makes the cluster submission bash files needed to actually
+# 		concatenate the files in the list files.
+
+
+#    Input Group Parameters
+#    ----------------------
+#    dir : str
+#       Path of the directory, where the files for this input group are located.
+#    run_ids_train/run_ids_validate/run_ids_rest : array
+#       Array, which specifies the range of the run_ids, that should be used for the training/validation.rest
+#       dataset of this input group.
+#       E.g. if [1,5], the script will put files from this input group with run_ids from 1 to 5 (including 1 and 5)
+#       to the training/validation/rest dataset.
+#       If you don't want to use a specific dataset for this input group, comment out the line or delete it!
+#
+# --- Documentation for every config parameter that is available --- #
+
+# --- Main options ---#
+
+n_files_train = 3
+n_files_validate = 1
+n_files_rest = 0
+
+output_file_folder = "/sps/km3net/users/guderian/NN_stuff/split_data_output/ORCA4/graph/ts/"
+
+output_file_name = "test_list"
+
+print_only = false # only print information of your input_groups, don't make any .list files
+
+shuffle_delete = true
+
+venv_path = "/sps/km3net/users/guderian/NN_stuff/deep_learning_source/venv_song/bin/"
+
+make_qsub_bash_files = true
+
+# --- Main options ---#
+
+
+# --- Input groups : these are the datafiles, that should be concatenated somehow --- #
+
+
+[elec_cc] 
+dir = "/sps/km3net/users/guderian/NN_stuff/graphs/ORCA4/base/gsg_elecCC-CC_1-500GeV.km3sim/test/"
+run_ids_train = [6763, 6767]
+run_ids_validate = [6768, 6769]
+
+
+[muon_nc] 
+dir = "/sps/km3net/users/guderian/NN_stuff/graphs/ORCA4/base/gsg_muonNC-NC_1-500GeV.km3sim/test/"
+run_ids_train = [6763, 6767]
+run_ids_validate = [6768, 6769]
+
+
+# --- Input groups : these are the datafiles, that should be concatenated somehow --- #
