@@ -360,7 +360,7 @@ def get_muon_mc_info_extr(input_file,prod_identifier=2,inactive_du=None):
     # check if std reco is present
     f = File(input_file, "r")
     has_std_reco = "reco" in f.keys()
-
+    
     # no n_gen here, but needed for concatenation
     n_gen = 1
     
