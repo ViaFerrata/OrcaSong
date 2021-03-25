@@ -4,7 +4,8 @@ in the h5 files.
 
 These are made for the specific given runs. They might not be
 applicable to other data, and could cause errors or produce unexpected
-results when used on data other then the specified.
+results when used on data other then the specified. Check for example the 
+primary position in the mc_tracks.
 
 """
 
@@ -19,132 +20,53 @@ __author__ = "Daniel Guderian"
 def get_std_reco(blob):
 
     """
-    Function to extract std reco info. The implemented strategy is the following:
-    First, look for whether a rec stag has been reached and only then extract the reconstructed
-    paramater from it. If not, set it to a dummy value (for now 0). This means that for an analysis the events with
-    exactly zero have to be filtered out!
-
-    The 'best track' is the first (highest lik) while a certain rec stage has to be reached. This might
-    have to be adjusted for other recos than JMuonGandalf chain.
-
-
-    Members of the Tracks:
-    dtype([('E', '<f8'), ('JCOPY_Z_M', '<f4'), ('JENERGY_CHI2', '<f4'), ('JENERGY_ENERGY', '<f4'),
-     ('JENERGY_MUON_RANGE_METRES', '<f4'), ('JENERGY_NDF', '<f4'), ('JENERGY_NOISE_LIKELIHOOD', '<f4'),
-     ('JENERGY_NUMBER_OF_HITS', '<f4'), ('JGANDALF_BETA0_RAD', '<f4'), ('JGANDALF_BETA1_RAD', '<f4'),
-     ('JGANDALF_CHI2', '<f4'), ('JGANDALF_LAMBDA', '<f4'), ('JGANDALF_NUMBER_OF_HITS', '<f4'),
-     ('JGANDALF_NUMBER_OF_ITERATIONS', '<f4'), ('JSHOWERFIT_ENERGY', '<f4'), ('JSTART_LENGTH_METRES', '<f4'),
-     ('JSTART_NPE_MIP', '<f4'), ('JSTART_NPE_MIP_TOTAL', '<f4'), ('JVETO_NPE', '<f4'), ('JVETO_NUMBER_OF_HITS', '<f4'),
-     ('dir_x', '<f8'), ('dir_y', '<f8'), ('dir_z', '<f8'), ('id', '<i4'), ('idx', '<i8'), ('length', '<f8'),
-     ('likelihood', '<f8'), ('pos_x', '<f8'), ('pos_y', '<f8'), ('pos_z', '<f8'), ('rec_type', '<i4'),
-     ('t', '<f8'), ('group_id', '<i8')])
-
-
-    members of rec stages:
-    .idx (corresponding to the track id),
-    .rec_stage (rec stage identifier, for JMuonGandalf for example: 1=prefit, 2=simplex, 3=gandalf,
-                    4=engery, 5=start),
-    .group_id (event id in file)
-
-
-    Parameters
-    ----------
-    blob : blob containing the reco info
-
+    Function to extract std reco info. This implementation requires h5 files 
+    to be processed with the option "--best_tracks" which adds the selection
+    of best tracks for each reco type to the output using the km3io tools.
+    
     Returns
     -------
     std_reco_info : dict
-            Dict with the most common std reco params. Can be expanded.
+            Dict with the std reco info of the best tracks.
 
     """
+    #this dict will be filled up
+    std_reco_info = {}
+    
+    #all known reco types to iterate over
+    reco_type_dict = {
+            "BestJmuon" : "jmuon_",
+            "BestJshower" : "jshower_",
+            "BestDusjshower" : "dusjshower_",
+            "BestAashower" : "aashower_",
+            }
 
-    # use this later to identify not reconstructed events
-    dummy_value = 0
-
-    # if there was no std reco at all, this will not exist
-    # these are events that stopped at/before prefit
-    try:
-        rec_stages = blob["RecStages"]
-        # get first track only
-        rec_stages_best_track = rec_stages.rec_stage[rec_stages.idx == 0]
-
-        # often enough: best track is the first
-        best_track = blob["Tracks"][0]
-
-    except KeyError:
-        rec_stages_best_track = []
-        print(
-            "An event didnt have any reco. Setting everything to"
-            + str(dummy_value)
-            + "."
-        )
-
-    # take the direction only if JGanalf was executed
-    if 3 in rec_stages_best_track:
-
-        std_dir_x = best_track["dir_x"]
-        std_dir_y = best_track["dir_y"]
-        std_dir_z = best_track["dir_z"]
-
-        std_beta0 = best_track["JGANDALF_BETA0_RAD"]
-        std_lik = best_track["likelihood"]
-        std_n_hits_gandalf = best_track["JGANDALF_NUMBER_OF_HITS"]
-
-    else:
-
-        std_dir_x = dummy_value
-        std_dir_y = dummy_value
-        std_dir_z = dummy_value
-
-        std_beta0 = dummy_value
-        std_lik = dummy_value
-        std_n_hits_gandalf = dummy_value
-
-    # energy fit from JEnergy
-    if 4 in rec_stages_best_track:
-
-        std_energy = best_track["E"]
-        lik_energy = best_track["JENERGY_CHI2"]
-
-    else:
-        std_energy = dummy_value
-        lik_energy = dummy_value
-
-    # vertex and length from JStart
-    if 5 in rec_stages_best_track:
-
-        std_pos_x = best_track["pos_x"]
-        std_pos_y = best_track["pos_y"]
-        std_pos_z = best_track["pos_z"]
-
-        std_length = best_track["JSTART_LENGTH_METRES"]
-
-    else:
-
-        std_pos_x = dummy_value
-        std_pos_y = dummy_value
-        std_pos_z = dummy_value
-
-        std_length = dummy_value
-
-    std_reco_info = {
-        "std_dir_x": std_dir_x,
-        "std_dir_y": std_dir_y,
-        "std_dir_z": std_dir_z,
-        "std_beta0": std_beta0,
-        "std_lik": std_lik,
-        "std_n_hits_gandalf": std_n_hits_gandalf,
-        "std_pos_x": std_pos_x,
-        "std_pos_y": std_pos_y,
-        "std_pos_z": std_pos_z,
-        "std_energy": std_energy,
-        "std_lik_energy": lik_energy,
-        "std_length": std_length,
-    }
-
+    for name_in_blob,identifier in reco_type_dict.items():
+        
+        if name_in_blob in blob:
+        
+            #get the previously identified best track
+            bt = blob[name_in_blob]
+    
+            #get all its values
+            values = bt.item()
+    
+            #get the names of the values and add specific tag
+            reco_names = bt.dtype.names
+            specific_reco_names = np.core.defchararray.add(identifier,reco_names)
+    
+            #create a dict out of them
+            keys_list = list(specific_reco_names)
+            values_list = list(values)
+            zip_iterator = zip(keys_list, values_list)
+            reco_dict = dict(zip_iterator)
+        
+            #add this dict to the complete std reco collection
+            std_reco_info.update(reco_dict)
+    
     return std_reco_info
-
-
+    
+    
 def get_real_data_info_extr(input_file):
 
     """
@@ -200,7 +122,7 @@ def get_real_data_info_extr(input_file):
 
         # get all the std reco info
         if has_std_reco:
-
+            
             std_reco_info = get_std_reco(blob)
 
             track.update(std_reco_info)
@@ -232,7 +154,7 @@ def get_random_noise_mc_info_extr(input_file):
     f = File(input_file, "r")
     has_std_reco = "reco" in f.keys()
     
-
+    
     def mc_info_extr(blob):
 
         """
@@ -297,8 +219,7 @@ def get_neutrino_mc_info_extr(input_file):
     # get the n_gen
     header = HDF5Header.from_hdf5(input_file)
     n_gen = header.genvol.numberOfEvents
-    
-    
+        
     def mc_info_extr(blob):
 
         """
@@ -333,7 +254,7 @@ def get_neutrino_mc_info_extr(input_file):
         mc_track = blob["McTracks"][p]
 
         # some track mc truth info
-        particle_type = mc_track.type
+        particle_type = mc_track.pdgid      #sometimes type, sometimes pdgid
         energy = mc_track.energy
         is_cc = mc_track.cc
         bjorkeny = mc_track.by
@@ -373,7 +294,7 @@ def get_neutrino_mc_info_extr(input_file):
 
         # get all the std reco info
         if has_std_reco:
-
+            
             std_reco_info = get_std_reco(blob)
 
             track.update(std_reco_info)
@@ -382,8 +303,40 @@ def get_neutrino_mc_info_extr(input_file):
 
     return mc_info_extr
 
+#function used by Stefan to identify which muons leave how many mc hits in the (active) detector.
+def get_mchits_per_muon(blob, inactive_du=None):
 
-def get_muon_mc_info_extr(input_file,prod_identifier=2):
+	"""
+	For each muon in McTracks, get the number of McHits.
+	Parameters
+	----------
+	blob
+		The blob.
+	inactive_du : int, optional
+		McHits in this DU will not be counted.
+
+	Returns
+	-------
+	np.array
+		n_mchits, len = number of muons
+
+	"""
+	ids = blob["McTracks"]["id"]
+	
+	# Origin of each mchit (as int) in the active line
+	origin = blob["McHits"]["origin"]
+	
+	if inactive_du:
+		# only hits in active line
+		origin = origin[blob["McHits"]["du"] != inactive_du]
+	
+	# get how many mchits were produced per muon in the bundle
+	origin_dict = dict(zip(*np.unique(origin, return_counts=True)))
+	
+	return np.array([origin_dict.get(i, 0) for i in ids])
+
+
+def get_muon_mc_info_extr(input_file,prod_identifier=2,inactive_du=None):
 
     """
     Wrapper function that includes the actual mc_info_extr
@@ -407,7 +360,7 @@ def get_muon_mc_info_extr(input_file,prod_identifier=2):
     # check if std reco is present
     f = File(input_file, "r")
     has_std_reco = "reco" in f.keys()
-
+    
     # no n_gen here, but needed for concatenation
     n_gen = 1
     
@@ -440,15 +393,19 @@ def get_muon_mc_info_extr(input_file,prod_identifier=2):
 
         mc_track = blob["McTracks"][p]
 
-        particle_type = mc_track.type	 # assumed that this is the same for all muons in a bundle
+        particle_type = mc_track.pdgid # assumed that this is the same for all muons in a bundle, new: pdgid, old: type
         is_cc = 0 #set to 0
         bjorkeny = 0 #set to zero
         
         time_interaction = mc_track.time  # same for all muons in a bundle
 
-        # sum up the energy of all muons
-        energy = np.sum(blob["McTracks"].energy)
-
+        # sum up the energy from all muons that have at least x mc hits
+        n_hits_per_muon = get_mchits_per_muon(blob, inactive_du=inactive_du) #DU1 in ORCA4 is in the detx but not powered
+        
+        #dont consider muons with less than 10 mc hits
+        suficient_hits_mask = n_hits_per_muon >= 15
+        energy = np.sum(blob["McTracks"][suficient_hits_mask].energy)
+        
         # all muons in a bundle are parallel, so just take dir of first muon
         dir_x, dir_y, dir_z = mc_track.dir_x, mc_track.dir_y, mc_track.dir_z
 
@@ -495,7 +452,7 @@ def get_muon_mc_info_extr(input_file,prod_identifier=2):
 
         # get all the std reco info
         if has_std_reco:
-
+            
             std_reco_info = get_std_reco(blob)
 
             track.update(std_reco_info)

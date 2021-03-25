@@ -11,8 +11,8 @@ __author__ = "Daniel Guderian"
 
 
 test_dir = os.path.dirname(os.path.realpath(__file__))
-NEUTRINO_FILE = os.path.join(test_dir, "data", "neutrino_file.h5")
-DET_FILE_NEUTRINO = os.path.join(test_dir, "data", "neutrino_detector_file.detx")
+NEUTRINO_FILE = os.path.join(test_dir, "data", "mcv6_ORCA_test_rc.gsg_tauCClowE-CC_3-50GeV.km3sim.jterbr00008155.jorcarec.jsh.aanet.760.h5")
+DET_FILE_NEUTRINO = os.path.join(test_dir, "data", "KM3NeT_00000049_20200707.detx")
 
 
 class TestStdRecoExtractor(TestCase):
@@ -33,6 +33,10 @@ class TestStdRecoExtractor(TestCase):
         cls.outfile = os.path.join(cls.tmpdir.name, "binned.h5")
         cls.proc.run(infile=NEUTRINO_FILE, outfile=cls.outfile)
         cls.f = h5py.File(cls.outfile, "r")
+        cls.reco_names_in_original_file = ["best_jshower","best_jmuon"]
+        cls.reco_names = ["jshower","jmuon"]
+        cls.quantities_to_test = ["dir_z","dir_x","pos_x"]
+        cls.mc_quantities_to_test = ["dir_z","dir_x","vertex_pos_x"]
         
     @classmethod
     def tearDownClass(cls):
@@ -54,143 +58,27 @@ class TestStdRecoExtractor(TestCase):
             },
         )
 
-    def test_y(self):
-        y = self.f["y"][()]
-        target = {
-            "weight_w2": np.array(
-                [
-                    29650.0,
-                    297100.0,
-                    41450.0,
-                    371400.0,
-                    1101000000.0,
-                    2757000.0,
-                    15280000.0,
-                    262800000.0,
-                    22590.0,
-                    24240.0,
-                    80030.0,
-                    3018000.0,
-                    120600.0,
-                    872200.0,
-                    50440000.0,
-                    21540.0,
-                    42170.0,
-                    25230.0,
-                ]
-            ),
-            "n_gen": np.array(
-                [
-                    60000.0,
-                    60000.0,
-                    60000.0,
-                    60000.0,
-                    60000.0,
-                    60000.0,
-                    60000.0,
-                    60000.0,
-                    60000.0,
-                    60000.0,
-                    60000.0,
-                    60000.0,
-                    60000.0,
-                    60000.0,
-                    60000.0,
-                    60000.0,
-                    60000.0,
-                    60000.0,
-                ]
-            ),
-            "dir_z": np.array(
-                [
-                    -0.896549,
-                    -0.835252,
-                    0.300461,
-                    0.108997,
-                    0.128445,
-                    -0.543621,
-                    -0.23205,
-                    -0.297228,
-                    0.694932,
-                    0.73835,
-                    -0.007682,
-                    0.437847,
-                    -0.126804,
-                    0.153432,
-                    -0.263229,
-                    0.820217,
-                    0.452473,
-                    0.294217,
-                ]
-            ),
-            "is_cc": np.array(
-                [
-                    2.0,
-                    2.0,
-                    2.0,
-                    2.0,
-                    2.0,
-                    2.0,
-                    2.0,
-                    2.0,
-                    2.0,
-                    2.0,
-                    2.0,
-                    2.0,
-                    2.0,
-                    2.0,
-                    2.0,
-                    2.0,
-                    2.0,
-                    2.0,
-                ]
-            ),
-            "std_dir_z": np.array(
-                [
-                    -0.923199825369434,
-                    -0.6422689266782661,
-                    0.38853917922036363,
-                    -0.16690804339142448,
-                    -0.01584853496341109,
-                    -0.10151549881670698,
-                    -0.0409694104272829,
-                    -0.32964369874021787,
-                    -0.3294926806601529,
-                    0.6524241250799204,
-                    -0.3899574246450216,
-                    0.27872277417339086,
-                    0.0019490791409933206,
-                    0.20341370281708737,
-                    -0.15739475718286297,
-                    0.8040250543935723,
-                    0.08772622550043882,
-                    -0.7766722433951796,
-                ]
-            ),
-            "std_energy": np.array(
-                [
-                    4.7187625606210775,
-                    4.169818842606011,
-                    1.0056373761749966,
-                    5.908597073055873,
-                    12.409377607517195,
-                    7.566695371401163,
-                    1.3546775620239864,
-                    2.659528737837978,
-                    1.0056373761749966,
-                    2.1968321463948755,
-                    1.4821714294894754,
-                    10.135831333340658,
-                    2.6003934443336765,
-                    1.4492149732348223,
-                    71.69167874147956,
-                    8.094744120333358,
-                    3.148088080484504,
-                    1.0056373761749966,
-                ]
-            ),
-        }
-        for k, v in target.items():
-            np.testing.assert_equal(y[k], v)
-
+    def test_y_contents(self):
     
+        #the y from the processed file 
+        y = self.f["y"][()]
+        
+        #the info from the original file
+        orig_info = h5py.File(NEUTRINO_FILE,"r")
+        
+        orig_reco_info = orig_info["reco"]
+        orig_mc_info = orig_info["mc_tracks"]
+        
+        #test a few reco parameter
+        for i in range(len(self.reco_names_in_original_file)):
+            for j in self.quantities_to_test:
+                orig_reco_values = orig_reco_info[self.reco_names_in_original_file[i]][j]
+            
+                assert np.allclose(orig_reco_values,y[self.reco_names[i]+"_"+j])
+        
+        #test a few mc truth parameter
+        for j in range(len(self.quantities_to_test)):
+            orig_mc_values = orig_mc_info[self.quantities_to_test[j]][0] #only take fist, the primary
+            
+            assert np.allclose(orig_mc_values,y[self.mc_quantities_to_test[j]][0])
+        
