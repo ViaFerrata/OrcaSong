@@ -193,6 +193,23 @@ def get_random_noise_mc_info_extr(input_file):
     return mc_info_extr
 
 
+def get_rec_types_in_file(file):
+	
+	"""
+	Checks rand returns which rec types are in the file and thus need to be present 
+	in all best track and their fitinf information.
+	"""
+	#the known rec types
+	rec_type_names = ["best_jmuon","best_jshower","best_dusjshower","best_aashower"]
+	
+	#all reco related in the file
+	reco_objects_in_file = file["reco"].keys()
+	
+	#
+	rec_types_in_file = 2
+	
+	return rec_types_in_file
+	        
 def get_neutrino_mc_info_extr(input_file):
 
     """
@@ -215,7 +232,10 @@ def get_neutrino_mc_info_extr(input_file):
     # check if std reco is present
     f = File(input_file, "r")
     has_std_reco = "reco" in f.keys()
-
+    
+    #also check, which rec types are present
+    #rec_types = get_rec_types_in_file(f)
+            
     # get the n_gen
     header = HDF5Header.from_hdf5(input_file)
     n_gen = header.genvol.numberOfEvents
