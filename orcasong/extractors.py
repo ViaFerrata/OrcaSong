@@ -9,10 +9,11 @@ primary position in the mc_tracks.
 
 """
 
-import warnings
+import warnings, os, re
 import numpy as np
 from km3pipe.io.hdf5 import HDF5Header
 from h5py import File
+from km3pipe import math as k_math
 
 __author__ = "Daniel Guderian"
 
@@ -154,6 +155,10 @@ def get_random_noise_mc_info_extr(input_file):
     f = File(input_file, "r")
     has_std_reco = "reco" in f.keys()
     
+    #an identifier for what the part of the mc simulation was
+    #this way events can later be unambiguously identified
+    input_filename_string = os.path.basename(input_file)
+    part_number = re.findall(r'\d+', input_filename_string)[-2] #second last because of .h5
     
     def mc_info_extr(blob):
 
@@ -179,6 +184,7 @@ def get_random_noise_mc_info_extr(input_file):
             "event_id": event_info.event_id[0],
             "run_id": event_info.run_id[0],
             "particle_type": 0,
+            "part_number": part_number,
         }
 
         # get all the std reco info
@@ -192,8 +198,72 @@ def get_random_noise_mc_info_extr(input_file):
 
     return mc_info_extr
 
+def normalize_dirs(dir):
+	'''Make normalize the input cartesian coordinates to the unit sphere'''
+	length = np.sqrt(dir[0]**2+dir[1]**2+dir[2]**2)
+	return dir/length
 
-def get_neutrino_mc_info_extr(input_file):
+def weight_direction(dir,energies):
+	'''Weight a direction component according to the energies'''
+	return sum(dir*energies)/sum(energies)
+	
+	
+def get_test_directions(mc_tracks,only_lepons=False,weighted_by_energies=False):
+	'''Extract a few different definitions of the true direction'''
+	
+	#get secondary information, excluding neutrinos (so, including the primary)
+	leptons = [11,13,15]
+	all_chanrged_particles = [11,13,15,211,2212,2224,2214,1114,321,22]	#leptons, pions, protons, kaons, photon
+	
+	if only_lepons:
+		charged_particle_ids = leptons
+	else:		
+		charged_particle_ids = all_chanrged_particles
+	
+	#mask for the charged particles
+	is_charged = np.in1d(abs(mc_tracks.type),charged_particle_ids)
+	
+	#for NC there is no lepton; take highest energy hadron instead
+	if np.count_nonzero(is_charged) == 0:
+		is_charged = np.in1d(abs(mc_tracks.type),all_chanrged_particles)
+	
+	#if there are no charged particles at all, take the original neutrino dir
+	if np.count_nonzero(is_charged) == 0:
+		is_charged = np.ones(len(mc_tracks.type),dtype=bool)
+
+	charged_secondary_energies = mc_tracks.energy[is_charged]
+	charged_secondary_dir_x = mc_tracks.dir_x[is_charged]
+	charged_secondary_dir_y = mc_tracks.dir_y[is_charged]
+	charged_secondary_dir_z = mc_tracks.dir_z[is_charged]
+	charged_secondary_type = mc_tracks.type[is_charged]
+
+	if weighted_by_energies:
+		
+		leading_charged_secondary_dir_x = weight_direction(charged_secondary_dir_x,charged_secondary_energies)
+		leading_charged_secondary_dir_y = weight_direction(charged_secondary_dir_y,charged_secondary_energies)
+		leading_charged_secondary_dir_z = weight_direction(charged_secondary_dir_z,charged_secondary_energies)
+		
+	else:
+	
+		#assign the direction of the one with the largest energy
+		leading_charged_secondary_position = np.argmax(charged_secondary_energies)
+		leading_charged_secondary_dir_x = charged_secondary_dir_x[leading_charged_secondary_position]
+		leading_charged_secondary_dir_y = charged_secondary_dir_y[leading_charged_secondary_position]
+		leading_charged_secondary_dir_z = charged_secondary_dir_z[leading_charged_secondary_position]
+		leading_charged_secondary_type = charged_secondary_type[leading_charged_secondary_position]
+	
+	#normalize again to unit sphere in case this is now violated
+	dirs = [leading_charged_secondary_dir_x,leading_charged_secondary_dir_y,leading_charged_secondary_dir_z]
+	normalized_dirs = normalize_dirs(dirs)
+	
+	dirs_dict = {"leading_charged_secondary_dir_x":normalized_dirs[0],
+				"leading_charged_secondary_dir_y":normalized_dirs[1],
+				"leading_charged_secondary_dir_z":normalized_dirs[2],
+				}
+				
+	return dirs_dict
+	
+def get_neutrino_mc_info_extr(input_file,prod_identifier):
 
     """
     Wrapper function that includes the actual mc_info_extr
@@ -204,7 +274,9 @@ def get_neutrino_mc_info_extr(input_file):
     ----------
     input_file : km3net data file
             Can be online or offline format.
-
+    prod_identifier : int
+            An identifier to help identify an event later on.
+            
     Returns
     -------
     mc_info_extr : function
@@ -220,6 +292,12 @@ def get_neutrino_mc_info_extr(input_file):
     header = HDF5Header.from_hdf5(input_file)
     n_gen = header.genvol.numberOfEvents
         
+    #an identifier for what the part of the mc simulation was
+    #this way events can later be unambiguously identified
+    input_filename_string = os.path.basename(input_file)
+    #part_number = re.findall(r'\d+', input_filename_string)[-2] #second last because of .h5
+    part_number = 1
+    
     def mc_info_extr(blob):
 
         """
@@ -254,7 +332,7 @@ def get_neutrino_mc_info_extr(input_file):
         mc_track = blob["McTracks"][p]
 
         # some track mc truth info
-        particle_type = mc_track.pdgid      #sometimes type, sometimes pdgid
+        particle_type = mc_track.type      #sometimes type, sometimes pdgid
         energy = mc_track.energy
         is_cc = mc_track.cc
         bjorkeny = mc_track.by
@@ -267,6 +345,13 @@ def get_neutrino_mc_info_extr(input_file):
             mc_track.pos_y,
             mc_track.pos_z,
         )
+
+        #for tests, add some different definitions for the direction
+
+        #the direction of the charged particle with the largest energy
+        leading_chared_particle_dirs = get_test_directions(blob["McTracks"])
+        leading_lepton_dirs = get_test_directions(blob["McTracks"],only_lepons=True)
+        weighted_energy_direction = get_test_directions(blob["McTracks"],weighted_by_energies=True)
 
         # add also the nhits info
         n_hits = len(blob["Hits"])
@@ -290,6 +375,18 @@ def get_neutrino_mc_info_extr(input_file):
             "weight_w2": weight_w2,
             "weight_w3": weight_w3,
             "n_gen": n_gen,
+            "prod_identifier": prod_identifier,
+            "part_number": part_number,
+            "leading_chared_secondary_dir_x":leading_chared_particle_dirs["leading_charged_secondary_dir_x"],
+            "leading_chared_secondary_dir_y":leading_chared_particle_dirs["leading_charged_secondary_dir_y"],
+            "leading_chared_secondary_dir_z":leading_chared_particle_dirs["leading_charged_secondary_dir_z"],
+            "leading_lepton_dir_x":leading_lepton_dirs["leading_charged_secondary_dir_x"],
+            "leading_lepton_dir_y":leading_lepton_dirs["leading_charged_secondary_dir_y"],
+            "leading_lepton_dir_z":leading_lepton_dirs["leading_charged_secondary_dir_z"],
+            "weighted_energy_dir_x":weighted_energy_direction["leading_charged_secondary_dir_x"],
+            "weighted_energy_dir_y":weighted_energy_direction["leading_charged_secondary_dir_y"],
+            "weighted_energy_dir_z":weighted_energy_direction["leading_charged_secondary_dir_z"],
+            
         }
 
         # get all the std reco info
@@ -298,7 +395,7 @@ def get_neutrino_mc_info_extr(input_file):
             std_reco_info = get_std_reco(blob)
 
             track.update(std_reco_info)
-
+        
         return track
 
     return mc_info_extr
@@ -363,6 +460,11 @@ def get_muon_mc_info_extr(input_file,prod_identifier=2,inactive_du=None):
     
     # no n_gen here, but needed for concatenation
     n_gen = 1
+    
+    #an identifier for what the part of the mc simulation was
+    #this way events can later be unambiguously identified
+    input_filename_string = os.path.basename(input_file)
+    part_number = re.findall(r'\d+', input_filename_string)[-2] #second last because of .h5
     
     def mc_info_extr(blob):
 
@@ -448,6 +550,7 @@ def get_muon_mc_info_extr(input_file,prod_identifier=2,inactive_du=None):
             "weight_w3": weight_w3,
             "n_gen": n_gen,
             "prod_identifier": prod_identifier,
+            "part_number": part_number,
         }
 
         # get all the std reco info
