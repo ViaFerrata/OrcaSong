@@ -127,9 +127,10 @@ def get_real_data_info_extr(input_file):
     f = File(input_file, "r")
     has_std_reco = "reco" in f.keys()
     
-    #also check, which rec types are present
-    rec_types,rec_parameters_names = get_rec_types_in_file(f)
-    
+    if has_std_reco:
+		#also check, which rec types are present
+		rec_types,rec_parameters_names = get_rec_types_in_file(f)
+	
     def mc_info_extr(blob):
 
         """
@@ -195,8 +196,9 @@ def get_random_noise_mc_info_extr(input_file):
     f = File(input_file, "r")
     has_std_reco = "reco" in f.keys()
     
-    #also check, which rec types are present
-    rec_types,rec_parameters_names = get_rec_types_in_file(f)
+    if has_std_reco:
+    	#also check, which rec types are present
+    	rec_types,rec_parameters_names = get_rec_types_in_file(f)
     
     def mc_info_extr(blob):
 
@@ -259,8 +261,9 @@ def get_neutrino_mc_info_extr(input_file):
     f = File(input_file, "r")
     has_std_reco = "reco" in f.keys()
     
-    #also check, which rec types are present
-    rec_types,rec_parameters_names = get_rec_types_in_file(f)
+    if has_std_reco:
+        #also check, which rec types are present
+    	rec_types,rec_parameters_names = get_rec_types_in_file(f)
 
     # get the n_gen
     header = HDF5Header.from_hdf5(input_file)
@@ -407,8 +410,9 @@ def get_muon_mc_info_extr(input_file,prod_identifier=2,inactive_du=None):
     f = File(input_file, "r")
     has_std_reco = "reco" in f.keys()
     
-    #also check, which rec types are present
-    rec_types,rec_parameters_names = get_rec_types_in_file(f)
+    if has_std_reco:
+        #also check, which rec types are present
+        rec_types,rec_parameters_names = get_rec_types_in_file(f)
     
     # no n_gen here, but needed for concatenation
     n_gen = 1
