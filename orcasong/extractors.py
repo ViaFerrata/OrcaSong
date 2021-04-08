@@ -128,9 +128,9 @@ def get_real_data_info_extr(input_file):
     has_std_reco = "reco" in f.keys()
     
     if has_std_reco:
-		#also check, which rec types are present
-		rec_types,rec_parameters_names = get_rec_types_in_file(f)
-	
+        #also check, which rec types are present
+        rec_types,rec_parameters_names = get_rec_types_in_file(f)
+
     def mc_info_extr(blob):
 
         """
@@ -197,8 +197,8 @@ def get_random_noise_mc_info_extr(input_file):
     has_std_reco = "reco" in f.keys()
     
     if has_std_reco:
-    	#also check, which rec types are present
-    	rec_types,rec_parameters_names = get_rec_types_in_file(f)
+        #also check, which rec types are present
+        rec_types,rec_parameters_names = get_rec_types_in_file(f)
     
     def mc_info_extr(blob):
 
@@ -263,7 +263,7 @@ def get_neutrino_mc_info_extr(input_file):
     
     if has_std_reco:
         #also check, which rec types are present
-    	rec_types,rec_parameters_names = get_rec_types_in_file(f)
+        rec_types,rec_parameters_names = get_rec_types_in_file(f)
 
     # get the n_gen
     header = HDF5Header.from_hdf5(input_file)
