@@ -305,7 +305,26 @@ def _copy_attrs(src_datset, target_dataset):
             warnings.warn(f"Error: Can not copy attribute {k}: {e}")
 
 
-def get_parser():
+def concatenate(file, outfile="concatenated.h5", no_used_files=False, skip_errors=False):
+    """ Concatenate wrapped in a function. """
+    if len(file) == 1:
+        fc = FileConcatenator.from_list(
+            file[0],
+            skip_errors=skip_errors
+        )
+    else:
+        fc = FileConcatenator(
+            input_files=file,
+            skip_errors=skip_errors
+        )
+    fc.concatenate(
+        outfile,
+        append_used_files=not no_used_files,
+    )
+
+
+def main():
+    warnings.warn("concatenate is deprecated and has been renamed to orcasong concatenate")
     parser = argparse.ArgumentParser(
         description='Concatenate many small h5 files to a single large one '
                     'in a km3pipe compatible format. This is intended for '
@@ -331,27 +350,7 @@ def get_parser():
     parser.add_argument(
         '--skip_errors', action='store_true',
         help="If true, ignore files that can't be concatenated. ")
-    return parser
-
-
-def main():
-    parser = get_parser()
-    parsed_args = parser.parse_args()
-
-    if len(parsed_args.file) == 1:
-        fc = FileConcatenator.from_list(
-            parsed_args.file[0],
-            skip_errors=parsed_args.skip_errors
-        )
-    else:
-        fc = FileConcatenator(
-            input_files=parsed_args.file,
-            skip_errors=parsed_args.skip_errors
-        )
-    fc.concatenate(
-        parsed_args.outfile,
-        append_used_files=not parsed_args.no_used_files,
-    )
+    concatenate(**vars(parser.parse_args()))
 
 
 if __name__ == '__main__':
