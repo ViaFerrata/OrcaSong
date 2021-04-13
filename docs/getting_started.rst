@@ -20,13 +20,13 @@ the 'h5extract' command of km3pipe like so::
     yourself and let people know.
 
 
-Step 2: From h5 aanet files to DL files
----------------------------------------
-Produce DL files from the aanet h5 files using OrcaSong.
+Step 2: From h5 aanet files to h5 DL files
+------------------------------------------
+Produce DL h5 files from the aanet h5 files using OrcaSong.
 You can either produce images or graphs. See :ref:`orcasong_page` for
 instructions on how to do this.
 
-The resulting DL files can already be used as input for networks!
+The resulting DL h5 files can already be used as input for networks!
 
 Step 3: Concatenate
 -------------------

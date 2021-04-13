@@ -1,10 +1,10 @@
 .. _orcasong_page:
 
-Producing DL files from h5
-==========================
+Producing DL h5 files from aanet h5 files
+=========================================
 
-Describes how to use OrcaSong to produce files for Deep Learning
-from h5 files. These files can contain either images (for convolutional
+Describes how to use OrcaSong to produce h5 files for Deep Learning
+from aanet h5 files. These files can contain either images (for convolutional
 networks), or graphs (for Graph networks).
 
 .. contents:: :local:
