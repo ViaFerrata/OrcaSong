@@ -42,6 +42,11 @@ set up the file binner to generate zt data:
 
     fb = FileBinner(bin_edges_list)
 
+.. note::
+    You have to calibrate the file if it is not calibrated already
+    (i.e. if you there are no columns like pos_z in the hits).
+
+
 Calling the object like this will show you the binning:
 
 .. code-block:: python
