@@ -1,8 +1,11 @@
 # the mode to run orcasong in; either 'graph' or 'image'
 mode="graph"
-# arguments for running orcasong (see FileGraph or FileBinner in orcasong.core).
+# arguments for FileGraph or FileBinner (see orcasong.core)
 max_n_hits = 2000
 time_window = [-100, 5000]
+# can also give the arguments of orcasong.core.BaseProcessor,
+# which are shared between modes
+chunksize=16
 # built-in extractor function to use
 extractor = "neutrino_mc"
 

@@ -1,4 +1,3 @@
-import os
 import toml
 import orcasong.core
 import orcasong.extractors as extractors
@@ -31,15 +30,17 @@ def add_parser_run(subparsers):
 
 
 def run_orcasong(infile, toml_file, detx_file=None, outfile=None):
-    if outfile is None:
-        outfile = f"{os.path.splitext(os.path.basename(infile))[0]}_dl.h5"
+    setup_processor(infile, toml_file, detx_file).run(
+        infile=infile, outfile=outfile)
 
+
+def setup_processor(infile, toml_file, detx_file=None):
     cfg = toml.load(toml_file)
-    processor = _get_verbose(cfg["mode"], MODES)
+    processor = _get_verbose(cfg.pop("mode"), MODES)
 
     if "detx_file" in cfg:
         if detx_file is not None:
-            raise ValueError("detx_file passed to function AND defined in toml")
+            raise ValueError("detx_file passed to run AND defined in toml")
         detx_file = cfg.pop("detx_file")
 
     if "extractor" in cfg:
@@ -48,11 +49,11 @@ def run_orcasong(infile, toml_file, detx_file=None, outfile=None):
     else:
         extractor = None
 
-    processor(
+    return processor(
         det_file=detx_file,
         extractor=extractor,
         **cfg,
-    ).run(infile=infile, outfile=outfile)
+    )
 
 
 def _get_verbose(key, d):
