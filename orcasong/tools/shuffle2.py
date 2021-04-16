@@ -2,6 +2,8 @@ import os
 import time
 import datetime
 import argparse
+import warnings
+
 import numpy as np
 import psutil
 import h5py
@@ -335,6 +337,8 @@ def slicify(fancy_indices):
 
 
 def run_parser():
+    # TODO deprecated
+    warnings.warn("h5shuffle2 is deprecated and has been renamed to orcasong h5shuffle2")
     parser = argparse.ArgumentParser(
         description="Shuffle datasets in a h5file that have the same length. "
         "Uses chunkwise readout for speed-up."

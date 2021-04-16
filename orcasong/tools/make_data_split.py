@@ -5,6 +5,7 @@
 __author__ = "Michael Moser, Daniel Guderian"
 
 import os
+import warnings
 import toml
 import argparse
 import h5py
@@ -13,6 +14,8 @@ import numpy as np
 
 
 def get_parser():
+    # TODO deprecated
+    warnings.warn("make_data_split is deprecated and has been renamed to orcasong make_data_split")
     parser = argparse.ArgumentParser(
         description="Create datasets based on the run_id's."
         "Use the config to add input folder and set the ranges."
@@ -24,6 +27,20 @@ def get_parser():
     )
 
     return parser
+
+
+def add_parser(subparsers):
+    parser = subparsers.add_parser(
+        "make_data_split",
+        description="Create datasets based on the run_id's."
+        "Use the config to add input folder and set the ranges."
+        "Outputs a list in an txt file that can be used to "
+        "concatenate the files specfied"
+    )
+    parser.add_argument(
+        "config", type=str, help="See example config for detailed information"
+    )
+    parser.set_defaults(func=make_split)
 
 
 def get_all_ip_group_keys(cfg):
@@ -418,9 +435,10 @@ def main():
     # load the config
     parser = get_parser()
     parsed_args = parser.parse_args()
+    make_split(parsed_args.config)
 
-    config_file = parsed_args.config
 
+def make_split(config_file):
     # decode config
     cfg = toml.load(config_file)
     cfg["toml_filename"] = config_file
