@@ -6,6 +6,7 @@ import argparse
 from orcasong.tools.concatenate import concatenate
 from orcasong.tools.postproc import postproc_file
 from orcasong.tools.shuffle2 import h5shuffle2
+import orcasong.from_toml as from_toml
 
 
 def _add_parser_concatenate(subparsers):
@@ -119,6 +120,8 @@ def main():
     )
     subparsers = parser.add_subparsers()
 
+    from_toml.add_parser_filegraph(subparsers)
+    from_toml.add_parser_filebinner(subparsers)
     _add_parser_concatenate(subparsers)
     _add_parser_h5shuffle(subparsers)
     _add_parser_h5shuffle2(subparsers)
