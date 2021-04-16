@@ -324,6 +324,7 @@ def concatenate(file, outfile="concatenated.h5", no_used_files=False, skip_error
 
 
 def main():
+    # TODO deprecated
     warnings.warn("concatenate is deprecated and has been renamed to orcasong concatenate")
     parser = argparse.ArgumentParser(
         description='Concatenate many small h5 files to a single large one '

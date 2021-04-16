@@ -28,9 +28,9 @@ setup(
 
     entry_points={'console_scripts': [
         'orcasong=orcasong.parser:main',
+        # TODO all deprecated:
         'make_dsplit=orcasong.tools.make_data_split:main',
         'plot_binstats=orcasong.plotting.plot_binstats:main',
-        # deprecated:
         'concatenate=orcasong.tools.concatenate:main',
         'h5shuffle=orcasong.tools.postproc:h5shuffle',
         'h5shuffle2=orcasong.tools.shuffle2:run_parser',

@@ -7,6 +7,8 @@ from orcasong.tools.concatenate import concatenate
 from orcasong.tools.postproc import postproc_file
 from orcasong.tools.shuffle2 import h5shuffle2
 import orcasong.from_toml as from_toml
+import orcasong.plotting.plot_binstats as plot_binstats
+import orcasong.tools.make_data_split as make_data_split
 
 
 def _add_parser_concatenate(subparsers):
@@ -124,6 +126,8 @@ def main():
     _add_parser_concatenate(subparsers)
     _add_parser_h5shuffle(subparsers)
     _add_parser_h5shuffle2(subparsers)
+    plot_binstats.add_parser(subparsers)
+    make_data_split.add_parser(subparsers)
     _add_parser_version(subparsers)
 
     kwargs = vars(parser.parse_args())

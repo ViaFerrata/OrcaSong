@@ -117,6 +117,7 @@ def get_filepath_output(input_file, shuffle=True, event_skipper=None):
 
 
 def h5shuffle():
+    # TODO deprecated
     warnings.warn("h5shuffle is deprecated and has been renamed to orcasong h5shuffle")
     parser = argparse.ArgumentParser(description='Shuffle an h5 file using km3pipe.')
     parser.add_argument('input_file', type=str, help='File to shuffle.')
