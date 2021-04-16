@@ -120,8 +120,7 @@ def main():
     )
     subparsers = parser.add_subparsers()
 
-    from_toml.add_parser_filegraph(subparsers)
-    from_toml.add_parser_filebinner(subparsers)
+    from_toml.add_parser_run(subparsers)
     _add_parser_concatenate(subparsers)
     _add_parser_h5shuffle(subparsers)
     _add_parser_h5shuffle2(subparsers)

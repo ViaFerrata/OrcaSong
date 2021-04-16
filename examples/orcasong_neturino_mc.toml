@@ -1,0 +1,10 @@
+# the mode to run orcasong in; either 'graph' or 'image'
+mode="graph"
+# arguments for running orcasong (see FileGraph or FileBinner in orcasong.core).
+max_n_hits = 2000
+time_window = [-100, 5000]
+# built-in extractor function to use
+extractor = "neutrino_mc"
+
+[extractor_config]
+# optional arguments for the extractor function can go here. None in this case.
