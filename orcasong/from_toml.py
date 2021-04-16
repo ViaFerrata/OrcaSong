@@ -58,5 +58,5 @@ def setup_processor(infile, toml_file, detx_file=None):
 
 def _get_verbose(key, d):
     if key not in d:
-        raise KeyError(f"Unknown key {key} (available: {list(d.keys())}")
+        raise KeyError(f"Unknown key '{key}' (available: {list(d.keys())})")
     return d[key]
