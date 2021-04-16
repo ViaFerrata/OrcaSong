@@ -12,7 +12,7 @@ Step 1: From root aanet files to h5 aanet files
 Convert offline files (aka aanet files) from root format to h5 format using
 the 'h5extract' command of km3pipe like so::
 
-    h5extract filename.root
+    h5extract aanet_file.root
 
 .. note::
     This has to be done only once for each file. Check if somebody did this
@@ -23,8 +23,14 @@ the 'h5extract' command of km3pipe like so::
 Step 2: From h5 aanet files to h5 DL files
 ------------------------------------------
 Produce DL h5 files from the aanet h5 files using OrcaSong.
-You can either produce images or graphs. See :ref:`orcasong_page` for
-instructions on how to do this.
+You can either produce images or graphs.
+If you have an orcasong config file, you can use it via the command line like this::
+
+    orcasong run aanet_file.h5 orcasong_config.toml --detx_file detector.detx
+
+
+Alternatively, you can use the python frontend of orcasong.
+See :ref:`orcasong_page` for instructions on how to do this.
 
 The resulting DL h5 files can already be used as input for networks!
 

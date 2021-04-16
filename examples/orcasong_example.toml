@@ -1,3 +1,6 @@
+# This is an example config for running orcasong. It's not intended
+# to be used for actual large-scale productions.
+
 # the mode to run orcasong in; either 'graph' or 'image'
 mode="graph"
 # arguments for FileGraph or FileBinner (see orcasong.core)
@@ -6,8 +9,8 @@ time_window = [-100, 5000]
 # can also give the arguments of orcasong.core.BaseProcessor,
 # which are shared between modes
 chunksize=16
-# built-in extractor function to use
+# built-in extractor function to use (see orcasong.from_toml.EXTRACTORS)
 extractor = "neutrino_mc"
 
 [extractor_config]
-# optional arguments for the extractor function can go here. None in this case.
+# arguments for setting up the extractor function can go here. None in this case.

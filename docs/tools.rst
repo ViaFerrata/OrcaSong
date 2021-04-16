@@ -37,7 +37,7 @@ km3pipe. The input can also be a txt file like from make_data_split.
 
 Can be used via the commandline like so::
 
-    concatenate --help
+    orcasong concatenate --help
 
 or import as:
 
@@ -58,7 +58,7 @@ Shuffle an h5 file using km3pipe.
 
 Can be used via the commandline like so::
 
-    h5shuffle --help
+    orcasong h5shuffle --help
 
 or import function for general postprocessing:
 
@@ -69,4 +69,7 @@ or import function for general postprocessing:
     postproc_file(output_filepath_concat)
 
 
-Theres also a faster (beta) version available called h5shuffle2.
+Theres also a faster (beta) version available called h5shuffle2::
+
+    orcasong h5shuffle2 --help
+
