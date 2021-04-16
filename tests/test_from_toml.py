@@ -8,11 +8,11 @@ EXAMPLES = os.path.join(
 )
 
 
-def test_extr(infile):
+def _test_extr(infile):
     return infile + "_extr"
 
 
-orcasong.from_toml.EXTRACTORS["neutrino_mc"] = test_extr
+orcasong.from_toml.EXTRACTORS["neutrino_mc"] = _test_extr
 
 
 class TestSetupProcessorExampleConfig(TestCase):
