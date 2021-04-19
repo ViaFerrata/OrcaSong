@@ -10,7 +10,7 @@ time_window = [-100, 5000]
 # which are shared between modes
 chunksize=16
 # built-in extractor function to use (see orcasong.from_toml.EXTRACTORS)
-extractor = "neutrino_mc"
+extractor = "nu_chain_neutrino"
 
 [extractor_config]
 # arguments for setting up the extractor function can go here. None in this case.
