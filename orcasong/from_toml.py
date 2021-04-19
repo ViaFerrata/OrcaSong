@@ -5,8 +5,12 @@ import orcasong.extractors as extractors
 # built-in extractors. First argument has to be the input filename,
 # other parameters can be set via 'extractor_config' dict in the toml
 EXTRACTORS = {
-    "neutrino_mc": extractors.get_neutrino_mc_info_extr,
-    "neutrino_data": extractors.get_real_data_info_extr,
+    "nu_chain_neutrino": extractors.get_neutrino_mc_info_extr,
+    "nu_chain_muon": extractors.get_muon_mc_info_extr,
+    "nu_chain_noise": extractors.get_random_noise_mc_info_extr,
+    "nu_chain_data": extractors.get_real_data_info_extr,
+    # TODO "bundle_mc": ???,
+    # TODO "bundle_data": ???,
 }
 
 MODES = {
