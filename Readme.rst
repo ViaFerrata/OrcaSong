@@ -41,6 +41,18 @@ You can get a list of all the bash commands in orcasong by typing::
 
     orcasong --help
 
-A Singularity image of the latest stable version of OrcaSong is also provided.
-You can download it from the km3net sftp server ``pi1139.physik.uni-erlangen.de``
-in ``singularity/orcasong.sif``.
+Containerization
+----------------
+The easiest way to run OrcaSong is with singularity.
+A Singularity image of the latest stable version of OrcaSong
+is automatically uploaded to our sftp server.
+Download it e.g. via::
+
+    wget http://pi1139.physik.uni-erlangen.de/singularity/orcasong_v???.sif
+
+where v??? is the version, e.g. orcasong_v4.3.2.sif.
+Run it e.g. via::
+
+    singularity shell orcasong_v???.sif
+
+
