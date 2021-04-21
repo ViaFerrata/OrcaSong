@@ -117,7 +117,7 @@ singularity:
   stage: singularity
   script:
     - singularity --version
-    - singularity build $SINGULARITY_IMAGE Singularity
+    - singularity build $SINGULARITY_RELEASE_IMAGE Singularity
     - apt-get update -qy
     - apt-get install -qy lftp
     - lftp -u $KM3NET_SFTP_USER,$KM3NET_SFTP_PASSWORD sftp://$KM3NET_SFTP_HOST -e "set sftp:auto-confirm yes; set ssl:verify-certificate no; cd singularity/; put SINGULARITY_RELEASE_IMAGE; bye"
