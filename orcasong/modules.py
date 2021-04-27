@@ -434,15 +434,18 @@ class DetApplier(kp.Module):
         if "McHits" in blob:
             blob["McHits"] = self.calib.apply(blob["McHits"])
         if self.center_hits_to:
-            self.shift_hits(blob)
+            self.shift_pos(blob)
         return blob
 
-    def shift_hits(self, blob):
-        """ Translate hits by cached vector. """
+    def shift_pos(self, blob):
+        """ Translate pos by cached vector. """
         for dim_name in ("pos_x", "pos_y", "pos_z"):
             blob["Hits"][dim_name] += self._vector_shift[dim_name]
             if "McHits" in blob:
                 blob["McHits"][dim_name] += self._vector_shift[dim_name]
+            if "McTracks" in blob and dim_name in blob["McTracks"]:
+                blob["McTracks"][dim_name] += self._vector_shift[dim_name]
+            # TODO also shift pos in reco?
 
     def _cache_shift_center(self):
         det_center, shift = {}, {}

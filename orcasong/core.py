@@ -39,10 +39,12 @@ class BaseProcessor:
         If true, the time slewing of hits depending on their tot
         will be corrected.
     center_hits_to : tuple, optional
-        Translate the xyz positions of the hits (and mchits), as if
+        Translate the xyz positions of the hits, as if
         the detector was centered at the given position.
         E.g., if its (0, 0, None), the hits and mchits will be
         centered at xy = 00, and z will be left untouched.
+        Will also translate mc_hits and pos_x/y/z in mc_tracks if they
+        are available. Will not shift pos in reco!
     add_t0 : bool
         If true, add t0 to the time of hits and mchits. If using a
         det_file, this will already have been done automatically
@@ -50,7 +52,7 @@ class BaseProcessor:
     event_skipper : func, optional
         Function that takes the blob as an input, and returns a bool.
         If the bool is true, the blob will be skipped.
-        This is placed after the binning and mc_info extractor.
+        This is placed after the binning and the extractor.
     chunksize : int
         Chunksize (along axis_0) used for saving the output
         to a .h5 file [default: 32].

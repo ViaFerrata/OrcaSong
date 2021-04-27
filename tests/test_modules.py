@@ -405,20 +405,32 @@ class TestDetApplier(TestCase):
         for d in ("pos_x", "pos_y", "pos_z"):
             np.testing.assert_array_almost_equal(target[d], self.deta._vector_shift[d])
 
-    def test_shift_is_applied_to_hits(self):
+    def test_shift_is_applied_to_blob(self):
         blob = {"Hits": {
             "pos_x": np.ones(3),
             "pos_y": np.ones(3)*2,
             "pos_z": np.ones(3)*3,
-        }}
-        target = {
+        },
+            "McTracks": {
+                "pos_x": 1,
+                "pos_y": 2,
+                "pos_z": 3,
+            }
+        }
+        target_hits = {
             "pos_x": np.ones(3) * 59.75166782379619,
             "pos_y": np.ones(3) * -19.5,
             "pos_z": np.ones(3) * 3,
         }
-        self.deta.shift_hits(blob)
+        target_mc_tracks = {
+            "pos_x": 59.75166782379619,
+            "pos_y": -19.5,
+            "pos_z": 3,
+        }
+        self.deta.shift_pos(blob)
         for d in ("pos_x", "pos_y", "pos_z"):
-            np.testing.assert_array_almost_equal(target[d], blob["Hits"][d])
+            np.testing.assert_array_almost_equal(target_hits[d], blob["Hits"][d])
+            np.testing.assert_array_almost_equal(target_mc_tracks[d], blob["Hits"][d])
 
 
 class TestBinningStatsMaker(TestCase):
