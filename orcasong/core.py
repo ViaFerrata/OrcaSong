@@ -9,7 +9,7 @@ import orcasong.modules as modules
 import orcasong.plotting.plot_binstats as plot_binstats
 
 
-__author__ = 'Stefan Reck'
+__author__ = "Stefan Reck"
 
 
 class BaseProcessor:
@@ -86,18 +86,22 @@ class BaseProcessor:
         each pipeline.
 
     """
-    def __init__(self, extractor=None,
-                 det_file=None,
-                 correct_mc_time=True,
-                 center_time=True,
-                 add_t0=False,
-                 correct_timeslew=True,
-                 center_hits_to=None,
-                 event_skipper=None,
-                 chunksize=32,
-                 keep_event_info=False,
-                 overwrite=True,
-                 mc_info_to_float64=True):
+
+    def __init__(
+        self,
+        extractor=None,
+        det_file=None,
+        correct_mc_time=True,
+        center_time=True,
+        add_t0=False,
+        correct_timeslew=True,
+        center_hits_to=None,
+        event_skipper=None,
+        chunksize=32,
+        keep_event_info=False,
+        overwrite=True,
+        mc_info_to_float64=True,
+    ):
         self.extractor = extractor
         self.det_file = det_file
         self.correct_mc_time = correct_mc_time
@@ -113,7 +117,7 @@ class BaseProcessor:
 
         self.n_statusbar = 1000
         self.n_memory_observer = 1000
-        self.complib = 'zlib'
+        self.complib = "zlib"
         self.complevel = 1
         self.flush_frequency = 1000
         self.seed = 42
@@ -132,8 +136,10 @@ class BaseProcessor:
 
         """
         if outfile is None:
-            outfile = os.path.join(os.getcwd(), "{}_dl.h5".format(
-                os.path.splitext(os.path.basename(infile))[0]))
+            outfile = os.path.join(
+                os.getcwd(),
+                "{}_dl.h5".format(os.path.splitext(os.path.basename(infile))[0]),
+            )
         if not self.overwrite:
             if os.path.isfile(outfile):
                 raise FileExistsError(f"File exists: {outfile}")
@@ -160,8 +166,8 @@ class BaseProcessor:
         outfiles = []
         for infile in infiles:
             outfile = os.path.join(
-                outfolder,
-                f"{os.path.splitext(os.path.basename(infile))[0]}_dl.h5")
+                outfolder, f"{os.path.splitext(os.path.basename(infile))[0]}_dl.h5"
+            )
             outfiles.append(outfile)
             self.run(infile, outfile)
         return outfiles
@@ -189,16 +195,24 @@ class BaseProcessor:
         if self.correct_mc_time:
             cmpts.append((km.mc.MCTimeCorrector, {}))
         if self.det_file:
-            cmpts.append((modules.DetApplier, {
-                "det_file": self.det_file,
-                "correct_timeslew": self.correct_timeslew,
-                "center_hits_to": self.center_hits_to,
-            }))
+            cmpts.append(
+                (
+                    modules.DetApplier,
+                    {
+                        "det_file": self.det_file,
+                        "correct_timeslew": self.correct_timeslew,
+                        "center_hits_to": self.center_hits_to,
+                    },
+                )
+            )
 
         if any((self.center_time, self.add_t0)):
-            cmpts.append((modules.TimePreproc, {
-                "add_t0": self.add_t0,
-                "center_time": self.center_time}))
+            cmpts.append(
+                (
+                    modules.TimePreproc,
+                    {"add_t0": self.add_t0, "center_time": self.center_time},
+                )
+            )
         return cmpts
 
     @abstractmethod
@@ -210,26 +224,37 @@ class BaseProcessor:
         """ Modules that postproc and save the events. """
         cmpts = []
         if self.extractor is not None:
-            cmpts.append((modules.McInfoMaker, {
-                "extractor": self.extractor,
-                "to_float64": self.mc_info_to_float64,
-                "store_as": "mc_info"}))
+            cmpts.append(
+                (
+                    modules.McInfoMaker,
+                    {
+                        "extractor": self.extractor,
+                        "to_float64": self.mc_info_to_float64,
+                        "store_as": "mc_info",
+                    },
+                )
+            )
 
         if self.event_skipper is not None:
-            cmpts.append((modules.EventSkipper, {
-                "event_skipper": self.event_skipper}))
+            cmpts.append((modules.EventSkipper, {"event_skipper": self.event_skipper}))
 
-        keys_keep = ['samples', 'mc_info', "header", "raw_header"]
+        keys_keep = ["samples", "mc_info", "header", "raw_header"]
         if self.keep_event_info:
-            keys_keep.append('EventInfo')
+            keys_keep.append("EventInfo")
         cmpts.append((km.common.Keep, {"keys": keys_keep}))
 
-        cmpts.append((kp.io.HDF5Sink, {
-            "filename": outfile,
-            "complib": self.complib,
-            "complevel": self.complevel,
-            "chunksize": self.chunksize,
-            "flush_frequency": self.flush_frequency}))
+        cmpts.append(
+            (
+                kp.io.HDF5Sink,
+                {
+                    "filename": outfile,
+                    "complib": self.complib,
+                    "complevel": self.complevel,
+                    "chunksize": self.chunksize,
+                    "flush_frequency": self.flush_frequency,
+                },
+            )
+        )
         return cmpts
 
     def finish_file(self, f, summary):
@@ -276,10 +301,8 @@ class FileBinner(BaseProcessor):
         Options of the BaseProcessor.
 
     """
-    def __init__(self, bin_edges_list,
-                 add_bin_stats=True,
-                 hit_weights=None,
-                 **kwargs):
+
+    def __init__(self, bin_edges_list, add_bin_stats=True, hit_weights=None, **kwargs):
         self.bin_edges_list = bin_edges_list
         self.add_bin_stats = add_bin_stats
         self.hit_weights = hit_weights
@@ -289,11 +312,18 @@ class FileBinner(BaseProcessor):
         """ Generate nD images. """
         cmpts = []
         if self.add_bin_stats:
-            cmpts.append((modules.BinningStatsMaker, {
-                "bin_edges_list": self.bin_edges_list}))
-        cmpts.append((modules.ImageMaker, {
-            "bin_edges_list": self.bin_edges_list,
-            "hit_weights": self.hit_weights}))
+            cmpts.append(
+                (modules.BinningStatsMaker, {"bin_edges_list": self.bin_edges_list})
+            )
+        cmpts.append(
+            (
+                modules.ImageMaker,
+                {
+                    "bin_edges_list": self.bin_edges_list,
+                    "hit_weights": self.hit_weights,
+                },
+            )
+        )
         return cmpts
 
     def finish_file(self, f, summary):
@@ -327,7 +357,8 @@ class FileBinner(BaseProcessor):
 
         if save_plot:
             plot_binstats.plot_hist_of_files(
-                files=outfiles, save_as=outfolder+"binning_hist.pdf")
+                files=outfiles, save_as=outfolder + "binning_hist.pdf"
+            )
         return outfiles
 
     def get_names_and_shape(self):
@@ -371,23 +402,83 @@ class FileGraph(BaseProcessor):
         Options of the BaseProcessor.
 
     """
-    def __init__(self, max_n_hits,
-                 time_window=None,
-                 hit_infos=None,
-                 **kwargs):
+
+    def __init__(self, max_n_hits, time_window=None, hit_infos=None, **kwargs):
         self.max_n_hits = max_n_hits
         self.time_window = time_window
         self.hit_infos = hit_infos
         super().__init__(**kwargs)
 
     def get_cmpts_main(self):
-        return [((modules.PointMaker, {
-            "max_n_hits": self.max_n_hits,
-            "time_window": self.time_window,
-            "hit_infos": self.hit_infos,
-            "dset_n_hits": "EventInfo"}))]
+        return [
+            (
+                (
+                    modules.PointMaker,
+                    {
+                        "max_n_hits": self.max_n_hits,
+                        "time_window": self.time_window,
+                        "hit_infos": self.hit_infos,
+                        "dset_n_hits": "EventInfo",
+                    },
+                )
+            )
+        ]
 
     def finish_file(self, f, summary):
         super().finish_file(f, summary)
         for i, hit_info in enumerate(summary["PointMaker"]["hit_infos"]):
+            f["x"].attrs.create(f"hit_info_{i}", hit_info)
+
+
+class TriggeredFileGraph(BaseProcessor):
+    """
+    Turn km3 events to graph data.
+
+    The resulting file will have a dataset "x" of shape
+    (?, max_n_hits, len(hit_infos) + 1).
+    The column names of the last axis (i.e. hit_infos) are saved
+    as attributes of the dataset (f["x"].attrs).
+    The last column will always be called 'is_valid', and its 0 if
+    the entry is padded, and 1 otherwise.
+
+    Parameters
+    ----------
+    max_n_hits : int
+        Maximum number of hits that gets saved per event. If an event has
+        more, some will get cut randomly!
+    time_window : tuple, optional
+        Two ints (start, end). Hits outside of this time window will be cut
+        away (based on 'Hits/time'). Default: Keep all hits.
+    hit_infos : tuple, optional
+        Which entries in the '/Hits' Table will be kept. E.g. pos_x, time, ...
+        Default: Keep all entries.
+    kwargs
+        Options of the BaseProcessor.
+
+    """
+
+    def __init__(self, max_n_hits, time_window=None, hit_infos=None, **kwargs):
+        self.max_n_hits = max_n_hits
+        self.time_window = time_window
+        self.hit_infos = hit_infos
+        super().__init__(**kwargs)
+
+    def get_cmpts_main(self):
+        return [
+            (
+                (
+                    modules.TriggeredPointMaker,
+                    {
+                        "max_n_hits": self.max_n_hits,
+                        "time_window": self.time_window,
+                        "hit_infos": self.hit_infos,
+                        "dset_n_hits": "EventInfo",
+                    },
+                )
+            )
+        ]
+
+    def finish_file(self, f, summary):
+        super().finish_file(f, summary)
+        for i, hit_info in enumerate(summary["TriggeredPointMaker"]["hit_infos"]):
             f["x"].attrs.create(f"hit_info_{i}", hit_info)

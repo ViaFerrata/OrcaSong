@@ -7,7 +7,7 @@ import km3pipe as kp
 import km3modules as km
 import orcasong.plotting.plot_binstats as plot_binstats
 
-__author__ = 'Stefan Reck'
+__author__ = "Stefan Reck"
 
 
 class McInfoMaker(kp.Module):
@@ -25,8 +25,8 @@ class McInfoMaker(kp.Module):
     """
 
     def configure(self):
-        self.extractor = self.require('extractor')
-        self.store_as = self.require('store_as')
+        self.extractor = self.require("extractor")
+        self.store_as = self.require("store_as")
         self.to_float64 = self.get("to_float64", default=True)
 
     def process(self, blob):
@@ -41,7 +41,8 @@ class McInfoMaker(kp.Module):
         else:
             dtypes = None
         kp_hist = kp.dataclasses.Table(
-            track, dtype=dtypes,  h5loc='y', name='event_info')
+            track, dtype=dtypes, h5loc="y", name="event_info"
+        )
         if len(kp_hist) != 1:
             self.log.warning(
                 "Warning: Extracted mc_info should have len 1, "
@@ -66,8 +67,8 @@ class TimePreproc(kp.Module):
     """
 
     def configure(self):
-        self.add_t0 = self.get('add_t0', default=False)
-        self.center_time = self.get('center_time', default=True)
+        self.add_t0 = self.get("add_t0", default=False)
+        self.center_time = self.get("center_time", default=True)
 
         self._print_flags = set()
 
@@ -119,8 +120,8 @@ class ImageMaker(kp.Module):
     """
 
     def configure(self):
-        self.bin_edges_list = self.require('bin_edges_list')
-        self.hit_weights = self.get('hit_weights')
+        self.bin_edges_list = self.require("bin_edges_list")
+        self.hit_weights = self.get("hit_weights")
         self.store_as = "samples"
 
     def process(self, blob):
@@ -140,7 +141,8 @@ class ImageMaker(kp.Module):
 
         hist_one_event = histogram[np.newaxis, ...].astype(np.uint8)
         kp_hist = kp.dataclasses.NDArray(
-            hist_one_event, h5loc='x', title=name + "event_images")
+            hist_one_event, h5loc="x", title=name + "event_images"
+        )
 
         blob[self.store_as] = kp_hist
         return blob
@@ -175,7 +177,7 @@ class BinningStatsMaker(kp.Module):
     """
 
     def configure(self):
-        self.bin_edges_list = self.require('bin_edges_list')
+        self.bin_edges_list = self.require("bin_edges_list")
         self.res_increase = self.get("res_increase", default=5)
         self.bin_plot_freq = 1
 
@@ -202,8 +204,7 @@ class BinningStatsMaker(kp.Module):
         Increase resolution of given binning.
         """
         increased_n_bins = (len(bin_edges) - 1) * self.res_increase + 1
-        bin_edges = np.linspace(
-            bin_edges[0], bin_edges[-1], increased_n_bins)
+        bin_edges = np.linspace(bin_edges[0], bin_edges[-1], increased_n_bins)
 
         return bin_edges
 
@@ -222,8 +223,7 @@ class BinningStatsMaker(kp.Module):
                 out_neg = data[data < np.min(hist_bin_edges)].size
 
                 # get all hits which are not cut off by other bin edges
-                data = hits[bin_name][self._is_in_limits(
-                    hits, excluded=bin_name)]
+                data = hits[bin_name][self._is_in_limits(hits, excluded=bin_name)]
                 hist = np.histogram(data, bins=hist_bin_edges)[0]
 
                 self.hists[bin_name]["hist"] += hist
@@ -250,14 +250,15 @@ class BinningStatsMaker(kp.Module):
         return self.hists
 
     def _is_in_limits(self, hits, excluded=None):
-        """ Get which hits are in the limits defined by ALL bin edges
-        (except for given one). """
+        """Get which hits are in the limits defined by ALL bin edges
+        (except for given one)."""
         inside = None
         for dfield, edges in self.bin_edges_list:
             if dfield == excluded:
                 continue
-            is_in = np.logical_and(hits[dfield] >= min(edges),
-                                   hits[dfield] <= max(edges))
+            is_in = np.logical_and(
+                hits[dfield] >= min(edges), hits[dfield] <= max(edges)
+            )
             if inside is None:
                 inside = is_in
             else:
@@ -289,6 +290,7 @@ class PointMaker(kp.Module):
         this name (usually this is EventInfo).
 
     """
+
     def configure(self):
         self.max_n_hits = self.require("max_n_hits")
         self.hit_infos = self.get("hit_infos", default=None)
@@ -301,10 +303,12 @@ class PointMaker(kp.Module):
             self.hit_infos = blob["Hits"].dtype.names
         points, n_hits = self.get_points(blob)
         blob[self.store_as] = kp.NDArray(
-            np.expand_dims(points, 0), h5loc="x", title="nodes")
+            np.expand_dims(points, 0), h5loc="x", title="nodes"
+        )
         if self.dset_n_hits:
             blob[self.dset_n_hits] = blob[self.dset_n_hits].append_columns(
-                "n_hits_intime", n_hits)
+                "n_hits_intime", n_hits
+            )
         return blob
 
     def get_points(self, blob):
@@ -322,23 +326,24 @@ class PointMaker(kp.Module):
             Number of hits in the given time window.
 
         """
-        points = np.zeros(
-            (self.max_n_hits, len(self.hit_infos) + 1), dtype="float32")
+        points = np.zeros((self.max_n_hits, len(self.hit_infos) + 1), dtype="float32")
 
         hits = blob["Hits"]
         if self.time_window is not None:
             # remove hits outside of time window
-            hits = hits[np.logical_and(
-                hits["time"] >= self.time_window[0],
-                hits["time"] <= self.time_window[1],
-            )]
+            hits = hits[
+                np.logical_and(
+                    hits["time"] >= self.time_window[0],
+                    hits["time"] <= self.time_window[1],
+                )
+            ]
 
         n_hits = len(hits)
         if n_hits > self.max_n_hits:
             # if there are too many hits, take random ones, but keep order
             indices = np.arange(n_hits)
             np.random.shuffle(indices)
-            which = indices[:self.max_n_hits]
+            which = indices[: self.max_n_hits]
             which.sort()
             hits = hits[which]
 
@@ -346,11 +351,108 @@ class PointMaker(kp.Module):
             data = hits[which]
             points[:n_hits, i] = data
         # last column is whether there was a hit or no
-        points[:n_hits, -1] = 1.
+        points[:n_hits, -1] = 1.0
         return points, n_hits
 
     def finish(self):
-        return {"hit_infos": tuple(self.hit_infos) + ("is_valid", )}
+        return {"hit_infos": tuple(self.hit_infos) + ("is_valid",)}
+
+
+class TriggeredPointMaker(kp.Module):
+    """
+    Quick and dirty adaption of TriggeredPointMaker to only use triggered hits.
+
+    Store individual hit info from "Hits" in the blob as 'samples'.
+
+    Used for graph networks.
+
+    Attributes
+    ----------
+    max_n_hits : int
+        Maximum number of hits that gets saved per event. If an event has
+        more, some will get cut!
+    time_window : tuple, optional
+        Two ints (start, end). Hits outside of this time window will be cut
+        away (base on 'Hits/time').
+        Default: Keep all hits.
+    hit_infos : tuple, optional
+        Which entries in the '/Hits' Table will be kept. E.g. pos_x, time, ...
+        Default: Keep all entries.
+    dset_n_hits : str, optional
+        If given, store the number of hits that are in the time window
+        as a new column called 'n_hits_intime' in the dataset with
+        this name (usually this is EventInfo).
+
+    """
+
+    def configure(self):
+        self.max_n_hits = self.require("max_n_hits")
+        self.hit_infos = self.get("hit_infos", default=None)
+        self.time_window = self.get("time_window", default=None)
+        self.dset_n_hits = self.get("dset_n_hits", default=None)
+        self.store_as = "samples"
+
+    def process(self, blob):
+        if self.hit_infos is None:
+            self.hit_infos = blob["Hits"].dtype.names
+        points, n_hits = self.get_points(blob)
+        blob[self.store_as] = kp.NDArray(
+            np.expand_dims(points, 0), h5loc="x", title="nodes"
+        )
+        if self.dset_n_hits:
+            blob[self.dset_n_hits] = blob[self.dset_n_hits].append_columns(
+                "n_hits_intime", n_hits
+            )
+        return blob
+
+    def get_points(self, blob):
+        """
+        Get the desired hit infos from the blob.
+
+        Returns
+        -------
+        points : np.array
+            The hit infos of this event as a 2d matrix. No of rows are
+            fixed to the given max_n_hits. Each of the self.extract_keys,
+            is in one column + an additional column which is 1 for
+            actual hits, and 0 for if its a padded row.
+        n_hits : int
+            Number of hits in the given time window.
+
+        """
+        points = np.zeros((self.max_n_hits, len(self.hit_infos) + 1), dtype="float32")
+
+        hits = blob["Hits"]
+        triggered = hits.triggered
+        hits = hits[triggered != 0]
+        if self.time_window is not None:
+            # remove hits outside of time window
+            hits = hits[
+                np.logical_and(
+                    hits["time"] >= self.time_window[0],
+                    hits["time"] <= self.time_window[1],
+                )
+            ]
+
+        n_hits = len(hits)
+
+        if n_hits > self.max_n_hits:
+            # if there are too many hits, take random ones, but keep order
+            indices = np.arange(n_hits)
+            np.random.shuffle(indices)
+            which = indices[: self.max_n_hits]
+            which.sort()
+            hits = hits[which]
+
+        for i, which in enumerate(self.hit_infos):
+            data = hits[which]
+            points[:n_hits, i] = data
+        # last column is whether there was a hit or no
+        points[:n_hits, -1] = 1.0
+        return points, n_hits
+
+    def finish(self):
+        return {"hit_infos": tuple(self.hit_infos) + ("is_valid",)}
 
 
 class EventSkipper(kp.Module):
@@ -366,7 +468,7 @@ class EventSkipper(kp.Module):
     """
 
     def configure(self):
-        self.event_skipper = self.require('event_skipper')
+        self.event_skipper = self.require("event_skipper")
         self._not_skipped = 0
         self._skipped = 0
 
@@ -430,7 +532,8 @@ class DetApplier(kp.Module):
                 )
             self._calib_checked = True
         blob["Hits"] = self.calib.apply(
-            blob["Hits"], correct_slewing=self.correct_timeslew)
+            blob["Hits"], correct_slewing=self.correct_timeslew
+        )
         if "McHits" in blob:
             blob["McHits"] = self.calib.apply(blob["McHits"])
         if self.center_hits_to:
@@ -472,14 +575,18 @@ class HitRotator(kp.Module):
     """
 
     def configure(self):
-        self.theta = self.require('theta')
+        self.theta = self.require("theta")
 
     def process(self, blob):
-        x = blob['Hits']['x']
-        y = blob['Hits']['y']
+        x = blob["Hits"]["x"]
+        y = blob["Hits"]["y"]
 
-        rot_matrix = np.array([[np.cos(self.theta), - np.sin(self.theta)],
-                               [np.sin(self.theta), np.cos(self.theta)]])
+        rot_matrix = np.array(
+            [
+                [np.cos(self.theta), -np.sin(self.theta)],
+                [np.sin(self.theta), np.cos(self.theta)],
+            ]
+        )
 
         x_rot = []
         y_rot = []
@@ -490,8 +597,7 @@ class HitRotator(kp.Module):
             x_rot.append(rot[0][0])
             y_rot.append(rot[1][0])
 
-        blob['Hits']['x'] = x_rot
-        blob['Hits']['y'] = y_rot
+        blob["Hits"]["x"] = x_rot
+        blob["Hits"]["y"] = y_rot
 
         return blob
-
