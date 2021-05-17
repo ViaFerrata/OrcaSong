@@ -367,6 +367,8 @@ class FileGraph(BaseProcessor):
     hit_infos : tuple, optional
         Which entries in the '/Hits' Table will be kept. E.g. pos_x, time, ...
         Default: Keep all entries.
+    only_triggered_hits : bool
+        If true, use only triggered hits. Otherwise, use all hits.
     kwargs
         Options of the BaseProcessor.
 
@@ -374,10 +376,12 @@ class FileGraph(BaseProcessor):
     def __init__(self, max_n_hits,
                  time_window=None,
                  hit_infos=None,
+                 only_triggered_hits=False,
                  **kwargs):
         self.max_n_hits = max_n_hits
         self.time_window = time_window
         self.hit_infos = hit_infos
+        self.only_triggered_hits = only_triggered_hits
         super().__init__(**kwargs)
 
     def get_cmpts_main(self):
@@ -385,7 +389,9 @@ class FileGraph(BaseProcessor):
             "max_n_hits": self.max_n_hits,
             "time_window": self.time_window,
             "hit_infos": self.hit_infos,
-            "dset_n_hits": "EventInfo"}))]
+            "dset_n_hits": "EventInfo",
+            "only_triggered_hits": self.only_triggered_hits,
+        }))]
 
     def finish_file(self, f, summary):
         super().finish_file(f, summary)
