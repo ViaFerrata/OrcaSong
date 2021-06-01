@@ -288,6 +288,8 @@ class PointMaker(kp.Module):
         If given, store the number of hits that are in the time window
         as a new column called 'n_hits_intime' in the dataset with
         this name (usually this is EventInfo).
+    only_triggered_hits : bool
+        If true, use only triggered hits. Otherwise, use all hits.
 
     """
 
@@ -296,6 +298,7 @@ class PointMaker(kp.Module):
         self.hit_infos = self.get("hit_infos", default=None)
         self.time_window = self.get("time_window", default=None)
         self.dset_n_hits = self.get("dset_n_hits", default=None)
+        self.only_triggered_hits = self.get("only_triggered_hits", default=False)
         self.store_as = "samples"
 
     def process(self, blob):
@@ -329,6 +332,8 @@ class PointMaker(kp.Module):
         points = np.zeros((self.max_n_hits, len(self.hit_infos) + 1), dtype="float32")
 
         hits = blob["Hits"]
+        if self.only_triggered_hits:
+            hits = hits[hits.triggered != 0]
         if self.time_window is not None:
             # remove hits outside of time window
             hits = hits[
