@@ -28,9 +28,12 @@ class McInfoMaker(kp.Module):
         self.extractor = self.require('extractor')
         self.store_as = self.require('store_as')
         self.to_float64 = self.get("to_float64", default=True)
+        self.sort_y = self.get("sort_y", default=True)
 
     def process(self, blob):
         track = self.extractor(blob)
+        if self.sort_y:
+            track = {k: track[k] for k in sorted(track)}
         if self.to_float64:
             dtypes = []
             for key, v in track.items():

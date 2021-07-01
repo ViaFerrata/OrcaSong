@@ -1,0 +1,13 @@
+# for atmospheric muon bundles, ORCA4, corsika sibyll 2.3c, graph network
+mode = "graph"
+max_n_hits = 2000
+time_window = [-250, 1000]
+extractor = "bundle_mc"
+# center of mupage detector:
+center_hits_to = [0.020, -0.040, 111.186]
+
+[extractor_config]
+inactive_du = 1
+plane_point = [17, 17, 111]
+only_downgoing_tracks = true
+is_corsika = true
