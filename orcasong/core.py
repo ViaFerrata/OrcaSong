@@ -59,9 +59,11 @@ class BaseProcessor:
     overwrite : bool
         If True, overwrite the output file if it exists already.
         If False, throw an error instead.
-    mc_info_to_float64 : bool
-        Convert everything in the mcinfo array to float 64 (Default: True).
-        Hint: int dtypes can not store nan!
+    sort_y : bool
+        Sort the columns in the y dataset alphabetically.
+    y_to_float64 : bool
+        Convert everything in the y dataset to float 64 (Default: True).
+        Hint: Not all other dtypes can store nan!
 
     Attributes
     ----------
@@ -97,7 +99,8 @@ class BaseProcessor:
                  chunksize=32,
                  keep_event_info=False,
                  overwrite=True,
-                 mc_info_to_float64=True):
+                 sort_y=True,
+                 y_to_float64=True):
         self.extractor = extractor
         self.det_file = det_file
         self.correct_mc_time = correct_mc_time
@@ -109,7 +112,8 @@ class BaseProcessor:
         self.chunksize = chunksize
         self.keep_event_info = keep_event_info
         self.overwrite = overwrite
-        self.mc_info_to_float64 = mc_info_to_float64
+        self.sort_y = sort_y
+        self.y_to_float64 = y_to_float64
 
         self.n_statusbar = 1000
         self.n_memory_observer = 1000
@@ -212,7 +216,8 @@ class BaseProcessor:
         if self.extractor is not None:
             cmpts.append((modules.McInfoMaker, {
                 "extractor": self.extractor,
-                "to_float64": self.mc_info_to_float64,
+                "to_float64": self.y_to_float64,
+                "sort_y": self.sort_y,
                 "store_as": "mc_info"}))
 
         if self.event_skipper is not None:

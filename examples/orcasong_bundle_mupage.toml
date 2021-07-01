@@ -1,0 +1,10 @@
+# for atmospheric muon bundles, mupage ORCA4, graph network
+mode = "graph"
+max_n_hits = 2000
+time_window = [-250, 1000]
+extractor = "bundle_mc"
+
+[extractor_config]
+inactive_du = 1
+plane_point = [17, 17, 111]
+only_downgoing_tracks = true
