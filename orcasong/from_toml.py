@@ -1,3 +1,5 @@
+import os
+from pathlib import Path
 import toml
 import orcasong.core
 import orcasong.extractors as extractors
@@ -24,7 +26,9 @@ def add_parser_run(subparsers):
         "run",
         description='Produce a dl file from an aanet file.')
     parser.add_argument('infile', type=str, help="Aanet file in h5 format.")
-    parser.add_argument('toml_file', type=str, help="Orcasong configuration in toml format.")
+    parser.add_argument('toml_file', type=str, help=(
+        "Orcasong configuration in toml format. Use prefix 'orcasong:' to load "
+        "a toml from OrcaSong/examples."))
     parser.add_argument('--detx_file', type=str, default=None, help=(
         "Optional detx file to calibrate on the fly. Can not be used if a "
         "detx_file has also been given in the toml file."))
@@ -39,6 +43,8 @@ def run_orcasong(infile, toml_file, detx_file=None, outfile=None):
 
 
 def setup_processor(infile, toml_file, detx_file=None):
+    if toml_file.startswith("orcasong:"):
+        toml_file = _get_from_examples(toml_file[9:])
     cfg = toml.load(toml_file)
     processor = _get_verbose(cfg.pop("mode"), MODES)
 
@@ -64,3 +70,9 @@ def _get_verbose(key, d):
     if key not in d:
         raise KeyError(f"Unknown key '{key}' (available: {list(d.keys())})")
     return d[key]
+
+
+def _get_from_examples(filename):
+    direc = os.path.join(Path(orcasong.core.__file__).parents[1], "examples")
+    files = {file: os.path.join(direc, file) for file in os.listdir(direc)}
+    return _get_verbose(filename, files)

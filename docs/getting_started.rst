@@ -29,7 +29,10 @@ If you have an orcasong config file, you can use it via the command line like th
     orcasong run aanet_file.h5 orcasong_config.toml --detx_file detector.detx
 
 
-Check out the git repo here https://git.km3net.de/ml/OrcaSong/-/tree/master/examples for some examples of config files.
+For some examples of config files you can check out the git repo here
+https://git.km3net.de/ml/OrcaSong/-/tree/master/examples .
+These can be loaded from the command line by using the prefix
+``orcasong:`` before the filename, e.g. ``orcasong:orcasong_bundle_mupage.toml``.
 Alternatively, you can use the python frontend of orcasong.
 See :ref:`orcasong_page` for instructions on how to do this.
 
