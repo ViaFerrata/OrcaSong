@@ -30,9 +30,9 @@ If you have an orcasong config file, you can use it via the command line like th
 
 
 For some examples of config files you can check out the git repo here
-https://git.km3net.de/ml/OrcaSong/-/tree/master/examples .
+https://git.km3net.de/ml/OrcaSong/-/tree/master/configs .
 These can be loaded from the command line by using the prefix
-``orcasong:`` before the filename, e.g. ``orcasong:orcasong_bundle_mupage.toml``.
+``orcasong:`` before the filename, e.g. ``orcasong:bundle_ORCA4_data_v5-40.toml``.
 Alternatively, you can use the python frontend of orcasong.
 See :ref:`orcasong_page` for instructions on how to do this.
 
