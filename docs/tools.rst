@@ -23,7 +23,7 @@ and shuffle, to be directly submitted on computing clusters, are created.
 
 Can be used via the commandline::
 
-    orcasong/tools/make_data_split.py config.toml
+    orcasong make_data_split config.toml
 
 
 .. _concatenate:
