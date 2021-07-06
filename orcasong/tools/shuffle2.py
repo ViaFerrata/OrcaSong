@@ -146,8 +146,9 @@ def get_n_iterations(
     n_iterations = int(
         np.ceil(np.log(dset_info["n_chunks"]) / np.log(dset_info["chunks_per_batch"]))
     )
+    print(f"Largest dataset: {dset_info['name']}")
     print(f"Total chunks: {dset_info['n_chunks']}")
-    print(f"Chunks per batch: {dset_info['chunks_per_batch']}")
+    print(f"Max. chunks per batch: {dset_info['chunks_per_batch']}")
     print(f"--> min iterations for full shuffle: {n_iterations}")
     return n_iterations
 
