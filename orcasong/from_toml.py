@@ -11,8 +11,8 @@ EXTRACTORS = {
     "nu_chain_muon": extractors.get_muon_mc_info_extr,
     "nu_chain_noise": extractors.get_random_noise_mc_info_extr,
     "nu_chain_data": extractors.get_real_data_info_extr,
-    "bundle_mc": extractors.bundles.BundleMCExtractor,
-    "bundle_data": extractors.bundles.BundleDataExtractor,
+    "bundle_mc": extractors.BundleMCExtractor,
+    "bundle_data": extractors.BundleDataExtractor,
 }
 
 MODES = {
