@@ -273,3 +273,9 @@ def _slicify(fancy_indices):
 def _get_temp_filenames(output_file, number):
     path, file = os.path.split(output_file)
     return [os.path.join(path, f"temp_iteration_{i}_{file}") for i in range(number)]
+
+
+def run_parser():
+    # TODO deprecated
+    raise NotImplementedError(
+        "h5shuffle2 has been renamed to orcasong h5shuffle2")

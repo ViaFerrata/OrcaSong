@@ -219,20 +219,8 @@ def get_all_h5_files():
 
 def main():
     # TODO deprecated
-    warnings.warn(
-        "plot_binstats is deprecated and has been renamed to orcasong plot_binstats")
-    parser = argparse.ArgumentParser(
-        description='Generate a plot with statistics of the binning. '
-                    'Can only be used on files generated with the FileBinner when '
-                    'add_bin_stats was set to true (default). ')
-    parser.add_argument(
-        '--save_as', type=str, default="bin_stats_plot.pdf",
-        help='Filename of the plot. Default: bin_stats_plot.pdf.')
-    parser.add_argument(
-        'files', type=str, nargs='*', default=None,
-        help='File(s) to plot. Default: Plot for all h5 files in current dir.')
-
-    plot_hist_of_files(**vars(parser.parse_args()))
+    raise NotImplementedError(
+        "plot_binstats has been renamed to orcasong plot_binstats")
 
 
 def add_parser(subparsers):
