@@ -58,7 +58,9 @@ class TestFileConcatenator(TestCase):
 
     def test_get_cumu_rows(self):
         fc = conc.FileConcatenator(self.dummy_files)
-        np.testing.assert_array_equal(fc.cumu_rows, [0, 10, 25])
+        self.assertDictEqual(
+            fc.cumu_rows, {'numpy_array': [0, 10, 25], 'rec_array': [0, 10, 25]}
+        )
 
     def test_concatenate_used_files(self):
         fc = conc.FileConcatenator(self.dummy_files)
