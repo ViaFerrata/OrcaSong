@@ -272,7 +272,12 @@ def get_compopts(file):
 
     """
     with h5py.File(file, 'r') as f:
-        dset = f[strip_keys(list(f.keys()))[0]]
+        # for reading the comptopts, take first datsets thats not indexed
+        dset_names = strip_keys(list(f.keys()))
+        for dset_name in dset_names:
+            if f"{dset_name}_indices" not in dset_names:
+                break
+        dset = f[dset_name]
         comptopts = {}
         comptopts["complib"] = dset.compression
         if comptopts["complib"] == 'lzf':
