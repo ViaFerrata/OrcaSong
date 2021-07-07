@@ -145,9 +145,9 @@ def get_n_iterations(
         max_ram = get_max_ram(max_ram_fraction=max_ram_fraction)
     with h5py.File(input_file, "r") as f_in:
         dset_info = _get_largest_dset(f_in, datasets, max_ram)
-    n_iterations = int(
+    n_iterations = np.amax((1, int(
         np.ceil(np.log(dset_info["n_chunks"]) / np.log(dset_info["chunks_per_batch"]))
-    )
+    )))
     print(f"Largest dataset: {dset_info['name']}")
     print(f"Total chunks: {dset_info['n_chunks']}")
     print(f"Max. chunks per batch: {dset_info['chunks_per_batch']}")

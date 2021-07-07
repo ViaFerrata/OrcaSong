@@ -4,6 +4,7 @@ import h5py
 import numpy as np
 import orcasong.tools.postproc as postproc
 import orcasong.tools.shuffle2 as shuffle2
+from .test_concatenate import BaseTestClass
 
 __author__ = 'Stefan Reck'
 
@@ -88,6 +89,40 @@ class TestShuffleV2(TestCase):
         finally:
             if os.path.exists(fname):
                 os.remove(fname)
+
+
+class TestShuffleIndexed(BaseTestClass.BaseIndexedFile):
+    def setUp(self) -> None:
+        self.outfile = "temp_out.h5"
+        shuffle2.h5shuffle2(
+            self.infile.name,
+            output_file=self.outfile,
+            datasets=("x",),
+            seed=2,
+        )
+
+    def tearDown(self) -> None:
+        if os.path.exists(self.outfile):
+            os.remove(self.outfile)
+
+    def test_check_x(self):
+        with h5py.File(self.outfile) as f_out:
+            np.testing.assert_array_equal(
+                f_out["x"],
+                np.concatenate([np.arange(17, 20), np.arange(5, 17), np.arange(0, 5)])
+            )
+
+    def test_check_x_indices_n_items(self):
+        with h5py.File(self.outfile) as f_out:
+            target_n_items = np.array([3, 12, 5])
+            np.testing.assert_array_equal(
+                f_out["x_indices"]["n_items"], target_n_items)
+
+    def test_check_x_indices_index(self):
+        with h5py.File(self.outfile) as f_out:
+            target_index = np.array([0, 3, 15])
+            np.testing.assert_array_equal(
+                f_out["x_indices"]["index"], target_index)
 
 
 def _make_shuffle_dummy_file(filepath):
