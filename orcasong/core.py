@@ -378,12 +378,14 @@ class FileGraph(BaseProcessor):
         Options of the BaseProcessor.
 
     """
-    def __init__(self, max_n_hits,
+    def __init__(self, max_n_hits=None,
+                 padded=True,
                  time_window=None,
                  hit_infos=None,
                  only_triggered_hits=False,
                  **kwargs):
         self.max_n_hits = max_n_hits
+        self.padded = padded
         self.time_window = time_window
         self.hit_infos = hit_infos
         self.only_triggered_hits = only_triggered_hits
@@ -392,6 +394,7 @@ class FileGraph(BaseProcessor):
     def get_cmpts_main(self):
         return [((modules.PointMaker, {
             "max_n_hits": self.max_n_hits,
+            "padded": self.padded,
             "time_window": self.time_window,
             "hit_infos": self.hit_infos,
             "dset_n_hits": "EventInfo",
@@ -402,3 +405,4 @@ class FileGraph(BaseProcessor):
         super().finish_file(f, summary)
         for i, hit_info in enumerate(summary["PointMaker"]["hit_infos"]):
             f["x"].attrs.create(f"hit_info_{i}", hit_info)
+        f["x"].attrs.create("indexed", not self.padded)

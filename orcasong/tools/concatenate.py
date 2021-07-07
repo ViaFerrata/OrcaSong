@@ -2,7 +2,6 @@ import os
 import time
 import h5py
 import numpy as np
-import argparse
 import warnings
 
 
@@ -29,8 +28,8 @@ class FileConcatenator:
     comptopts : dict
         Options for compression. They are read from the first input file,
         but they can be updated as well during init.
-    cumu_rows : np.array
-        The cumulative number of rows (axis_0) of the specified
+    cumu_rows : dict
+        Foe each dataset, the cumulative number of rows (axis_0) of the specified
         input .h5 files (i.e. [0,100,200,300,...] if each file has 100 rows).
 
     """
@@ -39,7 +38,6 @@ class FileConcatenator:
         print(f"Checking {len(input_files)} files ...")
 
         self.input_files, self.cumu_rows = self._get_cumu_rows(input_files)
-        print(f"Total rows:\t{self.cumu_rows[-1]}")
 
         # Get compression options from first file in the list
         self.comptopts = get_compopts(self.input_files[0])
@@ -111,44 +109,40 @@ class FileConcatenator:
 
     def _conc_file(self, f_in, f_out, input_file, input_file_nmbr):
         """ Conc one file to the output. """
-        for folder_name in f_in:
-            if is_folder_ignored(folder_name):
+        for dset_name in f_in:
+            if is_folder_ignored(dset_name):
                 # we dont need datasets created by pytables anymore
                 continue
-            input_dataset = f_in[folder_name]
+            input_dataset = f_in[dset_name]
             folder_data = input_dataset[()]
 
             if input_file_nmbr > 0:
                 # we need to add the current number of the
                 # group_id / index in the file_output to the
                 # group_ids / indices of the file that is to be appended
-                try:
-                    if folder_name.endswith("_indices") and \
-                            "index" in folder_data.dtype.names:
-                        column_name = "index"
-                    elif "group_id" in folder_data.dtype.names:
-                        column_name = "group_id"
-                    else:
-                        column_name = None
-                except TypeError:
-                    column_name = None
-                if column_name is not None:
-                    # add 1 because the group_ids / indices start with 0
-                    folder_data[column_name] += \
-                        np.amax(f_out[folder_name][column_name]) + 1
+                last_index = self.cumu_rows[dset_name][input_file_nmbr] - 1
+                if (dset_name.endswith("_indices") and
+                        "index" in folder_data.dtype.names):
+                    folder_data["index"] += (
+                            f_out[dset_name][last_index]["index"] +
+                            f_out[dset_name][last_index]["n_items"]
+                    )
+                elif folder_data.dtype.names and "group_id" in folder_data.dtype.names:
+                    # add 1 because the group_ids start with 0
+                    folder_data["group_id"] += f_out[dset_name][last_index]["group_id"] + 1
 
             if self._modify_folder:
                 data_mody = self._modify(
-                    input_file, folder_data, folder_name)
+                    input_file, folder_data, dset_name)
                 if data_mody is not None:
                     folder_data = data_mody
 
             if input_file_nmbr == 0:
                 # first file; create the dataset
-                dset_shape = (self.cumu_rows[-1],) + folder_data.shape[1:]
-                print(f"\tCreating dataset '{folder_name}' with shape {dset_shape}")
+                dset_shape = (self.cumu_rows[dset_name][-1],) + folder_data.shape[1:]
+                print(f"\tCreating dataset '{dset_name}' with shape {dset_shape}")
                 output_dataset = f_out.create_dataset(
-                    folder_name,
+                    dset_name,
                     data=folder_data,
                     maxshape=dset_shape,
                     chunks=(self.comptopts["chunksize"],) + folder_data.shape[1:],
@@ -156,37 +150,40 @@ class FileConcatenator:
                     compression_opts=self.comptopts["complevel"],
                     shuffle=self.comptopts["shuffle"],
                 )
-                output_dataset.resize(self.cumu_rows[-1], axis=0)
+                output_dataset.resize(self.cumu_rows[dset_name][-1], axis=0)
 
             else:
-                f_out[folder_name][
-                    self.cumu_rows[input_file_nmbr]:self.cumu_rows[input_file_nmbr + 1]] = folder_data
+                f_out[dset_name][
+                    self.cumu_rows[dset_name][input_file_nmbr]:
+                    self.cumu_rows[dset_name][input_file_nmbr + 1]
+                ] = folder_data
 
     def _modify(self, input_file, folder_data, folder_name):
         raise NotImplementedError
 
     def _get_cumu_rows(self, input_files):
         """
-        Get the cumulative number of rows of the input_files.
-        Also checks if all the files can be safely concatenated to the
-        first one.
+        Checks if all the files can be safely concatenated to the first one.
 
         """
         # names of datasets that will be in the output; read from first file
         with h5py.File(input_files[0], 'r') as f:
-            keys_stripped = strip_keys(list(f.keys()))
+            target_datasets = strip_keys(list(f.keys()))
 
-        errors, rows_per_file, valid_input_files = [], [0], []
+        errors, valid_input_files = [], []
+        cumu_rows = {k: [0] for k in target_datasets}
+
         for i, file_name in enumerate(input_files, start=1):
             file_name = os.path.abspath(file_name)
             try:
-                rows_this_file = _get_rows(file_name, keys_stripped)
+                rows_this_file = _get_rows(file_name, target_datasets)
             except Exception as e:
                 errors.append(e)
                 warnings.warn(f"Error during check of file {i}: {file_name}")
                 continue
             valid_input_files.append(file_name)
-            rows_per_file.append(rows_this_file)
+            for k in target_datasets:
+                cumu_rows[k].append(cumu_rows[k][-1] + rows_this_file[k])
 
         if errors:
             print("\n------- Errors -------\n----------------------")
@@ -200,8 +197,8 @@ class FileConcatenator:
                 raise OSError(err_str)
 
         print(f"Valid input files: {len(valid_input_files)}/{len(input_files)}")
-        print("Datasets:\t" + ", ".join(keys_stripped))
-        return valid_input_files, np.cumsum(rows_per_file)
+        print("Datasets:\t" + ", ".join(target_datasets))
+        return valid_input_files, cumu_rows
 
 
 def _get_rows(file_name, target_datasets):
@@ -215,11 +212,15 @@ def _get_rows(file_name, target_datasets):
                 f"It has {f.keys()} First file: {target_datasets}"
             )
         # check if all target datasets in the file have the same length
-        rows = [f[k].shape[0] for k in target_datasets]
-        if not all(row == rows[0] for row in rows):
+        # for datasets that have indices: only check indices
+        plain_rows = [
+            f[k].shape[0] for k in target_datasets
+            if not (f[k].attrs.get("indexed") and f"{k}_indices" in target_datasets)
+        ]
+        if not all(row == plain_rows[0] for row in plain_rows):
             raise ValueError(
                 f"Datasets in file {file_name} have varying length! "
-                f"{dict(zip(target_datasets, rows))}"
+                f"{dict(zip(target_datasets, plain_rows))}"
             )
         # check if the file has additional datasets apart from the target keys
         if not all(k in target_datasets for k in strip_keys(list(f.keys()))):
@@ -229,7 +230,8 @@ def _get_rows(file_name, target_datasets):
                 f"This file: {strip_keys(list(f.keys()))} "
                 f"First file {target_datasets}"
             )
-    return rows[0]
+        rows = {k: f[k].shape[0] for k in target_datasets}
+    return rows
 
 
 def strip_keys(f_keys):

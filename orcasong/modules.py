@@ -295,7 +295,8 @@ class PointMaker(kp.Module):
 
     """
     def configure(self):
-        self.max_n_hits = self.require("max_n_hits")
+        self.max_n_hits = self.get("max_n_hits", default=None)
+        self.padded = self.get("padded", default=True)
         self.hit_infos = self.get("hit_infos", default=None)
         self.time_window = self.get("time_window", default=None)
         self.dset_n_hits = self.get("dset_n_hits", default=None)
@@ -303,11 +304,12 @@ class PointMaker(kp.Module):
         self.store_as = "samples"
 
     def process(self, blob):
+        if self.padded and self.max_n_hits is None:
+            raise ValueError("Have to specify max_n_hits if padded is True")
         if self.hit_infos is None:
             self.hit_infos = blob["Hits"].dtype.names
         points, n_hits = self.get_points(blob)
-        blob[self.store_as] = kp.NDArray(
-            np.expand_dims(points, 0), h5loc="x", title="nodes")
+        blob[self.store_as] = kp.NDArray(points, h5loc="x", title="nodes")
         if self.dset_n_hits:
             blob[self.dset_n_hits] = blob[self.dset_n_hits].append_columns(
                 "n_hits_intime", n_hits)
@@ -326,11 +328,9 @@ class PointMaker(kp.Module):
             actual hits, and 0 for if its a padded row.
         n_hits : int
             Number of hits in the given time window.
+            Can be stored as n_hits_intime.
 
         """
-        points = np.zeros(
-            (self.max_n_hits, len(self.hit_infos) + 1), dtype="float32")
-
         hits = blob["Hits"]
         if self.only_triggered_hits:
             hits = hits[hits.triggered != 0]
@@ -342,7 +342,7 @@ class PointMaker(kp.Module):
             )]
 
         n_hits = len(hits)
-        if n_hits > self.max_n_hits:
+        if self.max_n_hits is not None and n_hits > self.max_n_hits:
             # if there are too many hits, take random ones, but keep order
             indices = np.arange(n_hits)
             np.random.shuffle(indices)
@@ -350,15 +350,27 @@ class PointMaker(kp.Module):
             which.sort()
             hits = hits[which]
 
-        for i, which in enumerate(self.hit_infos):
-            data = hits[which]
-            points[:n_hits, i] = data
-        # last column is whether there was a hit or no
-        points[:n_hits, -1] = 1.
+        if self.padded:
+            points = np.zeros(
+                (self.max_n_hits, len(self.hit_infos) + 1), dtype="float32")
+            for i, which in enumerate(self.hit_infos):
+                points[:n_hits, i] = hits[which]
+            # last column is whether there was a hit or no
+            points[:n_hits, -1] = 1.
+            # store along new axis
+            points = np.expand_dims(points, 0)
+        else:
+            points = np.zeros(
+                (len(hits), len(self.hit_infos)), dtype="float32")
+            for i, which in enumerate(self.hit_infos):
+                points[:, i] = hits[which]
         return points, n_hits
 
     def finish(self):
-        return {"hit_infos": tuple(self.hit_infos) + ("is_valid", )}
+        columns = tuple(self.hit_infos)
+        if self.padded:
+            columns += ("is_valid", )
+        return {"hit_infos": columns}
 
 
 class EventSkipper(kp.Module):
