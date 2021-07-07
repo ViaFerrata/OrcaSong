@@ -366,6 +366,11 @@ class FileGraph(BaseProcessor):
     max_n_hits : int
         Maximum number of hits that gets saved per event. If an event has
         more, some will get cut randomly!
+    padded : bool
+        If True, pad hits of each event with 0s to a fixed width, so that they can
+        be stored as 3d arrays. max_n_hits needs to be given in that case.
+        If False, save events with variable length as a 2d arrays
+        using km3pipe's indices.
     time_window : tuple, optional
         Two ints (start, end). Hits outside of this time window will be cut
         away (based on 'Hits/time'). Default: Keep all hits.
