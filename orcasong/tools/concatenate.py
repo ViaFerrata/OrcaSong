@@ -1,7 +1,6 @@
 import os
 import time
 import h5py
-import numpy as np
 import warnings
 
 
@@ -44,8 +43,6 @@ class FileConcatenator:
         if comptopts_update:
             self.comptopts.update(comptopts_update)
         print("\n".join([f"  {k}:\t{v}" for k, v in self.comptopts.items()]))
-
-        self._modify_folder = False
 
     @classmethod
     def from_list(cls, list_file, n_files=None, **kwargs):
@@ -90,7 +87,7 @@ class FileConcatenator:
                 print(f'Processing file {input_file_nmbr+1}/'
                       f'{len(self.input_files)}: {input_file}')
                 with h5py.File(input_file, 'r') as f_in:
-                    self._conc_file(f_in, f_out, input_file, input_file_nmbr)
+                    self._conc_file(f_in, f_out, input_file_nmbr)
                 f_out.flush()
             elapsed_time = time.time() - start_time
 
@@ -107,7 +104,7 @@ class FileConcatenator:
               f"\nElapsed time: {elapsed_time/60:.2f} min "
               f"({elapsed_time/len(self.input_files):.2f} s per file)")
 
-    def _conc_file(self, f_in, f_out, input_file, input_file_nmbr):
+    def _conc_file(self, f_in, f_out, input_file_nmbr):
         """ Conc one file to the output. """
         for dset_name in f_in:
             if is_folder_ignored(dset_name):
@@ -131,12 +128,6 @@ class FileConcatenator:
                     # add 1 because the group_ids start with 0
                     folder_data["group_id"] += f_out[dset_name][last_index]["group_id"] + 1
 
-            if self._modify_folder:
-                data_mody = self._modify(
-                    input_file, folder_data, dset_name)
-                if data_mody is not None:
-                    folder_data = data_mody
-
             if input_file_nmbr == 0:
                 # first file; create the dataset
                 dset_shape = (self.cumu_rows[dset_name][-1],) + folder_data.shape[1:]
@@ -157,9 +148,6 @@ class FileConcatenator:
                     self.cumu_rows[dset_name][input_file_nmbr]:
                     self.cumu_rows[dset_name][input_file_nmbr + 1]
                 ] = folder_data
-
-    def _modify(self, input_file, folder_data, folder_name):
-        raise NotImplementedError
 
     def _get_cumu_rows(self, input_files):
         """
