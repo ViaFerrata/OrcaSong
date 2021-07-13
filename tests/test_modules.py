@@ -192,6 +192,19 @@ class TestPointMaker(TestCase):
             max_n_hits=4)
         result = pm.process(self.input_blob_1)["samples"]
         self.assertTupleEqual(
+            pm.finish()["hit_infos"], ("t0", "time", "x"))
+        target = np.array(
+            [[0.1, 1, 4],
+             [0.2, 2, 5],
+             [0.3, 3, 6]],
+            dtype="float32")
+        np.testing.assert_array_equal(result, target)
+
+    def test_default_settings_fixed_length(self):
+        pm = modules.PointMaker(
+            max_n_hits=4, fixed_length=True)
+        result = pm.process(self.input_blob_1)["samples"]
+        self.assertTupleEqual(
             pm.finish()["hit_infos"], ("t0", "time", "x", "is_valid"))
         target = np.array(
             [[[0.1, 1, 4, 1],
@@ -200,12 +213,13 @@ class TestPointMaker(TestCase):
               [0,   0, 0, 0]]], dtype="float32")
         np.testing.assert_array_equal(result, target)
 
-    def test_input_blob_1(self):
+    def test_input_blob_1_fixed_length(self):
         pm = modules.PointMaker(
             max_n_hits=4,
             hit_infos=("x", "time"),
             time_window=None,
             dset_n_hits=None,
+            fixed_length=True,
         )
         result = pm.process(self.input_blob_1)["samples"]
         self.assertTupleEqual(
@@ -217,7 +231,7 @@ class TestPointMaker(TestCase):
               [0, 0, 0]]], dtype="float32")
         np.testing.assert_array_equal(result, target)
 
-    def test_input_blob_1_max_n_hits(self):
+    def test_input_blob_1_max_n_hits_fixed_length(self):
         input_blob_long = {
             "Hits": kp.Table({
                 "x": np.random.rand(1000).astype("float32"),
@@ -227,18 +241,20 @@ class TestPointMaker(TestCase):
             hit_infos=("x",),
             time_window=None,
             dset_n_hits=None,
+            fixed_length=True,
         ).process(input_blob_long)["samples"]
 
         self.assertSequenceEqual(result.shape, (1, 10, 2))
         self.assertTrue(all(
             np.isin(result[0, :, 0], input_blob_long["Hits"]["x"])))
 
-    def test_input_blob_time_window(self):
+    def test_input_blob_time_window_fixed_length(self):
         result = modules.PointMaker(
             max_n_hits=4,
             hit_infos=("x", "time"),
             time_window=[1, 2],
             dset_n_hits=None,
+            fixed_length=True,
         ).process(self.input_blob_1)["samples"]
         target = np.array(
             [[[4, 1, 1],
@@ -247,12 +263,13 @@ class TestPointMaker(TestCase):
               [0, 0, 0]]], dtype="float32")
         np.testing.assert_array_equal(result, target)
 
-    def test_input_blob_time_window_nhits(self):
+    def test_input_blob_time_window_nhits_fixed_length(self):
         result = modules.PointMaker(
             max_n_hits=4,
             hit_infos=("x", "time"),
             time_window=[1, 2],
             dset_n_hits="EventInfo",
+            fixed_length=True,
         ).process(self.input_blob_1)["EventInfo"]
         print(result)
         self.assertEqual(result["n_hits_intime"], 2)

@@ -83,7 +83,9 @@ class TestFileGraph(TestCase):
     """ Assert that the FileGraph still produces the same output. """
     @classmethod
     def setUpClass(cls):
-        cls.proc = orcasong.core.FileGraph(
+        # produce test file, once for fixed_length (old format), and once
+        # for the new format
+        cls.proc_fixed_length, cls.proc = [orcasong.core.FileGraph(
             max_n_hits=3,
             time_window=[0, 50],
             hit_infos=["pos_z", "time", "channel_id"],
@@ -92,8 +94,14 @@ class TestFileGraph(TestCase):
             add_t0=False,
             keep_event_info=True,
             correct_timeslew=False,
-        )
+            fixed_length=fixed_length,
+        ) for fixed_length in (True, False)]
         cls.tmpdir = tempfile.TemporaryDirectory()
+
+        cls.outfile_fixed_length = os.path.join(cls.tmpdir.name, "binned_fixed_length.h5")
+        cls.proc_fixed_length.run(infile=MUPAGE_FILE, outfile=cls.outfile_fixed_length)
+        cls.f_fixed_length = h5py.File(cls.outfile_fixed_length, "r")
+
         cls.outfile = os.path.join(cls.tmpdir.name, "binned.h5")
         cls.proc.run(infile=MUPAGE_FILE, outfile=cls.outfile)
         cls.f = h5py.File(cls.outfile, "r")
@@ -101,12 +109,30 @@ class TestFileGraph(TestCase):
     @classmethod
     def tearDownClass(cls):
         cls.f.close()
+        cls.f_fixed_length.close()
         cls.tmpdir.cleanup()
 
-    def test_keys(self):
-        self.assertSetEqual(set(self.f.keys()), {
+    def test_keys_fixed_length(self):
+        self.assertSetEqual(set(self.f_fixed_length.keys()), {
             '_i_event_info', '_i_group_info', '_i_y',
             'event_info', 'group_info', 'x', 'x_indices', 'y'})
+
+    def test_keys(self):
+        self.assertSetEqual(set(self.f_fixed_length.keys()), {
+            '_i_event_info', '_i_group_info', '_i_y',
+            'event_info', 'group_info', 'x', 'x_indices', 'y'})
+
+    def test_x_attrs_fixed_length(self):
+        to_check = {
+            "hit_info_0": "pos_z",
+            "hit_info_1": "time",
+            "hit_info_2": "channel_id",
+            "hit_info_3": "is_valid",
+            "indexed": False,
+        }
+        attrs = dict(self.f_fixed_length["x"].attrs)
+        for k, v in to_check.items():
+            self.assertTrue(attrs[k] == v)
 
     def test_x_attrs(self):
         to_check = {
@@ -114,12 +140,13 @@ class TestFileGraph(TestCase):
             "hit_info_1": "time",
             "hit_info_2": "channel_id",
             "hit_info_3": "is_valid",
+            "indexed": True,
         }
         attrs = dict(self.f["x"].attrs)
         for k, v in to_check.items():
             self.assertTrue(attrs[k] == v)
 
-    def test_x(self):
+    def test_x_fixed_length(self):
         target = np.array([
             [[676.941,  13.,  30.,   1.],
              [461.111,  32.,   9.,   1.],
@@ -131,7 +158,32 @@ class TestFileGraph(TestCase):
              [605.111,   9.,   4.,   1.],
              [424.889,  46.,  29.,   1.]]
         ], dtype=np.float32)
+        np.testing.assert_equal(target, self.f_fixed_length["x"])
+
+    def test_x(self):
+        target = np.array([
+            [676.941,  13.,  30.],
+            [461.111,  32.,   9.],
+            [424.941,   1.,  30.],
+            [172.83,  32.,  25.],
+            [316.83,   2.,  14.],
+            [461.059,   1.,   3.],
+            [496.83,  34.,  25.],
+            [605.111,   9.,   4.],
+            [424.889,  46.,  29.],
+        ], dtype=np.float32)
         np.testing.assert_equal(target, self.f["x"])
+
+    def test_y_fixed_length(self):
+        y = self.f_fixed_length["y"][()]
+        target = {
+            'event_id': np.array([0., 1., 2.]),
+            'run_id': np.array([1., 1., 1.]),
+            'trigger_mask': np.array([18., 18., 16.]),
+            'group_id': np.array([0, 1, 2]),
+        }
+        for k, v in target.items():
+            np.testing.assert_equal(y[k], v)
 
     def test_y(self):
         y = self.f["y"][()]
