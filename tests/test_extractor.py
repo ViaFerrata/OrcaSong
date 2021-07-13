@@ -17,6 +17,7 @@ DET_FILE_NEUTRINO = os.path.join(test_dir, "data", "KM3NeT_00000049_20200707.det
 NO_COMPLE_RECO_FILE = os.path.join(test_dir, "data", "arca_test_without_some_jmuon_recos.h5")
 ARCA_DETX = os.path.join(test_dir, "data", "KM3NeT_-00000001_20171212.detx")
 
+
 class TestStdRecoExtractor(TestCase):
     """ Assert that the neutrino info is extracted correctly. File has 18 events. """
 
@@ -31,6 +32,7 @@ class TestStdRecoExtractor(TestCase):
             det_file=DET_FILE_NEUTRINO,
             add_t0=True,
             keep_event_info=True,
+            fixed_length=True,
         )
         cls.tmpdir = tempfile.TemporaryDirectory()
         cls.outfile = os.path.join(cls.tmpdir.name, "binned.h5")
@@ -50,6 +52,7 @@ class TestStdRecoExtractor(TestCase):
             det_file=ARCA_DETX,
             add_t0=True,
             keep_event_info=True,
+            fixed_length=True,
         )
         cls.outfile_arca = os.path.join(cls.tmpdir.name, "binned_arca.h5")
         cls.proc.run(infile=NO_COMPLE_RECO_FILE, outfile=cls.outfile_arca)

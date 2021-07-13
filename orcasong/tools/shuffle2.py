@@ -6,6 +6,7 @@ import numpy as np
 import psutil
 import h5py
 from km3pipe.sys import peak_memory_usage
+import awkward as ak
 
 from orcasong.tools.postproc import get_filepath_output, copy_used_files
 from orcasong.tools.concatenate import copy_attrs
@@ -103,9 +104,10 @@ def _shuffle_file(
         output_file + "_temp_" + time.strftime("%d-%m-%Y-%H-%M-%S", time.gmtime())
     )
     with h5py.File(input_file, "r") as f_in:
-        _check_dsets(f_in, datasets)
-        dset_info = _get_largest_dset(f_in, datasets, max_ram)
-        print(f"Shuffling datasets {datasets}")
+        dsets = (*datasets, *_get_indexed_datasets(f_in, datasets))
+        _check_dsets(f_in, dsets)
+        dset_info = _get_largest_dset(f_in, dsets, max_ram)
+        print(f"Shuffling datasets {dsets}")
         indices_per_batch = _get_indices_per_batch(
             dset_info["n_batches"],
             dset_info["n_chunks"],
@@ -113,7 +115,7 @@ def _shuffle_file(
         )
 
         with h5py.File(temp_output_file, "x") as f_out:
-            for dset_name in datasets:
+            for dset_name in dsets:
                 print("Creating dataset", dset_name)
                 _shuffle_dset(f_out, f_in, dset_name, indices_per_batch)
                 print("Done!")
@@ -143,9 +145,9 @@ def get_n_iterations(
         max_ram = get_max_ram(max_ram_fraction=max_ram_fraction)
     with h5py.File(input_file, "r") as f_in:
         dset_info = _get_largest_dset(f_in, datasets, max_ram)
-    n_iterations = int(
+    n_iterations = np.amax((1, int(
         np.ceil(np.log(dset_info["n_chunks"]) / np.log(dset_info["chunks_per_batch"]))
-    )
+    )))
     print(f"Largest dataset: {dset_info['name']}")
     print(f"Total chunks: {dset_info['n_chunks']}")
     print(f"Max. chunks per batch: {dset_info['chunks_per_batch']}")
@@ -188,28 +190,53 @@ def _get_largest_dset(f, datasets, max_ram):
 
 def _check_dsets(f, datasets):
     # check if all datasets have the same number of lines
-    n_lines_list = [len(f[dset_name]) for dset_name in datasets]
+    n_lines_list = []
+    for dset_name in datasets:
+        if dset_is_indexed(f, dset_name):
+            dset_name = f"{dset_name}_indices"
+        n_lines_list.append(len(f[dset_name]))
+
     if not all([n == n_lines_list[0] for n in n_lines_list]):
         raise ValueError(
             f"Datasets have different lengths! " f"{n_lines_list}"
         )
 
 
+def _get_indexed_datasets(f, datasets):
+    indexed_datasets = []
+    for dset_name in datasets:
+        if dset_is_indexed(f, dset_name):
+            indexed_datasets.append(f"{dset_name}_indices")
+    return indexed_datasets
+
+
 def _get_dset_infos(f, datasets, max_ram):
     """ Retrieve infos for each dataset. """
     dset_infos = []
     for i, name in enumerate(datasets):
-        dset = f[name]
+        if name.endswith("_indices"):
+            continue
+        if dset_is_indexed(f, name):
+            # for indexed dataset: take average bytes in x per line in x_indices
+            dset_data = f[name]
+            name = f"{name}_indices"
+            dset = f[name]
+            bytes_per_line = (
+                np.asarray(dset[0]).nbytes *
+                len(dset_data) / len(dset)
+            )
+        else:
+            dset = f[name]
+            bytes_per_line = np.asarray(dset[0]).nbytes
+
         n_lines = len(dset)
         chunksize = dset.chunks[0]
         n_chunks = int(np.ceil(n_lines / chunksize))
-        bytes_per_line = np.asarray(dset[0]).nbytes
         bytes_per_chunk = bytes_per_line * chunksize
         chunks_per_batch = int(np.floor(max_ram / bytes_per_chunk))
 
         dset_infos.append({
             "name": name,
-            "dset": dset,
             "n_chunks": n_chunks,
             "chunks_per_batch": chunks_per_batch,
             "n_batches": int(np.ceil(n_chunks / chunks_per_batch)),
@@ -217,6 +244,16 @@ def _get_dset_infos(f, datasets, max_ram):
         })
 
     return dset_infos
+
+
+def dset_is_indexed(f, dset_name):
+    if f[dset_name].attrs.get("indexed"):
+        if f"{dset_name}_indices" not in f:
+            raise KeyError(
+                f"{dset_name} is indexed, but {dset_name}_indices is missing!")
+        return True
+    else:
+        return False
 
 
 def _shuffle_dset(f_out, f_in, dset_name, indices_per_batch):
@@ -229,7 +266,12 @@ def _shuffle_dset(f_out, f_in, dset_name, indices_per_batch):
     for batch_number, indices in enumerate(indices_per_batch):
         print(f"Processing batch {batch_number+1}/{len(indices_per_batch)}")
         # remove indices outside of dset
-        indices = indices[indices < len(dset_in)]
+        if dset_is_indexed(f_in, dset_name):
+            max_index = len(f_in[f"{dset_name}_indices"])
+        else:
+            max_index = len(dset_in)
+        indices = indices[indices < max_index]
+
         # reading has to be done with linearly increasing index
         #  fancy indexing is super slow
         #  so sort -> turn to slices -> read -> conc -> undo sorting
@@ -237,8 +279,27 @@ def _shuffle_dset(f_out, f_in, dset_name, indices_per_batch):
         unsort_ix = np.argsort(sort_ix)
         fancy_indices = indices[sort_ix]
         slices = _slicify(fancy_indices)
-        data = np.concatenate([dset_in[slc] for slc in slices])
-        data = data[unsort_ix]
+
+        if dset_is_indexed(f_in, dset_name):
+            # special treatment for indexed: slice based on indices dataset
+            slices_indices = [f_in[f"{dset_name}_indices"][slc] for slc in slices]
+            data = np.concatenate([
+                dset_in[slice(*_resolve_indexed(slc))] for slc in slices_indices
+            ])
+            # convert to 3d awkward array, then shuffle, then back to numpy
+            data_indices = np.concatenate(slices_indices)
+            data_ak = ak.unflatten(data, data_indices["n_items"])
+            data = ak.flatten(data_ak[unsort_ix], axis=1).to_numpy()
+
+        else:
+            data = np.concatenate([dset_in[slc] for slc in slices])
+            data = data[unsort_ix]
+
+        if dset_name.endswith("_indices"):
+            # recacalculate index
+            data["index"] = start_idx + np.concatenate([
+                [0], np.cumsum(data["n_items"][:-1])
+            ])
 
         if batch_number == 0:
             out_dset = f_out.create_dataset(
@@ -269,6 +330,11 @@ def _slicify(fancy_indices):
     slice_starts = np.concatenate([fancy_indices[:1], fancy_indices[1:][steps]])
     slice_ends = np.concatenate([fancy_indices[:-1][steps], fancy_indices[-1:]]) + 1
     return [slice(slice_starts[i], slice_ends[i]) for i in range(len(slice_starts))]
+
+
+def _resolve_indexed(ind):
+    # based on slice of x_indices, get where to slice in x
+    return ind["index"][0], ind["index"][-1] + ind["n_items"][-1]
 
 
 def _get_temp_filenames(output_file, number):

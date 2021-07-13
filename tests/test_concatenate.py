@@ -1,13 +1,14 @@
 import tempfile
-from unittest import TestCase
+import unittest
 import numpy as np
 import h5py
 import orcasong.tools.concatenate as conc
+import os
 
 __author__ = 'Stefan Reck'
 
 
-class TestFileConcatenator(TestCase):
+class TestFileConcatenator(unittest.TestCase):
     """
     Test concatenation on pre-generated h5 files. They are in tests/data.
 
@@ -58,7 +59,9 @@ class TestFileConcatenator(TestCase):
 
     def test_get_cumu_rows(self):
         fc = conc.FileConcatenator(self.dummy_files)
-        np.testing.assert_array_equal(fc.cumu_rows, [0, 10, 25])
+        self.assertDictEqual(
+            fc.cumu_rows, {'numpy_array': [0, 10, 25], 'rec_array': [0, 10, 25]}
+        )
 
     def test_concatenate_used_files(self):
         fc = conc.FileConcatenator(self.dummy_files)
@@ -112,6 +115,56 @@ class TestFileConcatenator(TestCase):
                     target,
                     f["rec_array"][()]
                 )
+
+
+class BaseTestClass:
+    class BaseIndexedFile(unittest.TestCase):
+        @classmethod
+        def setUpClass(cls) -> None:
+            cls.infile = tempfile.NamedTemporaryFile()
+            with h5py.File(cls.infile, "w") as f:
+                cls.x = np.arange(20)
+                dset_x = f.create_dataset("x", data=cls.x, chunks=True)
+                dset_x.attrs.create("indexed", True)
+                cls.indices = np.array(
+                    [(0, 5), (5, 12), (17, 3)],
+                    dtype=[('index', '<i8'), ('n_items', '<i8')]
+                )
+                f.create_dataset("x_indices", data=cls.indices, chunks=True)
+
+        @classmethod
+        def tearDownClass(cls) -> None:
+            cls.infile.close()
+
+
+class TestConcatenateIndexed(BaseTestClass.BaseIndexedFile):
+    def setUp(self) -> None:
+        self.outfile = "temp_out.h5"
+        conc.concatenate([self.infile.name] * 2, outfile=self.outfile)
+
+    def tearDown(self) -> None:
+        if os.path.exists(self.outfile):
+            os.remove(self.outfile)
+
+    def test_check_x(self):
+        with h5py.File(self.outfile) as f_out:
+            np.testing.assert_array_equal(
+                f_out["x"],
+                np.concatenate([self.x]*2)
+            )
+
+    def test_check_x_indices_n_items(self):
+        with h5py.File(self.outfile) as f_out:
+            target_n_items = np.concatenate([self.indices] * 2)["n_items"]
+            np.testing.assert_array_equal(
+                f_out["x_indices"]["n_items"], target_n_items)
+
+    def test_check_x_indices_index(self):
+        with h5py.File(self.outfile) as f_out:
+            target_n_items = np.concatenate([self.indices] * 2)["n_items"]
+            target_index = np.concatenate([[0], target_n_items.cumsum()[:-1]])
+            np.testing.assert_array_equal(
+                f_out["x_indices"]["index"], target_index)
 
 
 def _create_dummy_file(filepath, columns=10, val_array=1, val_recarray=(1, 3)):

@@ -1,6 +1,5 @@
 # for atmospheric muon bundles, data ORCA4, graph network
 mode = "graph"
-max_n_hits = 2000
 time_window = [-250, 1000]
 extractor = "bundle_data"
 
