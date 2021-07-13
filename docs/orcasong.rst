@@ -105,16 +105,12 @@ like this:
 
     from orcasong.core import FileGraph
 
+    fg = FileGraph()
+
 The FileGraph produces a list of nodes, each representing a hit.
-The length of this list has to be fixed, i.e. be the same for each event.
-Since the number of hits varies from event to event, some events will have to get
-padded, while others might get hits removed. The parameter ``max_n_hits``
-of FileGraph determines this fixed length:
-
-.. code-block:: python
-
-    fg = FileGraph(max_n_hits=2000)
-
+Since the number of hits varies from event to event, the hits of all events are saved
+in a long list (2d array), and a seperate datasets is saved that can be used
+to identify which hits belong to which events.
 
 General usage
 -------------
