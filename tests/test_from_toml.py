@@ -27,7 +27,7 @@ class TestSetupProcessorExampleConfig(TestCase):
         self.assertEqual(self.processor.time_window, [-100, 5000])
 
     def test_max_n_hits(self):
-        self.assertEqual(self.processor.max_n_hits, 2000)
+        self.assertEqual(self.processor.max_n_hits, None)
 
     def test_chunksize(self):
         self.assertEqual(self.processor.chunksize, 16)
