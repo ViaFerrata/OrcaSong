@@ -139,7 +139,6 @@ class TestFileGraph(TestCase):
             "hit_info_0": "pos_z",
             "hit_info_1": "time",
             "hit_info_2": "channel_id",
-            "hit_info_3": "is_valid",
             "indexed": True,
         }
         attrs = dict(self.f["x"].attrs)
