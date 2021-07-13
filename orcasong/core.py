@@ -355,42 +355,44 @@ class FileGraph(BaseProcessor):
     Turn km3 events to graph data.
 
     The resulting file will have a dataset "x" of shape
-    (?, max_n_hits, len(hit_infos) + 1).
+    (total n_hits, len(hit_infos)).
     The column names of the last axis (i.e. hit_infos) are saved
     as attributes of the dataset (f["x"].attrs).
-    The last column will always be called 'is_valid', and its 0 if
-    the entry is padded, and 1 otherwise.
 
     Parameters
     ----------
-    max_n_hits : int
-        Maximum number of hits that gets saved per event. If an event has
-        more, some will get cut randomly!
-    padded : bool
-        If True, pad hits of each event with 0s to a fixed width, so that they can
-        be stored as 3d arrays. max_n_hits needs to be given in that case.
-        If False, save events with variable length as a 2d arrays
-        using km3pipe's indices.
-    time_window : tuple, optional
-        Two ints (start, end). Hits outside of this time window will be cut
-        away (based on 'Hits/time'). Default: Keep all hits.
     hit_infos : tuple, optional
         Which entries in the '/Hits' Table will be kept. E.g. pos_x, time, ...
         Default: Keep all entries.
+    time_window : tuple, optional
+        Two ints (start, end). Hits outside of this time window will be cut
+        away (based on 'Hits/time'). Default: Keep all hits.
     only_triggered_hits : bool
-        If true, use only triggered hits. Otherwise, use all hits.
+        If true, use only triggered hits. Otherwise, use all hits (default).
+    max_n_hits : int
+        Maximum number of hits that gets saved per event. If an event has
+        more, some will get cut randomly! Default: Keep all hits.
+    fixed_length : bool
+        If False (default), save hits of events with variable length as
+        2d arrays using km3pipe's indices.
+        If True, pad hits of each event with 0s to a fixed length,
+        so that they can be stored as 3d arrays like images.
+        max_n_hits needs to be given in that case, and a column will be
+        added called 'is_valid', which is 0 if the entry is padded,
+        and 1 otherwise.
+        This is inefficient and will cut off hits, so it should not be used.
     kwargs
         Options of the BaseProcessor.
 
     """
     def __init__(self, max_n_hits=None,
-                 padded=True,
                  time_window=None,
                  hit_infos=None,
                  only_triggered_hits=False,
+                 fixed_length=False,
                  **kwargs):
         self.max_n_hits = max_n_hits
-        self.padded = padded
+        self.fixed_length = fixed_length
         self.time_window = time_window
         self.hit_infos = hit_infos
         self.only_triggered_hits = only_triggered_hits
@@ -399,7 +401,7 @@ class FileGraph(BaseProcessor):
     def get_cmpts_main(self):
         return [((modules.PointMaker, {
             "max_n_hits": self.max_n_hits,
-            "padded": self.padded,
+            "fixed_length": self.fixed_length,
             "time_window": self.time_window,
             "hit_infos": self.hit_infos,
             "dset_n_hits": "EventInfo",
@@ -410,4 +412,4 @@ class FileGraph(BaseProcessor):
         super().finish_file(f, summary)
         for i, hit_info in enumerate(summary["PointMaker"]["hit_infos"]):
             f["x"].attrs.create(f"hit_info_{i}", hit_info)
-        f["x"].attrs.create("indexed", not self.padded)
+        f["x"].attrs.create("indexed", not self.fixed_length)

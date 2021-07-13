@@ -141,7 +141,7 @@ class FileConcatenator:
                     compression_opts=self.comptopts["complevel"],
                     shuffle=self.comptopts["shuffle"],
                 )
-                output_dataset.resize(self.cumu_rows[dset_name][-1], axis=0)
+                output_dataset.resize(dset_shape[0], axis=0)
 
             else:
                 f_out[dset_name][
