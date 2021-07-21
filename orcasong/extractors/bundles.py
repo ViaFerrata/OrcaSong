@@ -105,8 +105,8 @@ class BundleMCExtractor:
 
     Parameters
     ----------
-    inactive_du : int or None
-        Don't count mchits in this du.
+    inactive_du : int, optional
+        Don't count mchits in this du. E.g. for ORCA4, DU 1 is inactive.
     min_n_mchits_list : tuple
         How many mchits does a muon have to produce to be counted?
         Create a seperate set of entries for each number in the tuple.
@@ -130,7 +130,7 @@ class BundleMCExtractor:
     """
     def __init__(self,
                  infile,
-                 inactive_du=1,
+                 inactive_du=None,
                  min_n_mchits_list=(0, 1, 10),
                  plane_point=(17, 17, 111),
                  with_mc_index=True,
@@ -150,6 +150,8 @@ class BundleMCExtractor:
             infile, only_downgoing_tracks=only_downgoing_tracks)
 
         if self.with_mc_index:
+            # TODO this would ideally not be read from the filename.
+            #  but there is currently not other way of accessing it (07/2021)
             self.mc_index = get_mc_index(infile)
             print(f"Using mc_index {self.mc_index}")
         else:
