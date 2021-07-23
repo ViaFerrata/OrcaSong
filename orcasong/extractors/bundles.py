@@ -173,7 +173,7 @@ class BundleMCExtractor:
             mc_info["dir_y"] = prim_track.dir_y
             mc_info["dir_z"] = prim_track.dir_z
             # use primary direction as plane normal
-            plane_normal = np.array(prim_track[["dir_x", "dir_y", "dir_z"]])
+            plane_normal = np.array(prim_track[["dir_x", "dir_y", "dir_z"]].tolist())
 
             for fld in ("pos_x", "pos_y", "pos_z", "pdgid", "energy", "time"):
                 mc_info[f"primary_{fld}"] = prim_track[fld]
