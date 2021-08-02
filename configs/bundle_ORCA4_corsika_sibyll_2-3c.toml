@@ -3,6 +3,7 @@ mode = "graph"
 extractor = "bundle_mc"
 # center of mupage detector:
 center_hits_to = [0.020, -0.040, 111.186]
+time_window = [-250, 1000]
 
 [extractor_config]
 inactive_du = 1

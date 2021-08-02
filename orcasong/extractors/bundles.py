@@ -120,6 +120,10 @@ class BundleMCExtractor:
         when the same run id/event id combination appears in mc files,
         which can happend e.g. in run by run simulations when there are
         multiplie mc runs per data run.
+        Requires the filename to have a very specific format, which is
+        likely not future-proof.
+        TODO this would ideally not be read from the filename,
+         but there is currently not other way of accessing it (07/2021).
     is_corsika : bool
         Use this when using Corsika!!!
     only_downgoing_tracks : bool
@@ -150,8 +154,6 @@ class BundleMCExtractor:
             infile, only_downgoing_tracks=only_downgoing_tracks)
 
         if self.with_mc_index:
-            # TODO this would ideally not be read from the filename.
-            #  but there is currently not other way of accessing it (07/2021)
             self.mc_index = get_mc_index(infile)
             print(f"Using mc_index {self.mc_index}")
         else:
@@ -201,15 +203,10 @@ class BundleMCExtractor:
             # total number of mchits of all muons
             mc_info[f"n_mc_hits_{suffix}"] = np.sum(
                 mchits_per_muon[mchits_per_muon >= min_n_mchits])
-
             # number of muons with at least the given number of mchits
             mc_info[f"n_muons_{suffix}"] = len(mc_tracks_sel)
-
             # summed up energy of all muons
             mc_info[f"energy_{suffix}"] = np.sum(mc_tracks_sel.energy)
-            mc_info[f"energy_lost_in_can_{suffix}"] = np.sum(
-                mc_tracks_sel.energy_lost_in_can)
-
             # bundle diameter; only makes sense for 2+ muons
             if len(mc_tracks_sel) >= 2:
                 positions_plane = get_plane_positions(
