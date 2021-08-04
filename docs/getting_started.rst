@@ -24,7 +24,10 @@ Step 2: From h5 aanet files to h5 DL files
 ------------------------------------------
 Produce DL h5 files from the aanet h5 files using OrcaSong.
 You can either produce images or graphs.
-If you have an orcasong config file, you can use it via the command line like this::
+It is easiest to use a config file for setting up all the options.
+See here https://git.km3net.de/ml/OrcaSong/-/blob/master/examples/orcasong_example.toml for an
+example config file.
+You can use it via the command line like this::
 
     orcasong run aanet_file.h5 orcasong_config.toml --detx detector.detx
 

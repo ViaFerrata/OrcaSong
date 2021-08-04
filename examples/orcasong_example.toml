@@ -3,14 +3,23 @@
 
 # the mode to run orcasong in; either 'graph' or 'image'
 mode="graph"
-# arguments for FileGraph or FileBinner can be put here
-# (see orcasong.core for a list of parameters)
+# Options for generating either graphs or images can be put here next,
+# depending on which mode was chosen.
+# For a list and explanation of the availble parameters, see
+# orcasong.core.FileGraph (graphs) or orcasong.core.FileBinner (images).
 time_window = [-100, 5000]
+
 # can also give the arguments of orcasong.core.BaseProcessor,
-# which are shared between modes
+# which are the same for both modes (graphs and images). Note that the
+# det file should not be listed here, but instead passed via the
+# det file option of the 'orcasong run' command.
 chunksize=16
-# built-in extractor function to use (see orcasong.from_toml.EXTRACTORS)
+
+# Extractor function to use.
+# This function is used to e.g. produce the labels that will be used for
+# training the networks later. Here, we use a built-in function for neutrinos
+# (see orcasong.from_toml.EXTRACTORS for available built-ins).
 extractor = "nu_chain_neutrino"
 
 [extractor_config]
-# arguments for setting up the extractor function can go here. None in this case.
+# arguments for setting up the extractor function could go here. None in this case.
