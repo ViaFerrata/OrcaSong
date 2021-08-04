@@ -416,15 +416,20 @@ class EventSkipper(kp.Module):
 
 class DetApplier(kp.Module):
     """
-    Apply calibration to the Hits and McHits with a detx file.
+    Apply detector information to the event data from a detx file, e.g.
+    calibrating hits.
 
     Attributes
     ----------
     det_file : str
         Path to a .detx detector geometry file.
+    calib_hits : bool
+        Apply calibration to hits. Default: True.
+    calib_mchits : bool
+        Apply calibration to mchits, if mchits are in the blob. Default: True.
     correct_timeslew : bool
-        If true, the time slewing of hits depending on their tot
-        will be corrected.
+        If true (default), the time slewing of hits depending on their tot
+        will be corrected. Only done if calib_hits is True.
     center_hits_to : tuple, optional
         Translate the xyz positions of the hits (and mchits), as if
         the detector was centered at the given position.
@@ -432,10 +437,11 @@ class DetApplier(kp.Module):
         centered at xy = 00, and z will be left untouched.
 
     """
-
     def configure(self):
         self.det_file = self.require("det_file")
         self.correct_timeslew = self.get("correct_timeslew", default=True)
+        self.calib_hits = self.get("calib_hits", default=True)
+        self.calib_mchits = self.get("calib_hits", default=True)
         self.center_hits_to = self.get("center_hits_to", default=None)
 
         self.cprint(f"Calibrating with {self.det_file}")
@@ -449,7 +455,7 @@ class DetApplier(kp.Module):
             self._cache_shift_center()
 
     def process(self, blob):
-        if self._calib_checked is False:
+        if (self.calib_hits or self.calib_mchits) and self._calib_checked is False:
             if "pos_x" in blob["Hits"]:
                 self.log.warn(
                     "Warning: Using a det file, but pos_x in Hits detected. "
@@ -457,9 +463,10 @@ class DetApplier(kp.Module):
                     "errors with t0."
                 )
             self._calib_checked = True
-        blob["Hits"] = self.calib.apply(
-            blob["Hits"], correct_slewing=self.correct_timeslew)
-        if "McHits" in blob:
+        if self.calib_hits:
+            blob["Hits"] = self.calib.apply(
+                blob["Hits"], correct_slewing=self.correct_timeslew)
+        if self.calib_mchits and "McHits" in blob:
             blob["McHits"] = self.calib.apply(blob["McHits"])
         if self.center_hits_to:
             self.shift_hits(blob)

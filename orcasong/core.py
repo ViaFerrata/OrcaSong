@@ -35,14 +35,21 @@ class BaseProcessor:
     center_time : bool
         Subtract time of first triggered hit from all hit times. Will
         also be done for McHits if they are in the blob [default: True].
+    calib_hits : bool
+        Apply calibration to hits if det file is given. Default: True.
+    calib_mchits : bool
+        Apply calibration to mchits if det file is given and mchits are
+        found in the blob. Default: True.
     correct_timeslew : bool
-        If true, the time slewing of hits depending on their tot
-        will be corrected.
+        If true (default), the time slewing of hits depending on their tot
+        will be corrected during calibration.
+        Only done if det file is given and calib_hits is True.
     center_hits_to : tuple, optional
         Translate the xyz positions of the hits (and mchits), as if
         the detector was centered at the given position.
         E.g., if its (0, 0, None), the hits and mchits will be
         centered at xy = 00, and z will be left untouched.
+        Can only be used when a detx file is given.
     add_t0 : bool
         If true, add t0 to the time of hits and mchits. If using a
         det_file, this will already have been done automatically
@@ -92,6 +99,8 @@ class BaseProcessor:
                  det_file=None,
                  correct_mc_time=True,
                  center_time=True,
+                 calib_hits=True,
+                 calib_mchits=True,
                  add_t0=False,
                  correct_timeslew=True,
                  center_hits_to=None,
@@ -101,10 +110,15 @@ class BaseProcessor:
                  overwrite=True,
                  sort_y=True,
                  y_to_float64=True):
+        if center_hits_to is not None and det_file is None:
+            raise ValueError("det_file has to be given when using center_hits_to")
+
         self.extractor = extractor
         self.det_file = det_file
         self.correct_mc_time = correct_mc_time
         self.center_time = center_time
+        self.calib_hits = calib_hits
+        self.calib_mchits = calib_mchits
         self.add_t0 = add_t0
         self.correct_timeslew = correct_timeslew
         self.center_hits_to = center_hits_to
@@ -197,6 +211,8 @@ class BaseProcessor:
                 "det_file": self.det_file,
                 "correct_timeslew": self.correct_timeslew,
                 "center_hits_to": self.center_hits_to,
+                "calib_hits": self.calib_hits,
+                "calib_mchits": self.calib_mchits,
             }))
 
         if any((self.center_time, self.add_t0)):
