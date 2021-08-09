@@ -441,7 +441,7 @@ class DetApplier(kp.Module):
         self.det_file = self.require("det_file")
         self.correct_timeslew = self.get("correct_timeslew", default=True)
         self.calib_hits = self.get("calib_hits", default=True)
-        self.calib_mchits = self.get("calib_hits", default=True)
+        self.calib_mchits = self.get("calib_mchits", default=True)
         self.center_hits_to = self.get("center_hits_to", default=None)
 
         self.cprint(f"Calibrating with {self.det_file}")
