@@ -10,14 +10,13 @@ root files for deep learning.
 Step 1: From root aanet files to h5 aanet files
 -----------------------------------------------
 Convert offline files (aka aanet files) from root format to h5 format using
-the 'h5extract' command of km3pipe like so::
+the 'h5extractf' command of km3pipe like so::
 
-    h5extract aanet_file.root
+    h5extractf aanet_file.root
 
 .. note::
-    This has to be done only once for each file. Check if somebody did this
-    already and has put it on sps somewhere. If not, consider putting it on sps
-    yourself and let people know.
+    'h5extractf' is still a prototype, please report if there are any issues.
+    There is also a (extremely slow) legacy version available called 'h5extract'.
 
 
 Step 2: From h5 aanet files to h5 DL files

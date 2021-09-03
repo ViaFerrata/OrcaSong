@@ -31,9 +31,10 @@ Can be used via the commandline::
 Concatenate
 -----------
 
-Concatenate files resulting from OrcaSong, i.e. merge some h5 files
-into a single, bigger one. The resulting file can still be read in with
-km3pipe. The input can also be a txt file like from make_data_split.
+Concatenate files resulting from OrcaSong, i.e. merge some DL h5 files
+into a single, bigger DL file. The resulting file can still be read in with
+km3pipe. The input can also be a list of filepaths in txt format like from
+make_data_split.
 
 Can be used via the commandline like so::
 
@@ -54,22 +55,14 @@ or import as:
 Shuffle
 -------
 
-Shuffle an h5 file using km3pipe.
+Shuffle a DL h5 file (beta version).
 
 Can be used via the commandline like so::
 
-    orcasong h5shuffle --help
-
-or import function for general postprocessing:
-
-.. code-block:: python
-
-    from orcasong.tools.postproc import postproc_file
-    
-    postproc_file(output_filepath_concat)
-
-
-Theres also a faster (beta) version available called h5shuffle2::
-
     orcasong h5shuffle2 --help
+
+
+Theres also a much slower legacy version available called h5shuffle::
+
+    orcasong h5shuffle --help
 

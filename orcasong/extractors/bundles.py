@@ -74,7 +74,6 @@ def get_best_track(blob, missing_value=np.nan, only_downgoing_tracks=False):
              'dir_y',
              'dir_z',
              'id',
-             'idx',
              'length',
              'likelihood',
              'pos_x',
