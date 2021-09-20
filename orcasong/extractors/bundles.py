@@ -82,17 +82,26 @@ def get_best_track(blob, missing_value=np.nan, only_downgoing_tracks=False):
              'rec_type',
              't',
              'group_id')
-    index = None
     if "Tracks" in blob:
+        tracks = blob["Tracks"]
+    elif "BestJmuon" in blob:
         if only_downgoing_tracks:
-            downs = np.where(blob["Tracks"].dir_z < 0)[0]
+            raise ValueError("only_downgoing_tracks option requires all tracks!")
+        tracks = blob["BestJmuon"]
+    else:
+        tracks = None
+
+    index = None
+    if tracks is not None:
+        if only_downgoing_tracks:
+            downs = np.where(tracks.dir_z < 0)[0]
             if len(downs) != 0:
                 index = downs[0]
         else:
             index = 0
 
     if index is not None:
-        track = blob["Tracks"][index]
+        track = tracks[index]
         return {f"jg_{name}_reco": track[name] for name in names}
     else:
         return {f"jg_{name}_reco": missing_value for name in names}
