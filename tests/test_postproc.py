@@ -6,7 +6,7 @@ import orcasong.tools.postproc as postproc
 import orcasong.tools.shuffle2 as shuffle2
 from .test_concatenate import BaseTestClass
 
-__author__ = 'Stefan Reck'
+__author__ = "Stefan Reck"
 
 test_dir = os.path.dirname(os.path.realpath(__file__))
 MUPAGE_FILE = os.path.join(test_dir, "data", "mupage.root.h5")
@@ -63,18 +63,37 @@ class TestShuffleV2(TestCase):
 
     def test_all_shuffled_datasets_have_same_order(self):
         with h5py.File(self.temp_output, "r") as f:
-            np.testing.assert_array_equal(
-                f["x"][:, 0], f["y"][:, 0]
-            )
+            np.testing.assert_array_equal(f["x"][:, 0], f["y"][:, 0])
 
     def test_seed_produces_this_shuffled_order(self):
         target_order = np.array(
-            [12.,  5.,  0., 20.,  6.,  2., 19., 13.,  1.,  9.,  8.,  4.,  3.,
-             11., 16., 15.,  7., 10., 17., 14., 21., 18.])
+            [
+                12.0,
+                5.0,
+                0.0,
+                20.0,
+                6.0,
+                2.0,
+                19.0,
+                13.0,
+                1.0,
+                9.0,
+                8.0,
+                4.0,
+                3.0,
+                11.0,
+                16.0,
+                15.0,
+                7.0,
+                10.0,
+                17.0,
+                14.0,
+                21.0,
+                18.0,
+            ]
+        )
         with h5py.File(self.temp_output, "r") as f:
-            np.testing.assert_array_equal(
-                f["x"][:, 0], target_order
-            )
+            np.testing.assert_array_equal(f["x"][:, 0], target_order)
 
     def test_run_3_iterations(self):
         # just check if it goes through without errors
@@ -109,20 +128,18 @@ class TestShuffleIndexed(BaseTestClass.BaseIndexedFile):
         with h5py.File(self.outfile) as f_out:
             np.testing.assert_array_equal(
                 f_out["x"],
-                np.concatenate([np.arange(17, 20), np.arange(5, 17), np.arange(0, 5)])
+                np.concatenate([np.arange(17, 20), np.arange(5, 17), np.arange(0, 5)]),
             )
 
     def test_check_x_indices_n_items(self):
         with h5py.File(self.outfile) as f_out:
             target_n_items = np.array([3, 12, 5])
-            np.testing.assert_array_equal(
-                f_out["x_indices"]["n_items"], target_n_items)
+            np.testing.assert_array_equal(f_out["x_indices"]["n_items"], target_n_items)
 
     def test_check_x_indices_index(self):
         with h5py.File(self.outfile) as f_out:
             target_index = np.array([0, 3, 15])
-            np.testing.assert_array_equal(
-                f_out["x_indices"]["index"], target_index)
+            np.testing.assert_array_equal(f_out["x_indices"]["index"], target_index)
 
 
 def _make_shuffle_dummy_file(filepath):

@@ -1,0 +1,6 @@
+# for real data, ORCA6, graph network
+mode = "graph"
+extractor = "nu_chain_data"
+correct_mc_time = false
+
+

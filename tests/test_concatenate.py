@@ -5,7 +5,7 @@ import h5py
 import orcasong.tools.concatenate as conc
 import os
 
-__author__ = 'Stefan Reck'
+__author__ = "Stefan Reck"
 
 
 class TestFileConcatenator(unittest.TestCase):
@@ -13,6 +13,7 @@ class TestFileConcatenator(unittest.TestCase):
     Test concatenation on pre-generated h5 files. They are in tests/data.
 
     """
+
     @classmethod
     def setUpClass(cls):
         cls.dummy_file_1 = tempfile.NamedTemporaryFile()
@@ -28,7 +29,10 @@ class TestFileConcatenator(unittest.TestCase):
             cls.dummy_file_2.name,
         )
         cls.compt_opts = {
-            'complib': 'gzip', 'complevel': 1, 'chunksize': 5, "shuffle": False
+            "complib": "gzip",
+            "complevel": 1,
+            "chunksize": 5,
+            "shuffle": False,
         }
 
     @classmethod
@@ -52,7 +56,7 @@ class TestFileConcatenator(unittest.TestCase):
         self.assertDictEqual(fc.comptopts, self.compt_opts)
 
     def test_fc_get_comptopts_updates(self):
-        fc = conc.FileConcatenator(self.dummy_files, comptopts_update={'chunksize': 1})
+        fc = conc.FileConcatenator(self.dummy_files, comptopts_update={"chunksize": 1})
         target_compt_opts = dict(self.compt_opts)
         target_compt_opts["chunksize"] = 1
         self.assertDictEqual(fc.comptopts, target_compt_opts)
@@ -60,7 +64,7 @@ class TestFileConcatenator(unittest.TestCase):
     def test_get_cumu_rows(self):
         fc = conc.FileConcatenator(self.dummy_files)
         self.assertDictEqual(
-            fc.cumu_rows, {'numpy_array': [0, 10, 25], 'rec_array': [0, 10, 25]}
+            fc.cumu_rows, {"numpy_array": [0, 10, 25], "rec_array": [0, 10, 25]}
         )
 
     def test_concatenate_used_files(self):
@@ -93,11 +97,8 @@ class TestFileConcatenator(unittest.TestCase):
             fc.concatenate(tf)
             with h5py.File(tf, "r") as f:
                 target = np.ones((25, 7, 3))
-                target[10:, :, :] = 2.
-                np.testing.assert_array_equal(
-                    target,
-                    f["numpy_array"][()]
-                )
+                target[10:, :, :] = 2.0
+                np.testing.assert_array_equal(target, f["numpy_array"][()])
 
     def test_concatenate_recarray_with_groupid(self):
         fc = conc.FileConcatenator(self.dummy_files)
@@ -106,15 +107,12 @@ class TestFileConcatenator(unittest.TestCase):
             with h5py.File(tf, "r") as f:
                 target = np.array(
                     [(1, 3, 1)] * 25,
-                    dtype=[('x', '<f8'), ('y', '<i8'), ("group_id", "<i8")]
+                    dtype=[("x", "<f8"), ("y", "<i8"), ("group_id", "<i8")],
                 )
-                target["x"][10:] = 4.
-                target["y"][10:] = 5.
+                target["x"][10:] = 4.0
+                target["y"][10:] = 5.0
                 target["group_id"] = np.arange(25)
-                np.testing.assert_array_equal(
-                    target,
-                    f["rec_array"][()]
-                )
+                np.testing.assert_array_equal(target, f["rec_array"][()])
 
 
 class BaseTestClass:
@@ -128,7 +126,7 @@ class BaseTestClass:
                 dset_x.attrs.create("indexed", True)
                 cls.indices = np.array(
                     [(0, 5), (5, 12), (17, 3)],
-                    dtype=[('index', '<i8'), ('n_items', '<i8')]
+                    dtype=[("index", "<i8"), ("n_items", "<i8")],
                 )
                 f.create_dataset("x_indices", data=cls.indices, chunks=True)
 
@@ -148,23 +146,18 @@ class TestConcatenateIndexed(BaseTestClass.BaseIndexedFile):
 
     def test_check_x(self):
         with h5py.File(self.outfile) as f_out:
-            np.testing.assert_array_equal(
-                f_out["x"],
-                np.concatenate([self.x]*2)
-            )
+            np.testing.assert_array_equal(f_out["x"], np.concatenate([self.x] * 2))
 
     def test_check_x_indices_n_items(self):
         with h5py.File(self.outfile) as f_out:
             target_n_items = np.concatenate([self.indices] * 2)["n_items"]
-            np.testing.assert_array_equal(
-                f_out["x_indices"]["n_items"], target_n_items)
+            np.testing.assert_array_equal(f_out["x_indices"]["n_items"], target_n_items)
 
     def test_check_x_indices_index(self):
         with h5py.File(self.outfile) as f_out:
             target_n_items = np.concatenate([self.indices] * 2)["n_items"]
             target_index = np.concatenate([[0], target_n_items.cumsum()[:-1]])
-            np.testing.assert_array_equal(
-                f_out["x_indices"]["index"], target_index)
+            np.testing.assert_array_equal(f_out["x_indices"]["index"], target_index)
 
 
 def _create_dummy_file(filepath, columns=10, val_array=1, val_recarray=(1, 3)):
@@ -172,16 +165,16 @@ def _create_dummy_file(filepath, columns=10, val_array=1, val_recarray=(1, 3)):
     with h5py.File(filepath, "w") as f:
         dset = f.create_dataset(
             "numpy_array",
-            data=np.ones(shape=(columns, 7, 3))*val_array,
+            data=np.ones(shape=(columns, 7, 3)) * val_array,
             chunks=(5, 7, 3),
             compression="gzip",
-            compression_opts=1
+            compression_opts=1,
         )
         dset.attrs.create("test_dset", "ok")
 
         rec_array = np.array(
-            [val_recarray + (1, )] * columns,
-            dtype=[('x', '<f8'), ('y', '<i8'), ("group_id", "<i8")]
+            [val_recarray + (1,)] * columns,
+            dtype=[("x", "<f8"), ("y", "<i8"), ("group_id", "<i8")],
         )
         rec_array["group_id"] = np.arange(columns)
         f.create_dataset(
@@ -189,6 +182,6 @@ def _create_dummy_file(filepath, columns=10, val_array=1, val_recarray=(1, 3)):
             data=rec_array,
             chunks=(5,),
             compression="gzip",
-            compression_opts=1
+            compression_opts=1,
         )
         f.attrs.create("test_file", "ok")

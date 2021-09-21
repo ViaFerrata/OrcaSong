@@ -1,0 +1,5 @@
+# for atm neutrino mc, ORCA6, graph network
+mode = "graph"
+extractor = "nu_chain_neutrino"
+
+

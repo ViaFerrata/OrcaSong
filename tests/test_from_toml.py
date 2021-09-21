@@ -3,9 +3,7 @@ import os
 import orcasong
 import orcasong.from_toml as from_toml
 
-EXAMPLES = os.path.join(
-    os.path.dirname(os.path.dirname(orcasong.__file__)), "examples"
-)
+EXAMPLES = os.path.join(os.path.dirname(os.path.dirname(orcasong.__file__)), "examples")
 
 
 def _test_extr(infile):
