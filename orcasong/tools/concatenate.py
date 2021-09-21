@@ -4,7 +4,7 @@ import h5py
 import warnings
 
 
-__author__ = 'Stefan Reck, Michael Moser'
+__author__ = "Stefan Reck, Michael Moser"
 
 
 class FileConcatenator:
@@ -32,6 +32,7 @@ class FileConcatenator:
         input .h5 files (i.e. [0,100,200,300,...] if each file has 100 rows).
 
     """
+
     def __init__(self, input_files, skip_errors=False, comptopts_update=None):
         self.skip_errors = skip_errors
         print(f"Checking {len(input_files)} files ...")
@@ -60,7 +61,7 @@ class FileConcatenator:
         input_files = []
         with open(list_file) as f:
             for line in f:
-                filepath = line.rstrip('\n')
+                filepath = line.rstrip("\n")
                 if filepath != "":
                     input_files.append(filepath)
         if n_files is not None:
@@ -81,12 +82,14 @@ class FileConcatenator:
 
         """
         print(f"Creating file {output_filepath}")
-        with h5py.File(output_filepath, 'x') as f_out:
+        with h5py.File(output_filepath, "x") as f_out:
             start_time = time.time()
             for input_file_nmbr, input_file in enumerate(self.input_files):
-                print(f'Processing file {input_file_nmbr+1}/'
-                      f'{len(self.input_files)}: {input_file}')
-                with h5py.File(input_file, 'r') as f_in:
+                print(
+                    f"Processing file {input_file_nmbr+1}/"
+                    f"{len(self.input_files)}: {input_file}"
+                )
+                with h5py.File(input_file, "r") as f_in:
                     self._conc_file(f_in, f_out, input_file_nmbr)
                 f_out.flush()
             elapsed_time = time.time() - start_time
@@ -95,17 +98,19 @@ class FileConcatenator:
                 print("Adding used files to output")
                 f_out.create_dataset(
                     "used_files",
-                    data=[n.encode("ascii", "ignore") for n in self.input_files]
+                    data=[n.encode("ascii", "ignore") for n in self.input_files],
                 )
 
         copy_attrs(self.input_files[0], output_filepath)
 
-        print(f"\nConcatenation complete!"
-              f"\nElapsed time: {elapsed_time/60:.2f} min "
-              f"({elapsed_time/len(self.input_files):.2f} s per file)")
+        print(
+            f"\nConcatenation complete!"
+            f"\nElapsed time: {elapsed_time/60:.2f} min "
+            f"({elapsed_time/len(self.input_files):.2f} s per file)"
+        )
 
     def _conc_file(self, f_in, f_out, input_file_nmbr):
-        """ Conc one file to the output. """
+        """Conc one file to the output."""
         for dset_name in f_in:
             if is_folder_ignored(dset_name):
                 # we dont need datasets created by pytables anymore
@@ -118,15 +123,19 @@ class FileConcatenator:
                 # group_id / index in the file_output to the
                 # group_ids / indices of the file that is to be appended
                 last_index = self.cumu_rows[dset_name][input_file_nmbr] - 1
-                if (dset_name.endswith("_indices") and
-                        "index" in folder_data.dtype.names):
+                if (
+                    dset_name.endswith("_indices")
+                    and "index" in folder_data.dtype.names
+                ):
                     folder_data["index"] += (
-                            f_out[dset_name][last_index]["index"] +
-                            f_out[dset_name][last_index]["n_items"]
+                        f_out[dset_name][last_index]["index"]
+                        + f_out[dset_name][last_index]["n_items"]
                     )
                 elif folder_data.dtype.names and "group_id" in folder_data.dtype.names:
                     # add 1 because the group_ids start with 0
-                    folder_data["group_id"] += f_out[dset_name][last_index]["group_id"] + 1
+                    folder_data["group_id"] += (
+                        f_out[dset_name][last_index]["group_id"] + 1
+                    )
 
             if input_file_nmbr == 0:
                 # first file; create the dataset
@@ -145,8 +154,9 @@ class FileConcatenator:
 
             else:
                 f_out[dset_name][
-                    self.cumu_rows[dset_name][input_file_nmbr]:
-                    self.cumu_rows[dset_name][input_file_nmbr + 1]
+                    self.cumu_rows[dset_name][input_file_nmbr] : self.cumu_rows[
+                        dset_name
+                    ][input_file_nmbr + 1]
                 ] = folder_data
 
     def _get_cumu_rows(self, input_files):
@@ -155,7 +165,7 @@ class FileConcatenator:
 
         """
         # names of datasets that will be in the output; read from first file
-        with h5py.File(input_files[0], 'r') as f:
+        with h5py.File(input_files[0], "r") as f:
             target_datasets = strip_keys(list(f.keys()))
 
         errors, valid_input_files = [], []
@@ -190,8 +200,8 @@ class FileConcatenator:
 
 
 def _get_rows(file_name, target_datasets):
-    """ Get no of rows from a file and check if its good for conc'ing. """
-    with h5py.File(file_name, 'r') as f:
+    """Get no of rows from a file and check if its good for conc'ing."""
+    with h5py.File(file_name, "r") as f:
         # check if all target datasets are in the file
         if not all(k in f.keys() for k in target_datasets):
             raise KeyError(
@@ -202,7 +212,8 @@ def _get_rows(file_name, target_datasets):
         # check if all target datasets in the file have the same length
         # for datasets that have indices: only check indices
         plain_rows = [
-            f[k].shape[0] for k in target_datasets
+            f[k].shape[0]
+            for k in target_datasets
             if not (f[k].attrs.get("indexed") and f"{k}_indices" in target_datasets)
         ]
         if not all(row == plain_rows[0] for row in plain_rows):
@@ -223,7 +234,7 @@ def _get_rows(file_name, target_datasets):
 
 
 def strip_keys(f_keys):
-    """ Remove unwanted keys from list. """
+    """Remove unwanted keys from list."""
     return [x for x in f_keys if not is_folder_ignored(x)]
 
 
@@ -238,8 +249,7 @@ def is_folder_ignored(folder_name):
     Also remove bin_stats.
 
     """
-    return any([s in folder_name for s in (
-        '_i_', "bin_stats", "raw_header", "header")])
+    return any([s in folder_name for s in ("_i_", "bin_stats", "raw_header", "header")])
 
 
 def get_compopts(file):
@@ -259,7 +269,7 @@ def get_compopts(file):
         Enable shuffle filter for chunks.
 
     """
-    with h5py.File(file, 'r') as f:
+    with h5py.File(file, "r") as f:
         # for reading the comptopts, take first datsets thats not indexed
         dset_names = strip_keys(list(f.keys()))
         for dset_name in dset_names:
@@ -268,7 +278,7 @@ def get_compopts(file):
         dset = f[dset_name]
         comptopts = {}
         comptopts["complib"] = dset.compression
-        if comptopts["complib"] == 'lzf':
+        if comptopts["complib"] == "lzf":
             comptopts["complevel"] = None
         else:
             comptopts["complevel"] = dset.compression_opts
@@ -300,18 +310,14 @@ def _copy_attrs(src_datset, target_dataset):
             warnings.warn(f"Error: Can not copy attribute {k}: {e}")
 
 
-def concatenate(file, outfile="concatenated.h5", no_used_files=False, skip_errors=False):
-    """ Concatenate wrapped in a function. """
+def concatenate(
+    file, outfile="concatenated.h5", no_used_files=False, skip_errors=False
+):
+    """Concatenate wrapped in a function."""
     if len(file) == 1:
-        fc = FileConcatenator.from_list(
-            file[0],
-            skip_errors=skip_errors
-        )
+        fc = FileConcatenator.from_list(file[0], skip_errors=skip_errors)
     else:
-        fc = FileConcatenator(
-            input_files=file,
-            skip_errors=skip_errors
-        )
+        fc = FileConcatenator(input_files=file, skip_errors=skip_errors)
     fc.concatenate(
         outfile,
         append_used_files=not no_used_files,
@@ -320,9 +326,8 @@ def concatenate(file, outfile="concatenated.h5", no_used_files=False, skip_error
 
 def main():
     # TODO deprecated
-    raise NotImplementedError(
-        "concatenate has been renamed to orcasong concatenate")
+    raise NotImplementedError("concatenate has been renamed to orcasong concatenate")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

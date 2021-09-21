@@ -3,17 +3,19 @@ import numpy as np
 
 
 class BundleDataExtractor:
-    """ Get info present in real data. """
+    """Get info present in real data."""
+
     def __init__(self, infile, only_downgoing_tracks=False):
         self.only_downgoing_tracks = only_downgoing_tracks
 
     def __call__(self, blob):
         # just take everything from event info
-        if not len(blob['EventInfo']) == 1:
+        if not len(blob["EventInfo"]) == 1:
             warnings.warn(f"Event info has length {len(blob['EventInfo'])}, not 1")
-        track = dict(zip(blob['EventInfo'].dtype.names, blob['EventInfo'][0]))
-        track.update(**get_best_track(
-            blob, only_downgoing_tracks=self.only_downgoing_tracks))
+        track = dict(zip(blob["EventInfo"].dtype.names, blob["EventInfo"][0]))
+        track.update(
+            **get_best_track(blob, only_downgoing_tracks=self.only_downgoing_tracks)
+        )
 
         track["n_hits"] = len(blob["Hits"])
         track["n_triggered_hits"] = blob["Hits"]["triggered"].sum()
@@ -34,7 +36,7 @@ class BundleDataExtractor:
 
 
 def get_only_first_hit_per_pmt(hits):
-    """ Keep only the first hit of each pmt. """
+    """Keep only the first hit of each pmt."""
     idents = np.stack((hits["dom_id"], hits["channel_id"]), axis=-1)
     sorted_time_indices = np.argsort(hits["time"])
     # indices of first hit per pmt in time sorted array:
@@ -50,38 +52,40 @@ def get_best_track(blob, missing_value=np.nan, only_downgoing_tracks=False):
     Can also take the best track only of those that are downgoing.
     """
     # hardcode names here since the first blob might not have Tracks
-    names = ('E',
-             'JCOPY_Z_M',
-             'JENERGY_CHI2',
-             'JENERGY_ENERGY',
-             'JENERGY_MUON_RANGE_METRES',
-             'JENERGY_NDF',
-             'JENERGY_NOISE_LIKELIHOOD',
-             'JENERGY_NUMBER_OF_HITS',
-             'JGANDALF_BETA0_RAD',
-             'JGANDALF_BETA1_RAD',
-             'JGANDALF_CHI2',
-             'JGANDALF_LAMBDA',
-             'JGANDALF_NUMBER_OF_HITS',
-             'JGANDALF_NUMBER_OF_ITERATIONS',
-             'JSHOWERFIT_ENERGY',
-             'JSTART_LENGTH_METRES',
-             'JSTART_NPE_MIP',
-             'JSTART_NPE_MIP_TOTAL',
-             'JVETO_NPE',
-             'JVETO_NUMBER_OF_HITS',
-             'dir_x',
-             'dir_y',
-             'dir_z',
-             'id',
-             'length',
-             'likelihood',
-             'pos_x',
-             'pos_y',
-             'pos_z',
-             'rec_type',
-             't',
-             'group_id')
+    names = (
+        "E",
+        "JCOPY_Z_M",
+        "JENERGY_CHI2",
+        "JENERGY_ENERGY",
+        "JENERGY_MUON_RANGE_METRES",
+        "JENERGY_NDF",
+        "JENERGY_NOISE_LIKELIHOOD",
+        "JENERGY_NUMBER_OF_HITS",
+        "JGANDALF_BETA0_RAD",
+        "JGANDALF_BETA1_RAD",
+        "JGANDALF_CHI2",
+        "JGANDALF_LAMBDA",
+        "JGANDALF_NUMBER_OF_HITS",
+        "JGANDALF_NUMBER_OF_ITERATIONS",
+        "JSHOWERFIT_ENERGY",
+        "JSTART_LENGTH_METRES",
+        "JSTART_NPE_MIP",
+        "JSTART_NPE_MIP_TOTAL",
+        "JVETO_NPE",
+        "JVETO_NUMBER_OF_HITS",
+        "dir_x",
+        "dir_y",
+        "dir_z",
+        "id",
+        "length",
+        "likelihood",
+        "pos_x",
+        "pos_y",
+        "pos_z",
+        "rec_type",
+        "t",
+        "group_id",
+    )
     if "Tracks" in blob:
         tracks = blob["Tracks"]
     elif "BestJmuon" in blob:
@@ -140,16 +144,18 @@ class BundleMCExtractor:
         If a value is missing, use this value instead.
 
     """
-    def __init__(self,
-                 infile,
-                 inactive_du=None,
-                 min_n_mchits_list=(0, 1, 10),
-                 plane_point=(17, 17, 111),
-                 with_mc_index=True,
-                 is_corsika=False,
-                 only_downgoing_tracks=False,
-                 missing_value=np.nan,
-                 ):
+
+    def __init__(
+        self,
+        infile,
+        inactive_du=None,
+        min_n_mchits_list=(0, 1, 10),
+        plane_point=(17, 17, 111),
+        with_mc_index=True,
+        is_corsika=False,
+        only_downgoing_tracks=False,
+        missing_value=np.nan,
+    ):
         self.inactive_du = inactive_du
         self.min_n_mchits_list = min_n_mchits_list
         self.plane_point = plane_point
@@ -159,7 +165,8 @@ class BundleMCExtractor:
         self.only_downgoing_tracks = only_downgoing_tracks
 
         self.data_extractor = BundleDataExtractor(
-            infile, only_downgoing_tracks=only_downgoing_tracks)
+            infile, only_downgoing_tracks=only_downgoing_tracks
+        )
 
         if self.with_mc_index:
             self.mc_index = get_mc_index(infile)
@@ -210,7 +217,8 @@ class BundleMCExtractor:
 
             # total number of mchits of all muons
             mc_info[f"n_mc_hits_{suffix}"] = np.sum(
-                mchits_per_muon[mchits_per_muon >= min_n_mchits])
+                mchits_per_muon[mchits_per_muon >= min_n_mchits]
+            )
             # number of muons with at least the given number of mchits
             mc_info[f"n_muons_{suffix}"] = len(mc_tracks_sel)
             # summed up energy of all muons
@@ -218,8 +226,12 @@ class BundleMCExtractor:
             # bundle diameter; only makes sense for 2+ muons
             if len(mc_tracks_sel) >= 2:
                 positions_plane = get_plane_positions(
-                    positions=mc_tracks_sel[["pos_x", "pos_y", "pos_z"]].to_dataframe().to_numpy(),
-                    directions=mc_tracks_sel[["dir_x", "dir_y", "dir_z"]].to_dataframe().to_numpy(),
+                    positions=mc_tracks_sel[["pos_x", "pos_y", "pos_z"]]
+                    .to_dataframe()
+                    .to_numpy(),
+                    directions=mc_tracks_sel[["dir_x", "dir_y", "dir_z"]]
+                    .to_dataframe()
+                    .to_numpy(),
                     plane_point=self.plane_point,
                     plane_normal=plane_normal,
                 )
@@ -263,7 +275,8 @@ def get_plane_positions(positions, directions, plane_point, plane_normal=None):
     if plane_normal is None:
         if not np.all(directions == directions[0]):
             raise ValueError(
-                "Muon tracks are not all parallel: plane_normal has to be specified!")
+                "Muon tracks are not all parallel: plane_normal has to be specified!"
+            )
         plane_normal = directions[0]
 
     # get the 3d points where each muon collides with the plane
@@ -316,7 +329,7 @@ def get_pairwise_distances(positions_plane, as_matrix=False):
 
     dists_x = np.expand_dims(pos_x, -2) - np.expand_dims(pos_x, -1)
     dists_y = np.expand_dims(pos_y, -2) - np.expand_dims(pos_y, -1)
-    l2_dists = np.sqrt(dists_x**2 + dists_y**2)
+    l2_dists = np.sqrt(dists_x ** 2 + dists_y ** 2)
     if as_matrix:
         return l2_dists
     else:

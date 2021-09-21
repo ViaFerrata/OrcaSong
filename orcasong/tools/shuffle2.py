@@ -140,14 +140,22 @@ def get_max_ram(max_ram_fraction):
 def get_n_iterations(
     input_file, datasets=("x", "y"), max_ram=None, max_ram_fraction=0.25
 ):
-    """ Get how often you have to shuffle with given ram to get proper randomness. """
+    """Get how often you have to shuffle with given ram to get proper randomness."""
     if max_ram is None:
         max_ram = get_max_ram(max_ram_fraction=max_ram_fraction)
     with h5py.File(input_file, "r") as f_in:
         dset_info = _get_largest_dset(f_in, datasets, max_ram)
-    n_iterations = np.amax((1, int(
-        np.ceil(np.log(dset_info["n_chunks"]) / np.log(dset_info["chunks_per_batch"]))
-    )))
+    n_iterations = np.amax(
+        (
+            1,
+            int(
+                np.ceil(
+                    np.log(dset_info["n_chunks"])
+                    / np.log(dset_info["chunks_per_batch"])
+                )
+            ),
+        )
+    )
     print(f"Largest dataset: {dset_info['name']}")
     print(f"Total chunks: {dset_info['n_chunks']}")
     print(f"Max. chunks per batch: {dset_info['chunks_per_batch']}")
@@ -197,9 +205,7 @@ def _check_dsets(f, datasets):
         n_lines_list.append(len(f[dset_name]))
 
     if not all([n == n_lines_list[0] for n in n_lines_list]):
-        raise ValueError(
-            f"Datasets have different lengths! " f"{n_lines_list}"
-        )
+        raise ValueError(f"Datasets have different lengths! " f"{n_lines_list}")
 
 
 def _get_indexed_datasets(f, datasets):
@@ -211,7 +217,7 @@ def _get_indexed_datasets(f, datasets):
 
 
 def _get_dset_infos(f, datasets, max_ram):
-    """ Retrieve infos for each dataset. """
+    """Retrieve infos for each dataset."""
     dset_infos = []
     for i, name in enumerate(datasets):
         if name.endswith("_indices"):
@@ -221,10 +227,7 @@ def _get_dset_infos(f, datasets, max_ram):
             dset_data = f[name]
             name = f"{name}_indices"
             dset = f[name]
-            bytes_per_line = (
-                np.asarray(dset[0]).nbytes *
-                len(dset_data) / len(dset)
-            )
+            bytes_per_line = np.asarray(dset[0]).nbytes * len(dset_data) / len(dset)
         else:
             dset = f[name]
             bytes_per_line = np.asarray(dset[0]).nbytes
@@ -235,13 +238,15 @@ def _get_dset_infos(f, datasets, max_ram):
         bytes_per_chunk = bytes_per_line * chunksize
         chunks_per_batch = int(np.floor(max_ram / bytes_per_chunk))
 
-        dset_infos.append({
-            "name": name,
-            "n_chunks": n_chunks,
-            "chunks_per_batch": chunks_per_batch,
-            "n_batches": int(np.ceil(n_chunks / chunks_per_batch)),
-            "chunksize": chunksize,
-        })
+        dset_infos.append(
+            {
+                "name": name,
+                "n_chunks": n_chunks,
+                "chunks_per_batch": chunks_per_batch,
+                "n_batches": int(np.ceil(n_chunks / chunks_per_batch)),
+                "chunksize": chunksize,
+            }
+        )
 
     return dset_infos
 
@@ -250,7 +255,8 @@ def dset_is_indexed(f, dset_name):
     if f[dset_name].attrs.get("indexed"):
         if f"{dset_name}_indices" not in f:
             raise KeyError(
-                f"{dset_name} is indexed, but {dset_name}_indices is missing!")
+                f"{dset_name} is indexed, but {dset_name}_indices is missing!"
+            )
         return True
     else:
         return False
@@ -283,9 +289,9 @@ def _shuffle_dset(f_out, f_in, dset_name, indices_per_batch):
         if dset_is_indexed(f_in, dset_name):
             # special treatment for indexed: slice based on indices dataset
             slices_indices = [f_in[f"{dset_name}_indices"][slc] for slc in slices]
-            data = np.concatenate([
-                dset_in[slice(*_resolve_indexed(slc))] for slc in slices_indices
-            ])
+            data = np.concatenate(
+                [dset_in[slice(*_resolve_indexed(slc))] for slc in slices_indices]
+            )
             # convert to 3d awkward array, then shuffle, then back to numpy
             data_indices = np.concatenate(slices_indices)
             data_ak = ak.unflatten(data, data_indices["n_items"])
@@ -297,9 +303,9 @@ def _shuffle_dset(f_out, f_in, dset_name, indices_per_batch):
 
         if dset_name.endswith("_indices"):
             # recacalculate index
-            data["index"] = start_idx + np.concatenate([
-                [0], np.cumsum(data["n_items"][:-1])
-            ])
+            data["index"] = start_idx + np.concatenate(
+                [[0], np.cumsum(data["n_items"][:-1])]
+            )
 
         if batch_number == 0:
             out_dset = f_out.create_dataset(
@@ -325,7 +331,7 @@ def _shuffle_dset(f_out, f_in, dset_name, indices_per_batch):
 
 
 def _slicify(fancy_indices):
-    """ [0,1,2, 6,7,8] --> [0:3, 6:9] """
+    """[0,1,2, 6,7,8] --> [0:3, 6:9]"""
     steps = np.diff(fancy_indices) != 1
     slice_starts = np.concatenate([fancy_indices[:1], fancy_indices[1:][steps]])
     slice_ends = np.concatenate([fancy_indices[:-1][steps], fancy_indices[-1:]]) + 1
@@ -344,5 +350,4 @@ def _get_temp_filenames(output_file, number):
 
 def run_parser():
     # TODO deprecated
-    raise NotImplementedError(
-        "h5shuffle2 has been renamed to orcasong h5shuffle2")
+    raise NotImplementedError("h5shuffle2 has been renamed to orcasong h5shuffle2")

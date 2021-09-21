@@ -23,15 +23,29 @@ MODES = {
 
 def add_parser_run(subparsers):
     parser = subparsers.add_parser(
-        "run", description='Produce a dl file from an aanet file.')
-    parser.add_argument('infile', type=str, help="Aanet file in h5 format.")
-    parser.add_argument('config', type=str, help=(
-        "Orcasong configuration in toml format. Use prefix 'orcasong:' to load "
-        "a toml from OrcaSong/configs."))
-    parser.add_argument('--detx', type=str, default=None, help=(
-        "Optional detx file to calibrate on the fly."))
-    parser.add_argument('--outfile', type=str, default=None, help=(
-        "Path to output file. Default: Save with auto generated name in cwd."))
+        "run", description="Produce a dl file from an aanet file."
+    )
+    parser.add_argument("infile", type=str, help="Aanet file in h5 format.")
+    parser.add_argument(
+        "config",
+        type=str,
+        help=(
+            "Orcasong configuration in toml format. Use prefix 'orcasong:' to load "
+            "a toml from OrcaSong/configs."
+        ),
+    )
+    parser.add_argument(
+        "--detx",
+        type=str,
+        default=None,
+        help=("Optional detx file to calibrate on the fly."),
+    )
+    parser.add_argument(
+        "--outfile",
+        type=str,
+        default=None,
+        help=("Path to output file. Default: Save with auto generated name in cwd."),
+    )
     parser.set_defaults(func=run_orcasong)
 
 
@@ -47,8 +61,9 @@ def setup_processor(infile, toml_file, detx_file=None):
 
     if "extractor" in cfg:
         extractor_cfg = cfg.pop("extractor_config", {})
-        extractor = _get_verbose(
-            cfg.pop("extractor"), EXTRACTORS)(infile, **extractor_cfg)
+        extractor = _get_verbose(cfg.pop("extractor"), EXTRACTORS)(
+            infile, **extractor_cfg
+        )
     else:
         extractor = None
 
