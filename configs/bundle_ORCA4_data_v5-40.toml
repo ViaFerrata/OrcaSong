@@ -2,6 +2,7 @@
 mode = "graph"
 extractor = "bundle_data"
 time_window = [-250, 1000]
+correct_mc_time = false
 
 [extractor_config]
 only_downgoing_tracks = true

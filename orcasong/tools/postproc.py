@@ -13,13 +13,14 @@ from orcasong.tools.concatenate import get_compopts, copy_attrs
 
 
 def postproc_file(
-        input_file,
-        output_file=None,
-        shuffle=True,
-        event_skipper=None,
-        delete=False,
-        seed=42,
-        statusbar_every=1000):
+    input_file,
+    output_file=None,
+    shuffle=True,
+    event_skipper=None,
+    delete=False,
+    seed=42,
+    statusbar_every=1000,
+):
     """
     Postprocess a file using km3pipe after it has been preprocessed in OrcaSong.
 
@@ -50,18 +51,19 @@ def postproc_file(
     """
     if output_file is None:
         output_file = get_filepath_output(
-            input_file, shuffle=shuffle, event_skipper=event_skipper)
+            input_file, shuffle=shuffle, event_skipper=event_skipper
+        )
     if os.path.exists(output_file):
         raise FileExistsError(output_file)
 
-    print(f'Setting a Global Random State with the seed < {seed} >.')
+    print(f"Setting a Global Random State with the seed < {seed} >.")
     km.GlobalRandomState(seed=seed)
 
     comptopts = get_compopts(input_file)
     # km3pipe uses pytables for saving the shuffled output file,
     # which has the name 'zlib' for the 'gzip' filter
-    if comptopts["complib"] == 'gzip':
-        comptopts["complib"] = 'zlib'
+    if comptopts["complib"] == "gzip":
+        comptopts["complib"] = "zlib"
 
     pipe = kp.Pipeline()
     if statusbar_every is not None:
@@ -96,8 +98,7 @@ def postproc_file(
 
 
 def copy_used_files(source_file, target_file):
-    """ Copy the "used_files" dataset from one h5 file to another, if it is present.
-    """
+    """Copy the "used_files" dataset from one h5 file to another, if it is present."""
     with h5py.File(source_file, "r") as src:
         if "used_files" in src:
             print("Copying used_files dataset")
@@ -106,17 +107,15 @@ def copy_used_files(source_file, target_file):
 
 
 def get_filepath_output(input_file, shuffle=True, event_skipper=None):
-    """ Get the filename of the shuffled / rebalanced output file as a str.
-    """
-    fname_adtn = ''
+    """Get the filename of the shuffled / rebalanced output file as a str."""
+    fname_adtn = ""
     if shuffle:
-        fname_adtn += '_shuffled'
+        fname_adtn += "_shuffled"
     if event_skipper is not None:
-        fname_adtn += '_reb'
+        fname_adtn += "_reb"
     return f"{os.path.splitext(input_file)[0]}{fname_adtn}.h5"
 
 
 def h5shuffle():
     # TODO deprecated
-    raise NotImplementedError(
-        "h5shuffle has been renamed to orcasong h5shuffle")
+    raise NotImplementedError("h5shuffle has been renamed to orcasong h5shuffle")

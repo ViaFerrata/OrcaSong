@@ -7,7 +7,7 @@ import km3pipe as kp
 import km3modules as km
 import orcasong.plotting.plot_binstats as plot_binstats
 
-__author__ = 'Stefan Reck'
+__author__ = "Stefan Reck"
 
 
 class McInfoMaker(kp.Module):
@@ -25,8 +25,8 @@ class McInfoMaker(kp.Module):
     """
 
     def configure(self):
-        self.extractor = self.require('extractor')
-        self.store_as = self.require('store_as')
+        self.extractor = self.require("extractor")
+        self.store_as = self.require("store_as")
         self.to_float64 = self.get("to_float64", default=True)
         self.sort_y = self.get("sort_y", default=True)
 
@@ -44,7 +44,8 @@ class McInfoMaker(kp.Module):
         else:
             dtypes = None
         kp_hist = kp.dataclasses.Table(
-            track, dtype=dtypes,  h5loc='y', name='event_info')
+            track, dtype=dtypes, h5loc="y", name="event_info"
+        )
         if len(kp_hist) != 1:
             self.log.warning(
                 "Warning: Extracted mc_info should have len 1, "
@@ -69,8 +70,8 @@ class TimePreproc(kp.Module):
     """
 
     def configure(self):
-        self.add_t0 = self.get('add_t0', default=False)
-        self.center_time = self.get('center_time', default=True)
+        self.add_t0 = self.get("add_t0", default=False)
+        self.center_time = self.get("center_time", default=True)
 
         self._print_flags = set()
 
@@ -122,8 +123,8 @@ class ImageMaker(kp.Module):
     """
 
     def configure(self):
-        self.bin_edges_list = self.require('bin_edges_list')
-        self.hit_weights = self.get('hit_weights')
+        self.bin_edges_list = self.require("bin_edges_list")
+        self.hit_weights = self.get("hit_weights")
         self.store_as = "samples"
 
     def process(self, blob):
@@ -143,7 +144,8 @@ class ImageMaker(kp.Module):
 
         hist_one_event = histogram[np.newaxis, ...].astype(np.uint8)
         kp_hist = kp.dataclasses.NDArray(
-            hist_one_event, h5loc='x', title=name + "event_images")
+            hist_one_event, h5loc="x", title=name + "event_images"
+        )
 
         blob[self.store_as] = kp_hist
         return blob
@@ -178,7 +180,7 @@ class BinningStatsMaker(kp.Module):
     """
 
     def configure(self):
-        self.bin_edges_list = self.require('bin_edges_list')
+        self.bin_edges_list = self.require("bin_edges_list")
         self.res_increase = self.get("res_increase", default=5)
         self.bin_plot_freq = 1
 
@@ -205,8 +207,7 @@ class BinningStatsMaker(kp.Module):
         Increase resolution of given binning.
         """
         increased_n_bins = (len(bin_edges) - 1) * self.res_increase + 1
-        bin_edges = np.linspace(
-            bin_edges[0], bin_edges[-1], increased_n_bins)
+        bin_edges = np.linspace(bin_edges[0], bin_edges[-1], increased_n_bins)
 
         return bin_edges
 
@@ -225,8 +226,7 @@ class BinningStatsMaker(kp.Module):
                 out_neg = data[data < np.min(hist_bin_edges)].size
 
                 # get all hits which are not cut off by other bin edges
-                data = hits[bin_name][self._is_in_limits(
-                    hits, excluded=bin_name)]
+                data = hits[bin_name][self._is_in_limits(hits, excluded=bin_name)]
                 hist = np.histogram(data, bins=hist_bin_edges)[0]
 
                 self.hists[bin_name]["hist"] += hist
@@ -253,14 +253,15 @@ class BinningStatsMaker(kp.Module):
         return self.hists
 
     def _is_in_limits(self, hits, excluded=None):
-        """ Get which hits are in the limits defined by ALL bin edges
-        (except for given one). """
+        """Get which hits are in the limits defined by ALL bin edges
+        (except for given one)."""
         inside = None
         for dfield, edges in self.bin_edges_list:
             if dfield == excluded:
                 continue
-            is_in = np.logical_and(hits[dfield] >= min(edges),
-                                   hits[dfield] <= max(edges))
+            is_in = np.logical_and(
+                hits[dfield] >= min(edges), hits[dfield] <= max(edges)
+            )
             if inside is None:
                 inside = is_in
             else:
@@ -302,6 +303,7 @@ class PointMaker(kp.Module):
         this name (usually this is EventInfo).
 
     """
+
     def configure(self):
         self.hit_infos = self.get("hit_infos", default=None)
         self.time_window = self.get("time_window", default=None)
@@ -320,7 +322,8 @@ class PointMaker(kp.Module):
         blob[self.store_as] = kp.NDArray(points, h5loc="x", title="nodes")
         if self.dset_n_hits:
             blob[self.dset_n_hits] = blob[self.dset_n_hits].append_columns(
-                "n_hits_intime", n_hits)
+                "n_hits_intime", n_hits
+            )
         return blob
 
     def get_points(self, blob):
@@ -344,32 +347,35 @@ class PointMaker(kp.Module):
             hits = hits[hits.triggered != 0]
         if self.time_window is not None:
             # remove hits outside of time window
-            hits = hits[np.logical_and(
-                hits["time"] >= self.time_window[0],
-                hits["time"] <= self.time_window[1],
-            )]
+            hits = hits[
+                np.logical_and(
+                    hits["time"] >= self.time_window[0],
+                    hits["time"] <= self.time_window[1],
+                )
+            ]
 
         n_hits = len(hits)
         if self.max_n_hits is not None and n_hits > self.max_n_hits:
             # if there are too many hits, take random ones, but keep order
             indices = np.arange(n_hits)
             np.random.shuffle(indices)
-            which = indices[:self.max_n_hits]
+            which = indices[: self.max_n_hits]
             which.sort()
             hits = hits[which]
 
         if self.fixed_length:
             points = np.zeros(
-                (self.max_n_hits, len(self.hit_infos) + 1), dtype="float32")
+                (self.max_n_hits, len(self.hit_infos) + 1), dtype="float32"
+            )
             for i, which in enumerate(self.hit_infos):
                 points[:n_hits, i] = hits[which]
             # last column is whether there was a hit or no
-            points[:n_hits, -1] = 1.
+            points[:n_hits, -1] = 1.0
             # store along new axis
             points = np.expand_dims(points, 0)
         else:
-            points = np.zeros(
-                (len(hits), len(self.hit_infos)), dtype="float32")
+            # TODO points should be a Table, not a ndarray
+            points = np.zeros((len(hits), len(self.hit_infos)), dtype="float32")
             for i, which in enumerate(self.hit_infos):
                 points[:, i] = hits[which]
         return points, n_hits
@@ -377,7 +383,7 @@ class PointMaker(kp.Module):
     def finish(self):
         columns = tuple(self.hit_infos)
         if self.fixed_length:
-            columns += ("is_valid", )
+            columns += ("is_valid",)
         return {"hit_infos": columns}
 
 
@@ -394,7 +400,7 @@ class EventSkipper(kp.Module):
     """
 
     def configure(self):
-        self.event_skipper = self.require('event_skipper')
+        self.event_skipper = self.require("event_skipper")
         self._not_skipped = 0
         self._skipped = 0
 
@@ -437,6 +443,7 @@ class DetApplier(kp.Module):
         centered at xy = 00, and z will be left untouched.
 
     """
+
     def configure(self):
         self.det_file = self.require("det_file")
         self.correct_timeslew = self.get("correct_timeslew", default=True)
@@ -465,7 +472,8 @@ class DetApplier(kp.Module):
             self._calib_checked = True
         if self.calib_hits:
             blob["Hits"] = self.calib.apply(
-                blob["Hits"], correct_slewing=self.correct_timeslew)
+                blob["Hits"], correct_slewing=self.correct_timeslew
+            )
         if self.calib_mchits and "McHits" in blob:
             blob["McHits"] = self.calib.apply(blob["McHits"])
         if self.center_hits_to:
@@ -473,7 +481,7 @@ class DetApplier(kp.Module):
         return blob
 
     def shift_hits(self, blob):
-        """ Translate hits by cached vector. """
+        """Translate hits by cached vector."""
         for dim_name in ("pos_x", "pos_y", "pos_z"):
             blob["Hits"][dim_name] += self._vector_shift[dim_name]
             if "McHits" in blob:
@@ -507,14 +515,18 @@ class HitRotator(kp.Module):
     """
 
     def configure(self):
-        self.theta = self.require('theta')
+        self.theta = self.require("theta")
 
     def process(self, blob):
-        x = blob['Hits']['x']
-        y = blob['Hits']['y']
+        x = blob["Hits"]["x"]
+        y = blob["Hits"]["y"]
 
-        rot_matrix = np.array([[np.cos(self.theta), - np.sin(self.theta)],
-                               [np.sin(self.theta), np.cos(self.theta)]])
+        rot_matrix = np.array(
+            [
+                [np.cos(self.theta), -np.sin(self.theta)],
+                [np.sin(self.theta), np.cos(self.theta)],
+            ]
+        )
 
         x_rot = []
         y_rot = []
@@ -525,8 +537,7 @@ class HitRotator(kp.Module):
             x_rot.append(rot[0][0])
             y_rot.append(rot[1][0])
 
-        blob['Hits']['x'] = x_rot
-        blob['Hits']['y'] = y_rot
+        blob["Hits"]["x"] = x_rot
+        blob["Hits"]["y"] = y_rot
 
         return blob
-

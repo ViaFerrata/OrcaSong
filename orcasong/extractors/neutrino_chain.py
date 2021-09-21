@@ -15,96 +15,99 @@ from km3pipe.io.hdf5 import HDF5Header
 from h5py import File
 
 __author__ = "Daniel Guderian"
-	
 
-def get_std_reco(blob,rec_types,rec_parameters_names):
 
-	"""
-	Function to extract std reco info. This implementation requires h5 files 
-	to be processed with the option "--best_tracks" which adds the selection
-	of best tracks for each reco type to the output using the km3io tools.
+def get_std_reco(blob, rec_types, rec_parameters_names):
 
-	Returns
-	-------
-	std_reco_info : dict
-			Dict with the std reco info of the best tracks.
+    """
+    Function to extract std reco info. This implementation requires h5 files
+    to be processed with the option "--best_tracks" which adds the selection
+    of best tracks for each reco type to the output using the km3io tools.
 
-	"""
-	#this dict will be filled up
-	std_reco_info = {}
+    Returns
+    -------
+    std_reco_info : dict
+                    Dict with the std reco info of the best tracks.
 
-	#all known reco types to iterate over
-	reco_type_dict = {
-			"BestJmuon" : ("jmuon_","best_jmuon"),
-			"BestJshower" : ("jshower_","best_jshower"),
-			"BestDusjshower" : ("dusjshower_","best_dusjshower"),
-			"BestAashower" : ("aashower_","best_aashower"),
-			}
+    """
+    # this dict will be filled up
+    std_reco_info = {}
 
-	for name_in_blob,(identifier,best_track_name) in reco_type_dict.items():
-	
-		#always write out something for the generally present rec types
-		if best_track_name in rec_types:
-			
-			#specific names are with the prefix from the rec type
-			specific_reco_names = np.core.defchararray.add(identifier,rec_parameters_names)
-			
-			#extract actually present info
-			if name_in_blob in blob:
-				
-				#get the previously identified best track
-				bt = blob[name_in_blob]
+    # all known reco types to iterate over
+    reco_type_dict = {
+        "BestJmuon": ("jmuon_", "best_jmuon"),
+        "BestJshower": ("jshower_", "best_jshower"),
+        "BestDusjshower": ("dusjshower_", "best_dusjshower"),
+        "BestAashower": ("aashower_", "best_aashower"),
+    }
 
-				#get all its values
-				values = bt.item()
-				values_list = list(values)
-				#reco_names = bt.dtype.names #in case the fitinf and stuff will be tailored to the reco types
-												#at some point, get the names directly like this
+    for name_in_blob, (identifier, best_track_name) in reco_type_dict.items():
 
-			#in case there is no reco for this event but the reco type was done in general
-			else:
-				
-				#fill all values with nan's
-				values_array = np.empty(len(specific_reco_names))
-				values_array[:] = np.nan
-				values_list = values_array.tolist()
-			
-			#create a dict out of them
-			keys_list = list(specific_reco_names)
-			
-			zip_iterator = zip(keys_list, values_list)
-			reco_dict = dict(zip_iterator)
+        # always write out something for the generally present rec types
+        if best_track_name in rec_types:
 
-			#add this dict to the complete std reco collection
-			std_reco_info.update(reco_dict)
-			
-	return std_reco_info
+            # specific names are with the prefix from the rec type
+            specific_reco_names = np.core.defchararray.add(
+                identifier, rec_parameters_names
+            )
+
+            # extract actually present info
+            if name_in_blob in blob:
+
+                # get the previously identified best track
+                bt = blob[name_in_blob]
+
+                # get all its values
+                values = bt.item()
+                values_list = list(values)
+                # reco_names = bt.dtype.names #in case the fitinf and stuff will be tailored to the reco types
+                # at some point, get the names directly like this
+
+            # in case there is no reco for this event but the reco type was done in general
+            else:
+
+                # fill all values with nan's
+                values_array = np.empty(len(specific_reco_names))
+                values_array[:] = np.nan
+                values_list = values_array.tolist()
+
+            # create a dict out of them
+            keys_list = list(specific_reco_names)
+
+            zip_iterator = zip(keys_list, values_list)
+            reco_dict = dict(zip_iterator)
+
+            # add this dict to the complete std reco collection
+            std_reco_info.update(reco_dict)
+
+    return std_reco_info
 
 
 def get_rec_types_in_file(file):
-	
-	"""
-	Checks and returns which rec types are in the file and thus need to be present 
-	in all best track and their fitinf information later.
-	"""
 
-	#the known rec types
-	rec_type_names = ["best_jmuon","best_jshower","best_dusjshower","best_aashower"]
+    """
+    Checks and returns which rec types are in the file and thus need to be present
+    in all best track and their fitinf information later.
+    """
 
-	#all reco related objects in the file
-	reco_objects_in_file = file["reco"].keys()
-	
-	#check which ones are in there
-	rec_types_in_file = []
-	for rec_type in rec_type_names:
-		if rec_type in reco_objects_in_file:
-			rec_types_in_file.append(rec_type)
-			
-			#also get from here the list of dtype names that is share for all recos
-			rec_parameters_names = file["reco"][rec_type].dtype.names
+    # the known rec types
+    rec_type_names = ["best_jmuon", "best_jshower", "best_dusjshower", "best_aashower"]
 
-	return rec_types_in_file,rec_parameters_names
-	
+    # all reco related objects in the file
+    reco_objects_in_file = file["reco"].keys()
+
+    # check which ones are in there
+    rec_types_in_file = []
+    for rec_type in rec_type_names:
+        if rec_type in reco_objects_in_file:
+            rec_types_in_file.append(rec_type)
+
+            # also get from here the list of dtype names that is share for all recos
+            rec_parameters_names = file["reco"][rec_type].dtype.names
+
+    return rec_types_in_file, rec_parameters_names
+
+
 def get_real_data_info_extr(input_file):
 
     """
@@ -126,10 +129,10 @@ def get_real_data_info_extr(input_file):
     # check if std reco is present
     f = File(input_file, "r")
     has_std_reco = "reco" in f.keys()
-    
+
     if has_std_reco:
-        #also check, which rec types are present
-        rec_types,rec_parameters_names = get_rec_types_in_file(f)
+        # also check, which rec types are present
+        rec_types, rec_parameters_names = get_rec_types_in_file(f)
 
     def mc_info_extr(blob):
 
@@ -164,8 +167,8 @@ def get_real_data_info_extr(input_file):
 
         # get all the std reco info
         if has_std_reco:
-            
-            std_reco_info = get_std_reco(blob,rec_types,rec_parameters_names)
+
+            std_reco_info = get_std_reco(blob, rec_types, rec_parameters_names)
 
             track.update(std_reco_info)
 
@@ -195,11 +198,11 @@ def get_random_noise_mc_info_extr(input_file):
     # check if std reco is present
     f = File(input_file, "r")
     has_std_reco = "reco" in f.keys()
-    
+
     if has_std_reco:
-        #also check, which rec types are present
-        rec_types,rec_parameters_names = get_rec_types_in_file(f)
-    
+        # also check, which rec types are present
+        rec_types, rec_parameters_names = get_rec_types_in_file(f)
+
     def mc_info_extr(blob):
 
         """
@@ -229,7 +232,7 @@ def get_random_noise_mc_info_extr(input_file):
         # get all the std reco info
         if has_std_reco:
 
-            std_reco_info = get_std_reco(blob,rec_types,rec_parameters_names)
+            std_reco_info = get_std_reco(blob, rec_types, rec_parameters_names)
 
             track.update(std_reco_info)
 
@@ -237,7 +240,7 @@ def get_random_noise_mc_info_extr(input_file):
 
     return mc_info_extr
 
-	        
+
 def get_neutrino_mc_info_extr(input_file):
 
     """
@@ -260,15 +263,15 @@ def get_neutrino_mc_info_extr(input_file):
     # check if std reco is present
     f = File(input_file, "r")
     has_std_reco = "reco" in f.keys()
-    
+
     if has_std_reco:
-        #also check, which rec types are present
-        rec_types,rec_parameters_names = get_rec_types_in_file(f)
+        # also check, which rec types are present
+        rec_types, rec_parameters_names = get_rec_types_in_file(f)
 
     # get the n_gen
     header = HDF5Header.from_hdf5(input_file)
     n_gen = header.genvol.numberOfEvents
-        
+
     def mc_info_extr(blob):
 
         """
@@ -303,7 +306,7 @@ def get_neutrino_mc_info_extr(input_file):
         mc_track = blob["McTracks"][p]
 
         # some track mc truth info
-        particle_type = mc_track.pdgid      #sometimes type, sometimes pdgid
+        particle_type = mc_track.pdgid  # sometimes type, sometimes pdgid
         energy = mc_track.energy
         is_cc = mc_track.cc
         bjorkeny = mc_track.by
@@ -343,8 +346,8 @@ def get_neutrino_mc_info_extr(input_file):
 
         # get all the std reco info
         if has_std_reco:
-            
-            std_reco_info = get_std_reco(blob,rec_types,rec_parameters_names)
+
+            std_reco_info = get_std_reco(blob, rec_types, rec_parameters_names)
 
             track.update(std_reco_info)
 
@@ -352,40 +355,41 @@ def get_neutrino_mc_info_extr(input_file):
 
     return mc_info_extr
 
-#function used by Stefan to identify which muons leave how many mc hits in the (active) detector.
+
+# function used by Stefan to identify which muons leave how many mc hits in the (active) detector.
 def get_mchits_per_muon(blob, inactive_du=None):
 
-	"""
-	For each muon in McTracks, get the number of McHits.
-	Parameters
-	----------
-	blob
-		The blob.
-	inactive_du : int, optional
-		McHits in this DU will not be counted.
+    """
+    For each muon in McTracks, get the number of McHits.
+    Parameters
+    ----------
+    blob
+            The blob.
+    inactive_du : int, optional
+            McHits in this DU will not be counted.
 
-	Returns
-	-------
-	np.array
-		n_mchits, len = number of muons
+    Returns
+    -------
+    np.array
+            n_mchits, len = number of muons
 
-	"""
-	ids = blob["McTracks"]["id"]
-	
-	# Origin of each mchit (as int) in the active line
-	origin = blob["McHits"]["origin"]
-	
-	if inactive_du:
-		# only hits in active line
-		origin = origin[blob["McHits"]["du"] != inactive_du]
-	
-	# get how many mchits were produced per muon in the bundle
-	origin_dict = dict(zip(*np.unique(origin, return_counts=True)))
-	
-	return np.array([origin_dict.get(i, 0) for i in ids])
+    """
+    ids = blob["McTracks"]["id"]
+
+    # Origin of each mchit (as int) in the active line
+    origin = blob["McHits"]["origin"]
+
+    if inactive_du:
+        # only hits in active line
+        origin = origin[blob["McHits"]["du"] != inactive_du]
+
+    # get how many mchits were produced per muon in the bundle
+    origin_dict = dict(zip(*np.unique(origin, return_counts=True)))
+
+    return np.array([origin_dict.get(i, 0) for i in ids])
 
 
-def get_muon_mc_info_extr(input_file,prod_identifier=2,inactive_du=None):
+def get_muon_mc_info_extr(input_file, prod_identifier=2, inactive_du=None):
 
     """
     Wrapper function that includes the actual mc_info_extr
@@ -395,9 +399,9 @@ def get_muon_mc_info_extr(input_file,prod_identifier=2,inactive_du=None):
     ----------
     input_file : km3net data file
             Can be online or offline format.
-	prod_identifier : int
-		Solotion for now: just give a 1 for km3sim and a 2 for JSerine production. 
-		They have different simulated run times, shich are needed for the correct scaling.
+        prod_identifier : int
+                Solotion for now: just give a 1 for km3sim and a 2 for JSerine production.
+                They have different simulated run times, shich are needed for the correct scaling.
 
     Returns
     -------
@@ -409,14 +413,14 @@ def get_muon_mc_info_extr(input_file,prod_identifier=2,inactive_du=None):
     # check if std reco is present
     f = File(input_file, "r")
     has_std_reco = "reco" in f.keys()
-    
+
     if has_std_reco:
-        #also check, which rec types are present
-        rec_types,rec_parameters_names = get_rec_types_in_file(f)
-    
+        # also check, which rec types are present
+        rec_types, rec_parameters_names = get_rec_types_in_file(f)
+
     # no n_gen here, but needed for concatenation
     n_gen = 1
-    
+
     def mc_info_extr(blob):
 
         """
@@ -446,19 +450,23 @@ def get_muon_mc_info_extr(input_file,prod_identifier=2,inactive_du=None):
 
         mc_track = blob["McTracks"][p]
 
-        particle_type = mc_track.pdgid # assumed that this is the same for all muons in a bundle, new: pdgid, old: type
-        is_cc = 0 #set to 0
-        bjorkeny = 0 #set to zero
-        
+        particle_type = (
+            mc_track.pdgid
+        )  # assumed that this is the same for all muons in a bundle, new: pdgid, old: type
+        is_cc = 0  # set to 0
+        bjorkeny = 0  # set to zero
+
         time_interaction = mc_track.time  # same for all muons in a bundle
 
         # sum up the energy from all muons that have at least x mc hits
-        n_hits_per_muon = get_mchits_per_muon(blob, inactive_du=inactive_du) #DU1 in ORCA4 is in the detx but not powered
-        
-        #dont consider muons with less than 10 mc hits
+        n_hits_per_muon = get_mchits_per_muon(
+            blob, inactive_du=inactive_du
+        )  # DU1 in ORCA4 is in the detx but not powered
+
+        # dont consider muons with less than 10 mc hits
         suficient_hits_mask = n_hits_per_muon >= 15
         energy = np.sum(blob["McTracks"][suficient_hits_mask].energy)
-        
+
         # all muons in a bundle are parallel, so just take dir of first muon
         dir_x, dir_y, dir_z = mc_track.dir_x, mc_track.dir_y, mc_track.dir_z
 
@@ -505,8 +513,8 @@ def get_muon_mc_info_extr(input_file,prod_identifier=2,inactive_du=None):
 
         # get all the std reco info
         if has_std_reco:
-            
-            std_reco_info = get_std_reco(blob,rec_types,rec_parameters_names)
+
+            std_reco_info = get_std_reco(blob, rec_types, rec_parameters_names)
 
             track.update(std_reco_info)
 

@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 
 import orcasong.modules as modules
 
-__author__ = 'Stefan Reck'
+__author__ = "Stefan Reck"
 
 
 class TimePlotter:
@@ -37,13 +37,17 @@ class TimePlotter:
         Dont plot hits from this du.
 
     """
-    def __init__(self, files,
-                 do_mchits=False,
-                 det_file=None,
-                 center_time=True,
-                 add_t0=False,
-                 subtract_t0_mchits=False,
-                 inactive_du=None):
+
+    def __init__(
+        self,
+        files,
+        do_mchits=False,
+        det_file=None,
+        center_time=True,
+        add_t0=False,
+        subtract_t0_mchits=False,
+        inactive_du=None,
+    ):
         if isinstance(files, str):
             self.files = [files]
         else:
@@ -85,15 +89,10 @@ class TimePlotter:
         else:
             self.print_binstats(bins)
             plt.hist(
-                self.data,
-                bins=_get_padded_bins(bins, padding),
-                zorder=10,
-                **kwargs
+                self.data, bins=_get_padded_bins(bins, padding), zorder=10, **kwargs
             )
             for bin_line_x in (bins[0], bins[-1]):
-                plt.axvline(
-                    x=bin_line_x, color='firebrick', linestyle='--', zorder=20
-                )
+                plt.axvline(x=bin_line_x, color="firebrick", linestyle="--", zorder=20)
 
     def print_binstats(self, bin_edges):
         print(f"Cutoff left: {np.mean(self.data < bin_edges[0]):.2%}")
@@ -122,8 +121,7 @@ class TimePlotter:
                 blob = cal.process(blob)
             if time_pp is not None:
                 blob = time_pp.process(blob)
-            self.data = np.concatenate(
-                [self.data, self._get_data_one_event(blob)])
+            self.data = np.concatenate([self.data, self._get_data_one_event(blob)])
         pump.close()
 
     def _get_data_one_event(self, blob):
@@ -140,7 +138,7 @@ class TimePlotter:
 
 
 def _get_padded_bins(bin_edges, padding):
-    """ Add fraction of total # of bins, with same width. """
+    """Add fraction of total # of bins, with same width."""
     bin_width = bin_edges[1] - bin_edges[0]
     n_bins = len(bin_edges) - 1
     bins_to_add = np.ceil(padding * n_bins)
