@@ -368,6 +368,7 @@ class PointMaker(kp.Module):
             # store along new axis
             points = np.expand_dims(points, 0)
         else:
+            # TODO points should be a Table, not a ndarray
             points = np.zeros(
                 (len(hits), len(self.hit_infos)), dtype="float32")
             for i, which in enumerate(self.hit_infos):

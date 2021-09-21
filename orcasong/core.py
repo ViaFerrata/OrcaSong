@@ -115,6 +115,7 @@ class BaseProcessor:
 
         self.extractor = extractor
         self.det_file = det_file
+        # TODO automatically skip correct_mc_time if there is no mc
         self.correct_mc_time = correct_mc_time
         self.center_time = center_time
         self.calib_hits = calib_hits
@@ -123,6 +124,8 @@ class BaseProcessor:
         self.correct_timeslew = correct_timeslew
         self.center_hits_to = center_hits_to
         self.event_skipper = event_skipper
+        # TODO chunksize default of 32 is way to little for graph mode,
+        #  since thats only 32 hits per chunk
         self.chunksize = chunksize
         self.keep_event_info = keep_event_info
         self.overwrite = overwrite
@@ -379,6 +382,7 @@ class FileGraph(BaseProcessor):
     ----------
     hit_infos : tuple, optional
         Which entries in the '/Hits' Table will be kept. E.g. pos_x, time, ...
+        Often, only dir_x/y/z, pos_x/y/z and time are required.
         Default: Keep all entries.
     time_window : tuple, optional
         Two ints (start, end). Hits outside of this time window will be cut
@@ -389,6 +393,7 @@ class FileGraph(BaseProcessor):
         Maximum number of hits that gets saved per event. If an event has
         more, some will get cut randomly! Default: Keep all hits.
     fixed_length : bool
+        Legacy option.
         If False (default), save hits of events with variable length as
         2d arrays using km3pipe's indices.
         If True, pad hits of each event with 0s to a fixed length,
