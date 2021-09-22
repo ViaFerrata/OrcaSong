@@ -16,7 +16,8 @@ import numpy as np
 def get_parser():
     # TODO deprecated
     raise NotImplementedError(
-        "make_data_split has been renamed to orcasong make_data_split")
+        "make_data_split has been renamed to orcasong make_data_split"
+    )
 
 
 def add_parser(subparsers):
@@ -25,7 +26,7 @@ def add_parser(subparsers):
         description="Create datasets based on the run_id's."
         "Use the config to add input folder and set the ranges."
         "Outputs a list in an txt file that can be used to "
-        "concatenate the files specfied"
+        "concatenate the files specfied",
     )
     parser.add_argument(
         "config", type=str, help="See example config for detailed information"

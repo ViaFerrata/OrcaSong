@@ -7,6 +7,7 @@ import os
 import warnings
 import argparse
 import matplotlib
+
 matplotlib.use("pdf")
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_pdf import PdfPages
@@ -14,7 +15,7 @@ import h5py
 import numpy as np
 
 
-__author__ = 'Stefan Reck'
+__author__ = "Stefan Reck"
 
 
 def plot_hists(hists_list, save_to, plot_bin_edges=True):
@@ -51,30 +52,29 @@ def plot_hists(hists_list, save_to, plot_bin_edges=True):
             hist_prob = hist / bin_widths / np.sum(hist)
 
             fig, ax = plt.subplots()
-            plt.bar(
-                hist_bin_edges[:-1],
-                hist_prob,
-                align="edge",
-                width=bin_widths
-            )
+            plt.bar(hist_bin_edges[:-1], hist_prob, align="edge", width=bin_widths)
 
             if plot_bin_edges and bin_name != "time":
                 for bin_edge in bin_edges:
                     plt.axvline(
-                        x=bin_edge, color='grey', linestyle='-',
-                        linewidth=1, alpha=0.9
+                        x=bin_edge, color="grey", linestyle="-", linewidth=1, alpha=0.9
                     )
 
             # place a text box in upper left in axes coords
             out_neg_rel = cut_off[0] / total_hits
             out_pos_rel = cut_off[1] / total_hits
             textstr = "Hits cut off:\nLeft: {:.1%}\nRight: {:.1%}".format(
-                out_neg_rel, out_pos_rel)
-            props = dict(boxstyle='round', facecolor='white', alpha=0.9)
+                out_neg_rel, out_pos_rel
+            )
+            props = dict(boxstyle="round", facecolor="white", alpha=0.9)
             ax.text(
-                0.95, 0.95, textstr, transform=ax.transAxes,
-                verticalalignment='top', bbox=props,
-                horizontalalignment="right"
+                0.95,
+                0.95,
+                textstr,
+                transform=ax.transAxes,
+                verticalalignment="top",
+                bbox=props,
+                horizontalalignment="right",
             )
 
             # the auto ticks are nice even numbers
@@ -130,19 +130,26 @@ def combine_hists(hists_list):
             if bin_name not in combined_hists:
                 raise NameError(
                     "Hists dont all have the same binning field name:"
-                    "{}".format(bin_name))
+                    "{}".format(bin_name)
+                )
 
             bin_edges = hists_data["bin_edges"]
             comb_edges = combined_hists[bin_name]["bin_edges"]
             if len(bin_edges) != len(comb_edges):
-                raise ValueError("Hists have different hist bin edges: {} vs {}"
-                                 .format(bin_edges, comb_edges))
+                raise ValueError(
+                    "Hists have different hist bin edges: {} vs {}".format(
+                        bin_edges, comb_edges
+                    )
+                )
 
             hist_bin_edges = hists_data["hist_bin_edges"]
             comb_hist_edges = combined_hists[bin_name]["hist_bin_edges"]
             if len(hist_bin_edges) != len(comb_hist_edges):
-                raise ValueError("Hists have different bin edges: {} vs {}"
-                                 .format(hist_bin_edges, comb_hist_edges))
+                raise ValueError(
+                    "Hists have different bin edges: {} vs {}".format(
+                        hist_bin_edges, comb_hist_edges
+                    )
+                )
 
             combined_hists[bin_name]["hist"] += hists_data["hist"]
             combined_hists[bin_name]["cut_off"] += hists_data["cut_off"]
@@ -168,7 +175,7 @@ def add_hists_to_h5file(hists, f):
 
 
 def read_hists_from_h5file(f):
-    """ Read the binning stats from the file, put it in dicts. """
+    """Read the binning stats from the file, put it in dicts."""
     data = {}
     for bin_name, hists_data in f["bin_stats/"].items():
         data[bin_name] = {k: v[()] for k, v in hists_data.items()}
@@ -209,7 +216,7 @@ def plot_hist_of_files(save_as, files=None):
 
 
 def get_all_h5_files():
-    """ Get a list of all h5 files in the cwd. """
+    """Get a list of all h5 files in the cwd."""
     files = []
     for file in os.listdir(os.getcwd()):
         if file.endswith(".h5"):
@@ -220,21 +227,30 @@ def get_all_h5_files():
 def main():
     # TODO deprecated
     raise NotImplementedError(
-        "plot_binstats has been renamed to orcasong plot_binstats")
+        "plot_binstats has been renamed to orcasong plot_binstats"
+    )
 
 
 def add_parser(subparsers):
     parser = subparsers.add_parser(
         "plot_binstats",
-        description='Generate a plot with statistics of the binning. '
-                    'Can only be used on files generated with the FileBinner when '
-                    'add_bin_stats was set to true (default). ')
+        description="Generate a plot with statistics of the binning. "
+        "Can only be used on files generated with the FileBinner when "
+        "add_bin_stats was set to true (default). ",
+    )
     parser.add_argument(
-        '--save_as', type=str, default="bin_stats_plot.pdf",
-        help='Filename of the plot. Default: bin_stats_plot.pdf.')
+        "--save_as",
+        type=str,
+        default="bin_stats_plot.pdf",
+        help="Filename of the plot. Default: bin_stats_plot.pdf.",
+    )
     parser.add_argument(
-        'files', type=str, nargs='*', default=None,
-        help='File(s) to plot. Default: Plot for all h5 files in current dir.')
+        "files",
+        type=str,
+        nargs="*",
+        default=None,
+        help="File(s) to plot. Default: Plot for all h5 files in current dir.",
+    )
     parser.set_defaults(func=plot_hist_of_files)
 
 

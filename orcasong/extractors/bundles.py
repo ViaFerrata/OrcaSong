@@ -3,7 +3,7 @@ import numpy as np
 
 
 class BundleDataExtractor:
-    """ Get info present in real data. """
+    """Get info present in real data."""
 
     def __init__(self, infile, only_downgoing_tracks=False):
         self.only_downgoing_tracks = only_downgoing_tracks
@@ -36,7 +36,7 @@ class BundleDataExtractor:
 
 
 def get_only_first_hit_per_pmt(hits):
-    """ Keep only the first hit of each pmt. """
+    """Keep only the first hit of each pmt."""
     idents = np.stack((hits["dom_id"], hits["channel_id"]), axis=-1)
     sorted_time_indices = np.argsort(hits["time"])
     # indices of first hit per pmt in time sorted array:
@@ -86,17 +86,26 @@ def get_best_track(blob, missing_value=np.nan, only_downgoing_tracks=False):
         "t",
         "group_id",
     )
-    index = None
     if "Tracks" in blob:
+        tracks = blob["Tracks"]
+    elif "BestJmuon" in blob:
         if only_downgoing_tracks:
-            downs = np.where(blob["Tracks"].dir_z < 0)[0]
+            raise ValueError("only_downgoing_tracks option requires all tracks!")
+        tracks = blob["BestJmuon"]
+    else:
+        tracks = None
+
+    index = None
+    if tracks is not None:
+        if only_downgoing_tracks:
+            downs = np.where(tracks.dir_z < 0)[0]
             if len(downs) != 0:
                 index = downs[0]
         else:
             index = 0
 
     if index is not None:
-        track = blob["Tracks"][index]
+        track = tracks[index]
         return {f"jg_{name}_reco": track[name] for name in names}
     else:
         return {f"jg_{name}_reco": missing_value for name in names}

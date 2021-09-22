@@ -9,7 +9,7 @@ import orcasong.modules as modules
 import orcasong.plotting.plot_binstats as plot_binstats
 
 
-__author__ = 'Stefan Reck'
+__author__ = "Stefan Reck"
 
 
 class BaseProcessor:
@@ -95,26 +95,31 @@ class BaseProcessor:
         each pipeline.
 
     """
-    def __init__(self, extractor=None,
-                 det_file=None,
-                 correct_mc_time=True,
-                 center_time=True,
-                 calib_hits=True,
-                 calib_mchits=True,
-                 add_t0=False,
-                 correct_timeslew=True,
-                 center_hits_to=None,
-                 event_skipper=None,
-                 chunksize=32,
-                 keep_event_info=False,
-                 overwrite=True,
-                 sort_y=True,
-                 y_to_float64=True):
+
+    def __init__(
+        self,
+        extractor=None,
+        det_file=None,
+        correct_mc_time=True,
+        center_time=True,
+        calib_hits=True,
+        calib_mchits=True,
+        add_t0=False,
+        correct_timeslew=True,
+        center_hits_to=None,
+        event_skipper=None,
+        chunksize=32,
+        keep_event_info=False,
+        overwrite=True,
+        sort_y=True,
+        y_to_float64=True,
+    ):
         if center_hits_to is not None and det_file is None:
             raise ValueError("det_file has to be given when using center_hits_to")
 
         self.extractor = extractor
         self.det_file = det_file
+        # TODO automatically skip correct_mc_time if there is no mc
         self.correct_mc_time = correct_mc_time
         self.center_time = center_time
         self.calib_hits = calib_hits
@@ -123,6 +128,8 @@ class BaseProcessor:
         self.correct_timeslew = correct_timeslew
         self.center_hits_to = center_hits_to
         self.event_skipper = event_skipper
+        # TODO chunksize default of 32 is way to little for graph mode,
+        #  since thats only 32 hits per chunk
         self.chunksize = chunksize
         self.keep_event_info = keep_event_info
         self.overwrite = overwrite
@@ -131,7 +138,7 @@ class BaseProcessor:
 
         self.n_statusbar = 1000
         self.n_memory_observer = 1000
-        self.complib = 'zlib'
+        self.complib = "zlib"
         self.complevel = 1
         self.flush_frequency = 1000
         self.seed = 42
@@ -150,8 +157,10 @@ class BaseProcessor:
 
         """
         if outfile is None:
-            outfile = os.path.join(os.getcwd(), "{}_dl.h5".format(
-                os.path.splitext(os.path.basename(infile))[0]))
+            outfile = os.path.join(
+                os.getcwd(),
+                "{}_dl.h5".format(os.path.splitext(os.path.basename(infile))[0]),
+            )
         if not self.overwrite:
             if os.path.isfile(outfile):
                 raise FileExistsError(f"File exists: {outfile}")
@@ -178,14 +187,14 @@ class BaseProcessor:
         outfiles = []
         for infile in infiles:
             outfile = os.path.join(
-                outfolder,
-                f"{os.path.splitext(os.path.basename(infile))[0]}_dl.h5")
+                outfolder, f"{os.path.splitext(os.path.basename(infile))[0]}_dl.h5"
+            )
             outfiles.append(outfile)
             self.run(infile, outfile)
         return outfiles
 
     def build_pipe(self, infile, outfile, timeit=True):
-        """ Initialize and connect the modules from the different stages. """
+        """Initialize and connect the modules from the different stages."""
         components = [
             *self.get_cmpts_pre(infile=infile),
             *self.get_cmpts_main(),
@@ -201,56 +210,75 @@ class BaseProcessor:
         return pipe
 
     def get_cmpts_pre(self, infile):
-        """ Modules that read and calibrate the events. """
+        """Modules that read and calibrate the events."""
         cmpts = [(kp.io.hdf5.HDF5Pump, {"filename": infile})]
 
         if self.correct_mc_time:
             cmpts.append((km.mc.MCTimeCorrector, {}))
         if self.det_file:
-            cmpts.append((modules.DetApplier, {
-                "det_file": self.det_file,
-                "correct_timeslew": self.correct_timeslew,
-                "center_hits_to": self.center_hits_to,
-                "calib_hits": self.calib_hits,
-                "calib_mchits": self.calib_mchits,
-            }))
+            cmpts.append(
+                (
+                    modules.DetApplier,
+                    {
+                        "det_file": self.det_file,
+                        "correct_timeslew": self.correct_timeslew,
+                        "center_hits_to": self.center_hits_to,
+                        "calib_hits": self.calib_hits,
+                        "calib_mchits": self.calib_mchits,
+                    },
+                )
+            )
 
         if any((self.center_time, self.add_t0)):
-            cmpts.append((modules.TimePreproc, {
-                "add_t0": self.add_t0,
-                "center_time": self.center_time}))
+            cmpts.append(
+                (
+                    modules.TimePreproc,
+                    {"add_t0": self.add_t0, "center_time": self.center_time},
+                )
+            )
         return cmpts
 
     @abstractmethod
     def get_cmpts_main(self):
-        """  Produce and store the samples as 'samples' in the blob. """
+        """Produce and store the samples as 'samples' in the blob."""
         raise NotImplementedError
 
     def get_cmpts_post(self, outfile):
-        """ Modules that postproc and save the events. """
+        """Modules that postproc and save the events."""
         cmpts = []
         if self.extractor is not None:
-            cmpts.append((modules.McInfoMaker, {
-                "extractor": self.extractor,
-                "to_float64": self.y_to_float64,
-                "sort_y": self.sort_y,
-                "store_as": "mc_info"}))
+            cmpts.append(
+                (
+                    modules.McInfoMaker,
+                    {
+                        "extractor": self.extractor,
+                        "to_float64": self.y_to_float64,
+                        "sort_y": self.sort_y,
+                        "store_as": "mc_info",
+                    },
+                )
+            )
 
         if self.event_skipper is not None:
-            cmpts.append((modules.EventSkipper, {
-                "event_skipper": self.event_skipper}))
+            cmpts.append((modules.EventSkipper, {"event_skipper": self.event_skipper}))
 
-        keys_keep = ['samples', 'mc_info', "header", "raw_header"]
+        keys_keep = ["samples", "mc_info", "header", "raw_header"]
         if self.keep_event_info:
-            keys_keep.append('EventInfo')
+            keys_keep.append("EventInfo")
         cmpts.append((km.common.Keep, {"keys": keys_keep}))
 
-        cmpts.append((kp.io.HDF5Sink, {
-            "filename": outfile,
-            "complib": self.complib,
-            "complevel": self.complevel,
-            "chunksize": self.chunksize,
-            "flush_frequency": self.flush_frequency}))
+        cmpts.append(
+            (
+                kp.io.HDF5Sink,
+                {
+                    "filename": outfile,
+                    "complib": self.complib,
+                    "complevel": self.complevel,
+                    "chunksize": self.chunksize,
+                    "flush_frequency": self.flush_frequency,
+                },
+            )
+        )
         return cmpts
 
     def finish_file(self, f, summary):
@@ -297,24 +325,29 @@ class FileBinner(BaseProcessor):
         Options of the BaseProcessor.
 
     """
-    def __init__(self, bin_edges_list,
-                 add_bin_stats=True,
-                 hit_weights=None,
-                 **kwargs):
+
+    def __init__(self, bin_edges_list, add_bin_stats=True, hit_weights=None, **kwargs):
         self.bin_edges_list = bin_edges_list
         self.add_bin_stats = add_bin_stats
         self.hit_weights = hit_weights
         super().__init__(**kwargs)
 
     def get_cmpts_main(self):
-        """ Generate nD images. """
+        """Generate nD images."""
         cmpts = []
         if self.add_bin_stats:
-            cmpts.append((modules.BinningStatsMaker, {
-                "bin_edges_list": self.bin_edges_list}))
-        cmpts.append((modules.ImageMaker, {
-            "bin_edges_list": self.bin_edges_list,
-            "hit_weights": self.hit_weights}))
+            cmpts.append(
+                (modules.BinningStatsMaker, {"bin_edges_list": self.bin_edges_list})
+            )
+        cmpts.append(
+            (
+                modules.ImageMaker,
+                {
+                    "bin_edges_list": self.bin_edges_list,
+                    "hit_weights": self.hit_weights,
+                },
+            )
+        )
         return cmpts
 
     def finish_file(self, f, summary):
@@ -348,7 +381,8 @@ class FileBinner(BaseProcessor):
 
         if save_plot:
             plot_binstats.plot_hist_of_files(
-                files=outfiles, save_as=outfolder+"binning_hist.pdf")
+                files=outfiles, save_as=outfolder + "binning_hist.pdf"
+            )
         return outfiles
 
     def get_names_and_shape(self):
@@ -379,6 +413,7 @@ class FileGraph(BaseProcessor):
     ----------
     hit_infos : tuple, optional
         Which entries in the '/Hits' Table will be kept. E.g. pos_x, time, ...
+        Often, only dir_x/y/z, pos_x/y/z and time are required.
         Default: Keep all entries.
     time_window : tuple, optional
         Two ints (start, end). Hits outside of this time window will be cut
@@ -389,6 +424,7 @@ class FileGraph(BaseProcessor):
         Maximum number of hits that gets saved per event. If an event has
         more, some will get cut randomly! Default: Keep all hits.
     fixed_length : bool
+        Legacy option.
         If False (default), save hits of events with variable length as
         2d arrays using km3pipe's indices.
         If True, pad hits of each event with 0s to a fixed length,
@@ -401,12 +437,16 @@ class FileGraph(BaseProcessor):
         Options of the BaseProcessor.
 
     """
-    def __init__(self, max_n_hits=None,
-                 time_window=None,
-                 hit_infos=None,
-                 only_triggered_hits=False,
-                 fixed_length=False,
-                 **kwargs):
+
+    def __init__(
+        self,
+        max_n_hits=None,
+        time_window=None,
+        hit_infos=None,
+        only_triggered_hits=False,
+        fixed_length=False,
+        **kwargs,
+    ):
         self.max_n_hits = max_n_hits
         self.fixed_length = fixed_length
         self.time_window = time_window
@@ -415,14 +455,21 @@ class FileGraph(BaseProcessor):
         super().__init__(**kwargs)
 
     def get_cmpts_main(self):
-        return [((modules.PointMaker, {
-            "max_n_hits": self.max_n_hits,
-            "fixed_length": self.fixed_length,
-            "time_window": self.time_window,
-            "hit_infos": self.hit_infos,
-            "dset_n_hits": "EventInfo",
-            "only_triggered_hits": self.only_triggered_hits,
-        }))]
+        return [
+            (
+                (
+                    modules.PointMaker,
+                    {
+                        "max_n_hits": self.max_n_hits,
+                        "fixed_length": self.fixed_length,
+                        "time_window": self.time_window,
+                        "hit_infos": self.hit_infos,
+                        "dset_n_hits": "EventInfo",
+                        "only_triggered_hits": self.only_triggered_hits,
+                    },
+                )
+            )
+        ]
 
     def finish_file(self, f, summary):
         super().finish_file(f, summary)
