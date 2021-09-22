@@ -3,6 +3,7 @@ Run OrcaSong functionalities from command line.
 
 """
 import argparse
+from orcasong import version
 from orcasong.tools.concatenate import concatenate
 from orcasong.tools.postproc import postproc_file
 from orcasong.tools.shuffle2 import h5shuffle2
@@ -117,34 +118,21 @@ def _add_parser_h5shuffle2(subparsers):
     parser.set_defaults(func=h5shuffle2)
 
 
-def _add_parser_version(subparsers):
-    def show_version():
-        from orcasong import version
-
-        print(version)
-
-    parser = subparsers.add_parser(
-        "version",
-        description="Show installed orcanet version.",
-    )
-    parser.set_defaults(func=show_version)
-
-
 def main():
     parser = argparse.ArgumentParser(
         prog="orcasong",
         description=__doc__,
         formatter_class=argparse.RawTextHelpFormatter,
     )
-    subparsers = parser.add_subparsers()
+    parser.add_argument('--version', action='version', version=version)
 
+    subparsers = parser.add_subparsers()
     from_toml.add_parser_run(subparsers)
     _add_parser_concatenate(subparsers)
     _add_parser_h5shuffle(subparsers)
     _add_parser_h5shuffle2(subparsers)
     plot_binstats.add_parser(subparsers)
     make_data_split.add_parser(subparsers)
-    _add_parser_version(subparsers)
 
     kwargs = vars(parser.parse_args())
     func = kwargs.pop("func")
