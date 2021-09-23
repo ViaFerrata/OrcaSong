@@ -40,6 +40,7 @@ class FileConcatenator:
         self.input_files, self.cumu_rows = self._get_cumu_rows(input_files)
 
         # Get compression options from first file in the list
+        # TODO different chunksizes for different datasets!
         self.comptopts = get_compopts(self.input_files[0])
         if comptopts_update:
             self.comptopts.update(comptopts_update)

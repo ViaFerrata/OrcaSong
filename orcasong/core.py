@@ -1,4 +1,5 @@
 import os
+import warnings
 from abc import abstractmethod
 import h5py
 import km3pipe as kp
@@ -31,7 +32,8 @@ class BaseProcessor:
         Path to a .detx detector geometry file, which can be used to
         calibrate the hits.
     correct_mc_time : bool
-        Converts MC hit times to JTE times.
+        Convert MC hit times to JTE times. Will only be done if
+        mc_hits and mc_tracks are there.
     center_time : bool
         Subtract time of first triggered hit from all hit times. Will
         also be done for McHits if they are in the blob [default: True].
@@ -119,7 +121,6 @@ class BaseProcessor:
 
         self.extractor = extractor
         self.det_file = det_file
-        # TODO automatically skip correct_mc_time if there is no mc
         self.correct_mc_time = correct_mc_time
         self.center_time = center_time
         self.calib_hits = calib_hits
@@ -212,7 +213,13 @@ class BaseProcessor:
         cmpts = [(kp.io.hdf5.HDF5Pump, {"filename": infile})]
 
         if self.correct_mc_time:
-            cmpts.append((km.mc.MCTimeCorrector, {}))
+            with h5py.File(infile, "r") as f:
+                if "mc_hits" in f and "mc_tracks" in f:
+                    cmpts.append((km.mc.MCTimeCorrector, {}))
+                else:
+                    warnings.warn("Can not correct mc time: mc_hits "
+                                  "and/or mc_tracks not found!")
+
         if self.det_file:
             cmpts.append(
                 (
