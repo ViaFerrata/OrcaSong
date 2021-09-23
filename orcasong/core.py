@@ -128,8 +128,6 @@ class BaseProcessor:
         self.correct_timeslew = correct_timeslew
         self.center_hits_to = center_hits_to
         self.event_skipper = event_skipper
-        # TODO chunksize default of 32 is way to little for graph mode,
-        #  since thats only 32 hits per chunk
         self.chunksize = chunksize
         self.keep_event_info = keep_event_info
         self.overwrite = overwrite
@@ -326,11 +324,11 @@ class FileBinner(BaseProcessor):
 
     """
 
-    def __init__(self, bin_edges_list, add_bin_stats=True, hit_weights=None, **kwargs):
+    def __init__(self, bin_edges_list, add_bin_stats=True, hit_weights=None, chunksize=32, **kwargs):
         self.bin_edges_list = bin_edges_list
         self.add_bin_stats = add_bin_stats
         self.hit_weights = hit_weights
-        super().__init__(**kwargs)
+        super().__init__(chunksize=chunksize, **kwargs)
 
     def get_cmpts_main(self):
         """Generate nD images."""
@@ -433,6 +431,11 @@ class FileGraph(BaseProcessor):
         added called 'is_valid', which is 0 if the entry is padded,
         and 1 otherwise.
         This is inefficient and will cut off hits, so it should not be used.
+    chunksize: int, optional
+        Chunksize (along axis_0) used for saving the output to a .h5 file.
+        Default: None (auto-chunking). This is necessary since the hits/x
+        dataset has a varying length per event, so no event-by-event
+        chunking is possible.
     kwargs
         Options of the BaseProcessor.
 
@@ -445,6 +448,7 @@ class FileGraph(BaseProcessor):
         hit_infos=None,
         only_triggered_hits=False,
         fixed_length=False,
+        chunksize=None,
         **kwargs,
     ):
         self.max_n_hits = max_n_hits
@@ -452,7 +456,7 @@ class FileGraph(BaseProcessor):
         self.time_window = time_window
         self.hit_infos = hit_infos
         self.only_triggered_hits = only_triggered_hits
-        super().__init__(**kwargs)
+        super().__init__(chunksize=chunksize, **kwargs)
 
     def get_cmpts_main(self):
         return [
