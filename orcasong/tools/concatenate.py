@@ -144,11 +144,15 @@ class FileConcatenator:
                 chunks = self.comptopts["chunksize"]
                 if isinstance(chunks, dict):
                     chunks = chunks[dset_name]
+                else:
+                    # if chunk is an integer, its the first dimension and same
+                    #  chunks for all datasets
+                    chunks = (chunks,) + folder_data.shape[1:]
                 output_dataset = f_out.create_dataset(
                     dset_name,
                     data=folder_data,
                     maxshape=dset_shape,
-                    chunks=(chunks,) + folder_data.shape[1:],
+                    chunks=chunks,
                     compression=self.comptopts["complib"],
                     compression_opts=self.comptopts["complevel"],
                     shuffle=self.comptopts["shuffle"],
@@ -267,8 +271,7 @@ def get_compopts(file):
         the concatenated output files.
         A compression level is only available for gzip compression, not lzf!
     chunksize : None/dict
-        Specifies the chunksize of each dataset for axis_0 in the
-        concatenated output files.
+        Specifies the chunksize of each dataset in the conc output files.
     shuffle : bool
         Enable shuffle filter for chunks.
 
@@ -276,7 +279,7 @@ def get_compopts(file):
     with h5py.File(file, "r") as f:
         dset_names = strip_keys(list(f.keys()))
         comptopts = {}
-        comptopts["chunksize"] = {d: f[d].chunks[0] for d in dset_names}
+        comptopts["chunksize"] = {d: f[d].chunks for d in dset_names}
         # for reading the other comptopts, take first datset thats not indexed
         for dset_name in dset_names:
             dset = f[dset_name]

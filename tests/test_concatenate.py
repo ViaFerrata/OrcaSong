@@ -31,7 +31,7 @@ class TestFileConcatenator(unittest.TestCase):
         cls.compt_opts = {
             "complib": "gzip",
             "complevel": 1,
-            "chunksize": {"numpy_array": 5, "rec_array": 5},
+            "chunksize": {"numpy_array": (5, 7, 3), "rec_array": (5,)},
             "shuffle": False,
         }
 
