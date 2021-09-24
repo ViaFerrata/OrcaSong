@@ -1,4 +1,5 @@
 import os
+import warnings
 from abc import abstractmethod
 import h5py
 import km3pipe as kp
@@ -31,7 +32,8 @@ class BaseProcessor:
         Path to a .detx detector geometry file, which can be used to
         calibrate the hits.
     correct_mc_time : bool
-        Converts MC hit times to JTE times.
+        Convert MC hit times to JTE times. Will only be done if
+        mc_hits and mc_tracks are there.
     center_time : bool
         Subtract time of first triggered hit from all hit times. Will
         also be done for McHits if they are in the blob [default: True].
@@ -58,9 +60,9 @@ class BaseProcessor:
         Function that takes the blob as an input, and returns a bool.
         If the bool is true, the blob will be skipped.
         This is placed after the binning and mc_info extractor.
-    chunksize : int
+    chunksize : int, optional
         Chunksize (along axis_0) used for saving the output
-        to a .h5 file [default: 32].
+        to a .h5 file [default: None, i.e. auto chunking].
     keep_event_info : bool
         If True, will keep the "event_info" table [default: False].
     overwrite : bool
@@ -108,7 +110,7 @@ class BaseProcessor:
         correct_timeslew=True,
         center_hits_to=None,
         event_skipper=None,
-        chunksize=32,
+        chunksize=None,
         keep_event_info=False,
         overwrite=True,
         sort_y=True,
@@ -119,7 +121,6 @@ class BaseProcessor:
 
         self.extractor = extractor
         self.det_file = det_file
-        # TODO automatically skip correct_mc_time if there is no mc
         self.correct_mc_time = correct_mc_time
         self.center_time = center_time
         self.calib_hits = calib_hits
@@ -128,8 +129,6 @@ class BaseProcessor:
         self.correct_timeslew = correct_timeslew
         self.center_hits_to = center_hits_to
         self.event_skipper = event_skipper
-        # TODO chunksize default of 32 is way to little for graph mode,
-        #  since thats only 32 hits per chunk
         self.chunksize = chunksize
         self.keep_event_info = keep_event_info
         self.overwrite = overwrite
@@ -214,7 +213,13 @@ class BaseProcessor:
         cmpts = [(kp.io.hdf5.HDF5Pump, {"filename": infile})]
 
         if self.correct_mc_time:
-            cmpts.append((km.mc.MCTimeCorrector, {}))
+            with h5py.File(infile, "r") as f:
+                if "mc_hits" in f and "mc_tracks" in f:
+                    cmpts.append((km.mc.MCTimeCorrector, {}))
+                else:
+                    warnings.warn("Can not correct mc time: mc_hits "
+                                  "and/or mc_tracks not found!")
+
         if self.det_file:
             cmpts.append(
                 (
@@ -326,11 +331,11 @@ class FileBinner(BaseProcessor):
 
     """
 
-    def __init__(self, bin_edges_list, add_bin_stats=True, hit_weights=None, **kwargs):
+    def __init__(self, bin_edges_list, add_bin_stats=True, hit_weights=None, chunksize=32, **kwargs):
         self.bin_edges_list = bin_edges_list
         self.add_bin_stats = add_bin_stats
         self.hit_weights = hit_weights
-        super().__init__(**kwargs)
+        super().__init__(chunksize=chunksize, **kwargs)
 
     def get_cmpts_main(self):
         """Generate nD images."""

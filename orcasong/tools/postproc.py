@@ -2,8 +2,6 @@
 Scripts for postprocessing h5 files, e.g. shuffling.
 """
 import os
-import argparse
-import warnings
 
 import h5py
 import km3pipe as kp
@@ -64,6 +62,9 @@ def postproc_file(
     # which has the name 'zlib' for the 'gzip' filter
     if comptopts["complib"] == "gzip":
         comptopts["complib"] = "zlib"
+    # chunksize must be the same for all dsets using hdf5sink; use the one
+    #  from the first dataset
+    chunksize = list(comptopts["chunksize"].values())[0]
 
     pipe = kp.Pipeline()
     if statusbar_every is not None:
@@ -82,7 +83,7 @@ def postproc_file(
         filename=output_file,
         complib=comptopts["complib"],
         complevel=comptopts["complevel"],
-        chunksize=comptopts["chunksize"],
+        chunksize=chunksize,
         flush_frequency=1000,
     )
     pipe.drain()

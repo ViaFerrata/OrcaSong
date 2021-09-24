@@ -141,11 +141,18 @@ class FileConcatenator:
                 # first file; create the dataset
                 dset_shape = (self.cumu_rows[dset_name][-1],) + folder_data.shape[1:]
                 print(f"\tCreating dataset '{dset_name}' with shape {dset_shape}")
+                chunks = self.comptopts["chunksize"]
+                if isinstance(chunks, dict):
+                    chunks = chunks[dset_name]
+                else:
+                    # if chunk is an integer, its the first dimension and same
+                    #  chunks for all datasets
+                    chunks = (chunks,) + folder_data.shape[1:]
                 output_dataset = f_out.create_dataset(
                     dset_name,
                     data=folder_data,
                     maxshape=dset_shape,
-                    chunks=(self.comptopts["chunksize"],) + folder_data.shape[1:],
+                    chunks=chunks,
                     compression=self.comptopts["complib"],
                     compression_opts=self.comptopts["complevel"],
                     shuffle=self.comptopts["shuffle"],
@@ -263,26 +270,30 @@ def get_compopts(file):
         Specifies the compression level that should be used for saving
         the concatenated output files.
         A compression level is only available for gzip compression, not lzf!
-    chunksize : None/int
-        Specifies the chunksize for axis_0 in the concatenated output files.
+    chunksize : None/dict
+        Specifies the chunksize of each dataset in the conc output files.
     shuffle : bool
         Enable shuffle filter for chunks.
 
     """
     with h5py.File(file, "r") as f:
-        # for reading the comptopts, take first datsets thats not indexed
         dset_names = strip_keys(list(f.keys()))
+        comptopts = {"chunksize": {}}
+        for d in dset_names:
+            if hasattr(f[d], "chunks"):
+                comptopts["chunksize"][d] = f[d].chunks
+            else:
+                warnings.warn(f"Can not determine chunksize of dataset {d}")
+        # for reading the other comptopts, take first datset thats not indexed
         for dset_name in dset_names:
+            dset = f[dset_name]
             if f"{dset_name}_indices" not in dset_names:
                 break
-        dset = f[dset_name]
-        comptopts = {}
         comptopts["complib"] = dset.compression
         if comptopts["complib"] == "lzf":
             comptopts["complevel"] = None
         else:
             comptopts["complevel"] = dset.compression_opts
-        comptopts["chunksize"] = dset.chunks[0]
         comptopts["shuffle"] = dset.shuffle
     return comptopts
 

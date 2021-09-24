@@ -7,15 +7,11 @@ OrcaSong: Preprocessing KM3NeT data for DL
 .. image:: https://git.km3net.de/ml/OrcaSong/badges/master/pipeline.svg
     :target: https://git.km3net.de/ml/OrcaSong/pipelines
 
-.. image:: https://examples.pages.km3net.de/km3badges/docs-latest-brightgreen.svg
+.. image:: https://git.km3net.de/examples/km3badges/-/raw/master/docs-latest-brightgreen.svg
     :target: https://ml.pages.km3net.de/OrcaSong
 
 .. image:: https://git.km3net.de/ml/OrcaSong/badges/master/coverage.svg
     :target: https://ml.pages.km3net.de/OrcaSong/coverage
-
-.. image:: https://api.codacy.com/project/badge/Grade/1591b2d2d20e4c06a66cad99dc6aebe3
-    :alt: Codacy Badge
-    :target: https://www.codacy.com/app/sreck/OrcaSong?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=StefReck/OrcaSong&amp;utm_campaign=Badge_Grade
 
 OrcaSong is a project for preprocessing raw KM3NeT ORCA or ARCA event data
 for the use with deep neural networks, making use of km3nets data processing
