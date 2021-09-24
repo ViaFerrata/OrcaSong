@@ -31,7 +31,7 @@ class TestFileConcatenator(unittest.TestCase):
         cls.compt_opts = {
             "complib": "gzip",
             "complevel": 1,
-            "chunksize": 5,
+            "chunksize": {"numpy_array": 5, "rec_array": 5},
             "shuffle": False,
         }
 
@@ -158,6 +158,11 @@ class TestConcatenateIndexed(BaseTestClass.BaseIndexedFile):
             target_n_items = np.concatenate([self.indices] * 2)["n_items"]
             target_index = np.concatenate([[0], target_n_items.cumsum()[:-1]])
             np.testing.assert_array_equal(f_out["x_indices"]["index"], target_index)
+
+    def test_chunk_sizes_of_conc_file_are_the_same_as_in_input(self):
+        with h5py.File(self.outfile) as f_out:
+            self.assertTupleEqual(f_out["x"].chunks, (20,))
+            self.assertTupleEqual(f_out["x_indices"].chunks, (3,))
 
 
 def _create_dummy_file(filepath, columns=10, val_array=1, val_recarray=(1, 3)):
