@@ -60,9 +60,9 @@ class BaseProcessor:
         Function that takes the blob as an input, and returns a bool.
         If the bool is true, the blob will be skipped.
         This is placed after the binning and mc_info extractor.
-    chunksize : int
+    chunksize : int, optional
         Chunksize (along axis_0) used for saving the output
-        to a .h5 file [default: 32].
+        to a .h5 file [default: None, i.e. auto chunking].
     keep_event_info : bool
         If True, will keep the "event_info" table [default: False].
     overwrite : bool
@@ -110,7 +110,7 @@ class BaseProcessor:
         correct_timeslew=True,
         center_hits_to=None,
         event_skipper=None,
-        chunksize=32,
+        chunksize=None,
         keep_event_info=False,
         overwrite=True,
         sort_y=True,
@@ -438,11 +438,6 @@ class FileGraph(BaseProcessor):
         added called 'is_valid', which is 0 if the entry is padded,
         and 1 otherwise.
         This is inefficient and will cut off hits, so it should not be used.
-    chunksize: int, optional
-        Chunksize (along axis_0) used for saving the output to a .h5 file.
-        Default: None (auto-chunking). This is necessary since the hits/x
-        dataset has a varying length per event, so no event-by-event
-        chunking is possible.
     kwargs
         Options of the BaseProcessor.
 
@@ -455,7 +450,6 @@ class FileGraph(BaseProcessor):
         hit_infos=None,
         only_triggered_hits=False,
         fixed_length=False,
-        chunksize=None,
         **kwargs,
     ):
         self.max_n_hits = max_n_hits
@@ -463,7 +457,7 @@ class FileGraph(BaseProcessor):
         self.time_window = time_window
         self.hit_infos = hit_infos
         self.only_triggered_hits = only_triggered_hits
-        super().__init__(chunksize=chunksize, **kwargs)
+        super().__init__(**kwargs)
 
     def get_cmpts_main(self):
         return [
