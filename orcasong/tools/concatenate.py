@@ -278,8 +278,12 @@ def get_compopts(file):
     """
     with h5py.File(file, "r") as f:
         dset_names = strip_keys(list(f.keys()))
-        comptopts = {}
-        comptopts["chunksize"] = {d: f[d].chunks for d in dset_names}
+        comptopts = {"chunksize": {}}
+        for d in dset_names:
+            if hasattr(f[d], "chunks"):
+                comptopts["chunksize"][d] = f[d].chunks
+            else:
+                warnings.warn(f"Can not determine chunksize of dataset {d}")
         # for reading the other comptopts, take first datset thats not indexed
         for dset_name in dset_names:
             dset = f[dset_name]
