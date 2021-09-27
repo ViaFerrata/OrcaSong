@@ -182,7 +182,7 @@ class TestTimePreproc(TestCase):
                 {
                     "time": [-1.0, 0.0, 1.0],
                     "t0": [0.1, 0.2, 0.3],
-                    "triggered": [0, 1, 1],
+                    "triggered": [0, 0, 0],
                 }
             )
         }
