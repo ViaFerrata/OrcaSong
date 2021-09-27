@@ -20,8 +20,12 @@ class BundleDataExtractor:
         track["n_hits"] = len(blob["Hits"])
         track["n_triggered_hits"] = blob["Hits"]["triggered"].sum()
         is_triggered = blob["Hits"]["triggered"].astype(bool)
-        track["n_triggered_doms"] = len(np.unique(blob["Hits"]["dom_id"][is_triggered]))
-        track["t_last_triggered"] = blob["Hits"]["time"][is_triggered].max()
+        if np.any(is_triggered):
+            track["n_triggered_doms"] = len(np.unique(blob["Hits"]["dom_id"][is_triggered]))
+            track["t_last_triggered"] = blob["Hits"]["time"][is_triggered].max()
+        else:
+            track["n_triggered_doms"] = 0
+            track["t_last_triggered"] = np.nan
 
         unique_hits = get_only_first_hit_per_pmt(blob["Hits"])
         track["n_pmts"] = len(unique_hits)
