@@ -2,10 +2,9 @@
 Custom km3pipe modules for making nn input files.
 """
 
+import warnings
 import numpy as np
 import km3pipe as kp
-import km3modules as km
-import orcasong.plotting.plot_binstats as plot_binstats
 
 __author__ = "Stefan Reck"
 
@@ -89,8 +88,13 @@ class TimePreproc(kp.Module):
 
     def center_hittime(self, blob):
         hits_time = blob["Hits"].time
-        hits_triggered = blob["Hits"].triggered
-        t_first_trigger = np.min(hits_time[hits_triggered != 0])
+        is_triggered = blob["Hits"].triggered != 0
+        if np.any(is_triggered):
+            t_first_trigger = np.min(hits_time[is_triggered])
+        else:
+            warnings.warn("Warning: No triggered hits in blob! "
+                          "Centering with median time of all hits instead.")
+            t_first_trigger = np.median(hits_time)
 
         self._print_once("Centering time of Hits with first triggered hit")
         blob["Hits"].time = np.subtract(hits_time, t_first_trigger)

@@ -175,6 +175,24 @@ class TestTimePreproc(TestCase):
             np.array(out_blob["Hits"]), np.array(target["Hits"])
         )
 
+    def test_time_preproc_center_no_triggered_hits(self):
+        module = modules.TimePreproc(add_t0=False, center_time=True)
+        target = {
+            "Hits": kp.Table(
+                {
+                    "time": [-1.0, 0.0, 1.0],
+                    "t0": [0.1, 0.2, 0.3],
+                    "triggered": [0, 1, 1],
+                }
+            )
+        }
+        self.in_blob["Hits"]["triggered"] *= 0
+        out_blob = module.process(self.in_blob)
+        self.assertSetEqual(set(out_blob.keys()), set(target.keys()))
+        np.testing.assert_array_equal(
+            np.array(out_blob["Hits"]), np.array(target["Hits"])
+        )
+
     def test_time_preproc_t0_and_center(self):
         module = modules.TimePreproc(add_t0=True, center_time=True)
 
