@@ -226,12 +226,10 @@ class BundleMCExtractor:
             # bundle diameter; only makes sense for 2+ muons
             if len(mc_tracks_sel) >= 2:
                 positions_plane = get_plane_positions(
-                    positions=mc_tracks_sel[["pos_x", "pos_y", "pos_z"]]
-                    .to_dataframe()
-                    .to_numpy(),
-                    directions=mc_tracks_sel[["dir_x", "dir_y", "dir_z"]]
-                    .to_dataframe()
-                    .to_numpy(),
+                    positions=np.concatenate(
+                        [mc_tracks_sel[k][:, None] for k in ("pos_x", "pos_y", "pos_z")], axis=-1),
+                    directions=np.concatenate(
+                        [mc_tracks_sel[k][:, None] for k in ("dir_x", "dir_y", "dir_z")], axis=-1),
                     plane_point=self.plane_point,
                     plane_normal=plane_normal,
                 )

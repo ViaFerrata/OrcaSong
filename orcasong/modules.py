@@ -462,15 +462,16 @@ class DetApplier(kp.Module):
             self._cache_shift_center()
 
     def process(self, blob):
-        if (self.calib_hits or self.calib_mchits) and self._calib_checked is False:
-            if "pos_x" in blob["Hits"]:
-                self.log.warn(
-                    "Warning: Using a det file, but pos_x in Hits detected. "
-                    "Is the file already calibrated? This might lead to "
-                    "errors with t0."
-                )
-            self._calib_checked = True
         if self.calib_hits:
+            if self._calib_checked is False:
+                if "pos_x" in blob["Hits"]:
+                    self.log.warn(
+                        "Warning: Using a det file, but pos_x in Hits detected. "
+                        "Is the file already calibrated? This might lead to "
+                        "errors with t0."
+                    )
+                self._calib_checked = True
+                
             blob["Hits"] = self.calib.apply(
                 blob["Hits"], correct_slewing=self.correct_timeslew
             )
