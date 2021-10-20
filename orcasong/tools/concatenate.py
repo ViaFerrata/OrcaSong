@@ -148,23 +148,20 @@ class FileConcatenator:
                     # if chunk is an integer, its the first dimension and same
                     #  chunks for all datasets
                     chunks = (chunks,) + folder_data.shape[1:]
-                output_dataset = f_out.create_dataset(
+                f_out.create_dataset(
                     dset_name,
-                    data=folder_data,
-                    maxshape=dset_shape,
+                    shape=dset_shape,
+                    dtype=folder_data.dtype,
                     chunks=chunks,
                     compression=self.comptopts["complib"],
                     compression_opts=self.comptopts["complevel"],
                     shuffle=self.comptopts["shuffle"],
                 )
-                output_dataset.resize(dset_shape[0], axis=0)
 
-            else:
-                f_out[dset_name][
-                    self.cumu_rows[dset_name][input_file_nmbr] : self.cumu_rows[
-                        dset_name
-                    ][input_file_nmbr + 1]
-                ] = folder_data
+            f_out[dset_name][
+                self.cumu_rows[dset_name][input_file_nmbr]:
+                self.cumu_rows[dset_name][input_file_nmbr + 1]
+            ] = folder_data
 
     def _get_cumu_rows(self, input_files):
         """
