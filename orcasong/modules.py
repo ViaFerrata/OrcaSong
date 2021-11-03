@@ -76,6 +76,9 @@ class TimePreproc(kp.Module):
         self._print_flags = set()
 
     def process(self, blob):
+        if not "Hits" in blob:
+            self.log.warn("One event doesn't have hits for some reason. Sad. Skipping.")
+            return
         if self.add_t0:
             blob = self.add_t0_time(blob)
         if self.center_time:
@@ -471,7 +474,7 @@ class DetApplier(kp.Module):
                         "errors with t0."
                     )
                 self._calib_checked = True
-                
+
             blob["Hits"] = self.calib.apply(
                 blob["Hits"], correct_slewing=self.correct_timeslew
             )
