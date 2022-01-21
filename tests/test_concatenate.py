@@ -114,6 +114,13 @@ class TestFileConcatenator(unittest.TestCase):
                 target["group_id"] = np.arange(25)
                 np.testing.assert_array_equal(target, f["rec_array"][()])
 
+    def test_chunksize_larger_than_data(self):
+        fc = conc.FileConcatenator(self.dummy_files, comptopts_update={"chunksize": 100})
+        with tempfile.TemporaryFile() as tf:
+            fc.concatenate(tf)
+            with h5py.File(tf, "r") as f:
+                self.assertTupleEqual(f["rec_array"].chunks, f["rec_array"].shape)
+
 
 class BaseTestClass:
     class BaseIndexedFile(unittest.TestCase):
