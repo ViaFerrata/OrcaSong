@@ -1,4 +1,5 @@
 from unittest import TestCase
+import tempfile
 import os
 import h5py
 import numpy as np
@@ -140,6 +141,38 @@ class TestShuffleIndexed(BaseTestClass.BaseIndexedFile):
         with h5py.File(self.outfile) as f_out:
             target_index = np.array([0, 3, 15])
             np.testing.assert_array_equal(f_out["x_indices"]["index"], target_index)
+
+
+class TestShuffle2LargeFile(TestCase):
+    def setUp(self):
+        self.infile = tempfile.NamedTemporaryFile()
+        with h5py.File(self.infile, "w") as f:
+            dset_x = f.create_dataset("x", data=np.arange(2000), chunks=(11, ))
+            dset_x.attrs.create("indexed", 1)
+            n_items = np.ones(100) * 20
+            self.index = np.concatenate([[0.], np.cumsum(n_items)[:-1]])
+            indices = np.array(
+                list(zip(self.index, n_items)),
+                dtype=[("index", "<i8"), ("n_items", "<i8")],
+            )
+            f.create_dataset("x_indices", data=indices, chunks=(14, ))
+
+        self.outfile = "temp_out.h5"
+        shuffle2.h5shuffle2(
+            self.infile.name,
+            output_file=self.outfile,
+            datasets=("x",),
+            seed=2,
+            max_ram=10000,
+            iterations=2,
+        )
+
+    def test_indices_is_correct(self):
+        with h5py.File(self.outfile) as f_out:
+            np.testing.assert_array_equal(
+                f_out["x_indices"]["index"],
+                self.index,
+            )
 
 
 def _make_shuffle_dummy_file(filepath):

@@ -74,7 +74,8 @@ def _add_parser_h5shuffle2(subparsers):
     parser = subparsers.add_parser(
         "h5shuffle2",
         description="Shuffle datasets in a h5file that have the same length. "
-        "Uses chunkwise readout for speed-up.",
+        "Uses chunkwise readout for speed-up. If you run into memory errors, try"
+        "manually setting --max_ram to a smaller value.",
     )
     parser.add_argument(
         "input_file", type=str, help="Path of the file that will be shuffled."
@@ -97,10 +98,11 @@ def _add_parser_h5shuffle2(subparsers):
         "--max_ram_fraction",
         type=float,
         default=0.25,
-        help="in [0, 1]. Fraction of all available ram to use for reading one batch of data "
-        "Note: this should "
-        "be <=~0.25 or so, since lots of ram is needed for in-memory shuffling. "
-        "Default: 0.25",
+        help="in [0, 1]. Only used when max_ram is not given. Fraction of all "
+             "available ram to use for reading one batch of data "
+             "Note: this should "
+             "be <=~0.25 or so, since lots of ram is needed for in-memory shuffling. "
+             "Default: 0.25",
     )
     parser.add_argument(
         "--iterations",

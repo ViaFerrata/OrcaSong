@@ -269,6 +269,7 @@ def _shuffle_dset(f_out, f_in, dset_name, indices_per_batch):
     """
     dset_in = f_in[dset_name]
     start_idx = 0
+    running_index = 0
     for batch_number, indices in enumerate(indices_per_batch):
         print(f"Processing batch {batch_number+1}/{len(indices_per_batch)}")
         # remove indices outside of dset
@@ -288,12 +289,16 @@ def _shuffle_dset(f_out, f_in, dset_name, indices_per_batch):
 
         if dset_is_indexed(f_in, dset_name):
             # special treatment for indexed: slice based on indices dataset
-            slices_indices = [f_in[f"{dset_name}_indices"][slc] for slc in slices]
+            dset_name_indexed = f"{dset_name}_indices"
+            slices_indices = [f_in[dset_name_indexed][slc] for slc in slices]
+            data_indices = np.concatenate(slices_indices)
+            if any(np.diff(data_indices["index"]) <= 0):
+                raise ValueError(f"'index' in {dset_name_indexed} is not increasing for every event!")
+
             data = np.concatenate(
                 [dset_in[slice(*_resolve_indexed(slc))] for slc in slices_indices]
             )
             # convert to 3d awkward array, then shuffle, then back to numpy
-            data_indices = np.concatenate(slices_indices)
             data_ak = ak.unflatten(data, data_indices["n_items"])
             data = ak.flatten(data_ak[unsort_ix], axis=1).to_numpy()
 
@@ -303,9 +308,10 @@ def _shuffle_dset(f_out, f_in, dset_name, indices_per_batch):
 
         if dset_name.endswith("_indices"):
             # recacalculate index
-            data["index"] = start_idx + np.concatenate(
+            data["index"] = running_index + np.concatenate(
                 [[0], np.cumsum(data["n_items"][:-1])]
             )
+            running_index = sum(data[-1])
 
         if batch_number == 0:
             out_dset = f_out.create_dataset(
