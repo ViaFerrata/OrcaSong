@@ -42,7 +42,7 @@ A Singularity image of the latest stable version of OrcaSong
 is automatically uploaded to our sftp server.
 Download it e.g. via::
 
-    wget http://pi1139.physik.uni-erlangen.de/singularity/orcasong_v???.sif
+    wget http://sftp.km3net.de/singularity/orcasong_v???.sif
 
 where v??? is the version, e.g. orcasong_v4.3.2.sif.
 Run it e.g. via::
