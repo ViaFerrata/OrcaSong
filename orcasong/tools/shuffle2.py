@@ -237,6 +237,12 @@ def _get_dset_infos(f, datasets, max_ram):
         n_chunks = int(np.ceil(n_lines / chunksize))
         bytes_per_chunk = bytes_per_line * chunksize
         chunks_per_batch = int(np.floor(max_ram / bytes_per_chunk))
+        if chunks_per_batch == 0:
+            raise ValueError(
+                "Maximum usable RAM is {}, but one chunk of data is {} bytes."
+                "This means shuffle can not be done, as a whole chunk needs to be read in memory"
+                "at a time. Try allocating more RAM!".format(
+                    max_ram, bytes_per_chunk))
 
         dset_infos.append(
             {
