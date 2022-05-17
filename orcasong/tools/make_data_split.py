@@ -13,13 +13,6 @@ import random
 import numpy as np
 
 
-def get_parser():
-    # TODO deprecated
-    raise NotImplementedError(
-        "make_data_split has been renamed to orcasong make_data_split"
-    )
-
-
 def add_parser(subparsers):
     parser = subparsers.add_parser(
         "make_data_split",
@@ -29,7 +22,7 @@ def add_parser(subparsers):
         "concatenate the files specfied",
     )
     parser.add_argument(
-        "config", type=str, help="See example config for detailed information"
+        "config_file", type=str, help="See example config for detailed information"
     )
     parser.set_defaults(func=make_split)
 
@@ -418,17 +411,6 @@ def make_concatenate_and_shuffle_scripts(cfg):
                 f.write("rm " + conc_outputfile_fpath + "\n")
 
 
-def main():
-    """
-    Main function to make the data split.
-    """
-
-    # load the config
-    parser = get_parser()
-    parsed_args = parser.parse_args()
-    make_split(parsed_args.config)
-
-
 def make_split(config_file):
     # decode config
     cfg = toml.load(config_file)
@@ -474,7 +456,3 @@ def make_split(config_file):
     # create bash scripts that can be submitted to do the concatenation and shuffle
     if cfg["make_qsub_bash_files"] is True:
         make_concatenate_and_shuffle_scripts(cfg)
-
-
-if __name__ == "__main__":
-    main()
