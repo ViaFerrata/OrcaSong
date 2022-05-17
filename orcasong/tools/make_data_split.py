@@ -393,7 +393,7 @@ def make_concatenate_and_shuffle_scripts(cfg):
             f.write("# Shuffle the h5 file \n")
 
             f.write(
-                "orcasong h5shuffle2 " + conc_outputfile_fpath
+                "orcasong h5shuffle2 " + conc_outputfile_fpath)
 
             if cfg["shuffle_delete"]:
                 f.write("\n")
