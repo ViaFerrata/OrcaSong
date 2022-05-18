@@ -62,14 +62,14 @@ shuffle_delete = false
 
 [neutrino] 
 dir = "processed_data_neutrino"
-run_ids_train = [1, 6767]
-run_ids_validate = [1, 6769]
+run_ids_train = [1, 12000]
+run_ids_validate = [1, 12000
 
 
 [muon] 
 dir = "processed_data_muon"
-run_ids_train = [1, 6767]
-run_ids_validate = [9999, 6769]
+run_ids_train = [1, 12000]
+run_ids_validate = [1, 12000]
 
 
 # --- Input groups : these are the datafiles, that should be concatenated somehow --- #
