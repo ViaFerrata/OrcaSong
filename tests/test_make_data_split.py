@@ -65,7 +65,7 @@ class TestMakeDataSplit(TestCase):
             "processed_data_neutrino/processed_graph_neutrino.h5",
             "processed_data_neutrino/processed_graph_neutrino.h5\n",
         ]
-        cls.n_events_list = [18, 3]
+        cls.n_events_list = [50, 33]
         cls.contents_concatenate_script = [
             "concatenate " + list_output_train + " --outfile " + concatenate_file
         ]
