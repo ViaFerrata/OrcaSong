@@ -262,7 +262,7 @@ def get_random_noise_mc_info_extr(input_file):
     return mc_info_extr
 
 
-def get_neutrino_mc_info_extr(input_file,prod_identifier):
+def get_neutrino_mc_info_extr(input_file,prod_identifier=999):
 
     """
     Wrapper function that includes the actual mc_info_extr
@@ -274,7 +274,7 @@ def get_neutrino_mc_info_extr(input_file,prod_identifier):
     input_file : km3net data file
                     Can be online or offline format.
     prod_identifier : int
-    	An internal, inofficial identifier to mark the production. This has to be
+    	An internal, unofficial identifier to mark the neutrino production. This has to be
     	defined in a dict before. 
 
     Returns
