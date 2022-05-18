@@ -127,7 +127,7 @@ class TestMakeDataSplit(TestCase):
         assert os.path.exists(list_output_val) == 1
         with open(list_output_val) as f:
             for line in f:
-                self.assertIn(line, self.file_path_list_val)
+                self.assertIn(line, self.file_path_list)
         f.close
 
         assert os.path.exists(list_output_train) == 1
