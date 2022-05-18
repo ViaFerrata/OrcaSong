@@ -70,7 +70,7 @@ class TestMakeDataSplit(TestCase):
             "orcasong concatenate " + list_output_train + " --outfile " + concatenate_file
         ]
         cls.contents_shuffle_script = [
-            "orcasong h5shuffle2 " + concatenate_file + " --max_ram 1000000000 \n"
+            "orcasong h5shuffle2 " + concatenate_file
         ]
 
         # create list_file_dir
