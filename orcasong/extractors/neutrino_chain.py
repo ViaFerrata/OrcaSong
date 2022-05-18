@@ -262,7 +262,7 @@ def get_random_noise_mc_info_extr(input_file):
     return mc_info_extr
 
 
-def get_neutrino_mc_info_extr(input_file):
+def get_neutrino_mc_info_extr(input_file,prod_identifier):
 
     """
     Wrapper function that includes the actual mc_info_extr
@@ -273,6 +273,9 @@ def get_neutrino_mc_info_extr(input_file):
     ----------
     input_file : km3net data file
                     Can be online or offline format.
+    prod_identifier : int
+    	An internal, inofficial identifier to mark the production. This has to be
+    	defined in a dict before. 
 
     Returns
     -------
@@ -399,6 +402,7 @@ def get_neutrino_mc_info_extr(input_file):
             "n_gen": n_gen,
             "part_number": part_number,
             "tau_topology": tau_topology,
+            "prod_identifier": prod_identifier,
         }
 
         # get all the std reco info
