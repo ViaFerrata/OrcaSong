@@ -63,7 +63,7 @@ shuffle_delete = false
 [neutrino] 
 dir = "processed_data_neutrino"
 run_ids_train = [1, 12000]
-run_ids_validate = [1, 12000
+run_ids_validate = [1, 12000]
 
 
 [muon] 
