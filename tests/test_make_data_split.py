@@ -65,12 +65,12 @@ class TestMakeDataSplit(TestCase):
             "processed_data_neutrino/processed_graph_neutrino.h5",
             "processed_data_neutrino/processed_graph_neutrino.h5\n",
         ]
-        cls.n_events_list = [18, 3]
+        cls.n_events_list = [50, 33]
         cls.contents_concatenate_script = [
-            "concatenate " + list_output_train + " --outfile " + concatenate_file
+            "orcasong concatenate " + list_output_train + " --outfile " + concatenate_file
         ]
         cls.contents_shuffle_script = [
-            "h5shuffle2 " + concatenate_file + " --max_ram 1000000000 \n"
+            "orcasong h5shuffle2 " + concatenate_file
         ]
 
         # create list_file_dir
@@ -127,7 +127,7 @@ class TestMakeDataSplit(TestCase):
         assert os.path.exists(list_output_val) == 1
         with open(list_output_val) as f:
             for line in f:
-                self.assertIn(line, self.file_path_list_val)
+                self.assertIn(line, self.file_path_list)
         f.close
 
         assert os.path.exists(list_output_train) == 1

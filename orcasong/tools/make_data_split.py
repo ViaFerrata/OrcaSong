@@ -13,13 +13,6 @@ import random
 import numpy as np
 
 
-def get_parser():
-    # TODO deprecated
-    raise NotImplementedError(
-        "make_data_split has been renamed to orcasong make_data_split"
-    )
-
-
 def add_parser(subparsers):
     parser = subparsers.add_parser(
         "make_data_split",
@@ -29,7 +22,7 @@ def add_parser(subparsers):
         "concatenate the files specfied",
     )
     parser.add_argument(
-        "config", type=str, help="See example config for detailed information"
+        "config_file", type=str, help="See example config for detailed information"
     )
     parser.set_defaults(func=make_split)
 
@@ -354,11 +347,6 @@ def make_concatenate_and_shuffle_scripts(cfg):
     ):  # check if /data_split folder exists, if not create it.
         os.makedirs(dirpath + "/data_split")
 
-    # not available atm...
-    # chunksize = '' if cfg['chunksize'] is None else ' --chunksize ' + str(cfg['chunksize'])
-    # complib = '' if cfg['complib'] is None else ' --complib ' + str(cfg['complib'])
-    # complevel = '' if cfg['complevel'] is None else ' --complevel ' + str(cfg['complevel'])
-
     # make qsub .sh file for concatenating
     for listfile_fpath in cfg["output_lists"]:
         listfile_fname = os.path.basename(listfile_fpath)
@@ -379,10 +367,9 @@ def make_concatenate_and_shuffle_scripts(cfg):
             f.write("# Concatenate the files in the list\n")
 
             f.write(
-                "concatenate " + listfile_fpath + " --outfile " + conc_outputfile_fpath
+                "orcasong concatenate " + listfile_fpath + " --outfile " + conc_outputfile_fpath
             )
-            # at the moment it is not possible to set the comp opts like this+ chunksize + complib + complevel
-
+          
     # make qsub .sh file for shuffling
 
     for listfile_fpath in cfg["output_lists"]:
@@ -406,38 +393,17 @@ def make_concatenate_and_shuffle_scripts(cfg):
             f.write("# Shuffle the h5 file \n")
 
             f.write(
-                "h5shuffle2 " + conc_outputfile_fpath + " --max_ram 1000000000 \n"
-            )  # fix to 1GB ram; in lyon using a fraction
-            # is difficult...
-            # time python shuffle/shuffle_h5.py'
-            # + delete_flag_shuffle_tool
-            # + chunksize + complib + complevel
+                "orcasong h5shuffle2 " + conc_outputfile_fpath)
 
             if cfg["shuffle_delete"]:
                 f.write("\n")
                 f.write("rm " + conc_outputfile_fpath + "\n")
 
 
-def main():
-    """
-    Main function to make the data split.
-    """
-
-    # load the config
-    parser = get_parser()
-    parsed_args = parser.parse_args()
-    make_split(parsed_args.config)
-
-
 def make_split(config_file):
     # decode config
     cfg = toml.load(config_file)
     cfg["toml_filename"] = config_file
-
-    # set some defaults/Nones - at the moment setting of the com opts is not available!
-    # if 'chunksize' not in cfg: cfg['chunksize'] = None
-    # if 'complib' not in cfg: cfg['complib'] = None
-    # if 'complevel' not in cfg: cfg['complevel'] = None
 
     # read out all the input groups
     ip_group_keys = get_all_ip_group_keys(cfg)
@@ -474,7 +440,3 @@ def make_split(config_file):
     # create bash scripts that can be submitted to do the concatenation and shuffle
     if cfg["make_qsub_bash_files"] is True:
         make_concatenate_and_shuffle_scripts(cfg)
-
-
-if __name__ == "__main__":
-    main()

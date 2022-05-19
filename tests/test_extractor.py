@@ -35,7 +35,7 @@ class TestStdRecoExtractor(TestCase):
             max_n_hits=3,
             time_window=[0, 50],
             hit_infos=["pos_z", "time", "channel_id"],
-            extractor=extractors.get_neutrino_mc_info_extr(NEUTRINO_FILE),
+            extractor=extractors.get_neutrino_mc_info_extr(NEUTRINO_FILE,1),
             det_file=DET_FILE_NEUTRINO,
             add_t0=True,
             keep_event_info=True,
@@ -56,7 +56,7 @@ class TestStdRecoExtractor(TestCase):
             time_window=[0, 50],
             hit_infos=["pos_z", "time", "channel_id"],
             extractor=extractors.get_neutrino_mc_info_extr(
-                NOT_FULLY_RECONSTRUCTED_FILE
+                NOT_FULLY_RECONSTRUCTED_FILE,1
             ),
             det_file=DET_FILE_NEUTRINO,
             add_t0=True,
