@@ -518,9 +518,7 @@ def get_muon_mc_info_extr(input_file, inactive_du=None):
 
         primary_mc_track = blob["McTracks"][p]
 
-        particle_type = (
-            primary_mc_track.pdgid
-        )  # assumed that this is the same for all muons in a bundle, new: pdgid, old: type
+        particle_type = 13 # fixed for all muons
         is_cc = 0  # set to 0
         bjorkeny = 0  # set to zero
 
