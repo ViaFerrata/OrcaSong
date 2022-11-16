@@ -8,6 +8,7 @@ import orcasong.extractors as extractors
 # other parameters can be set via '[extractor_config]' in the toml
 EXTRACTORS = {
     "nu_chain_neutrino": extractors.get_neutrino_mc_info_extr,
+    "nu_chain_neutrino_gl": extractors.get_neutrino_mc_info_extr_glashow,
     "nu_chain_muon": extractors.get_muon_mc_info_extr,
     "nu_chain_noise": extractors.get_random_noise_mc_info_extr,
     "nu_chain_data": extractors.get_real_data_info_extr,
