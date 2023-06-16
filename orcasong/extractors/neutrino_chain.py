@@ -14,7 +14,7 @@ import numpy as np
 from km3pipe.io.hdf5 import HDF5Header
 from h5py import File
 import os, re
-
+import random
 __author__ = "Daniel Guderian"
 
 
@@ -580,6 +580,170 @@ def get_neutrino_mc_info_extr_glashow(input_file,prod_identifier=999):
 
     return mc_info_extr
 
+def get_neutrino_mc_info_extr_glashow_test(input_file,prod_identifier=999):
+
+    """
+    Wrapper function that includes the actual mc_info_extr
+    for neutrino simulations. The n_gen parameter, needed for neutrino weighting
+    is extracted from the header of the file.
+
+    Parameters
+    ----------
+    input_file : km3net data file
+                    Can be online or offline format.
+    prod_identifier : int
+    	An internal, unofficial identifier to mark the neutrino production. This has to be
+    	defined in a dict before. 
+
+    Returns
+    -------
+    mc_info_extr : function
+                    The actual mc_info_extr function that holds the extractions.
+
+    """
+
+    # check if std reco is present
+    f = File(input_file, "r")
+    has_std_reco = "reco" in f.keys()
+
+    if has_std_reco:
+        # also check, which rec types are present
+        rec_types, rec_parameters_names = get_rec_types_in_file(f)
+
+    # get the n_gen
+    header = HDF5Header.from_hdf5(input_file)
+    n_gen = header.genvol.numberOfEvents
+
+    # an identifier for what the part of the mc simulation this was
+    # this way, events can later be unambiguously identified
+    input_filename_string = os.path.basename(input_file)
+    try:
+        part_number = re.findall(r"\d+", input_filename_string)[
+            -2
+        ]  # second last because of .h5 - works only for officially named files
+    except IndexError:
+        part_number = 0
+
+    def mc_info_extr(blob):
+
+        """
+        Processes a blob and creates the y with mc_info and, if existing, std reco.
+
+        For this neutrino case it is the full mc info for the primary neutrino; there are the several "McTracks":
+        check the simulation which index "p" the neutrino has.
+
+        Parameters
+        ----------
+        blob : dict
+                        The blob from the pipeline.
+
+        Returns
+        -------
+        track : dict
+                        Containing all the specified info the y should have.
+
+        """
+
+        # get general info about the event
+        event_info = blob["EventInfo"]
+        event_id = event_info.event_id[0]
+        run_id = event_info.run_id[0]
+
+        # weights for neutrino analysis
+        weight_w1 = event_info.weight_w1[0]
+        weight_w2 = event_info.weight_w2[0]
+        weight_w3 = event_info.weight_w3[0]
+
+        is_cc = event_info.W2LIST_GSEAGEN_CC[0]
+        bjorkeny = event_info.W2LIST_GSEAGEN_BY[0]
+
+        # first, look for the particular neutrino index of the production
+        p = 0  # for ORCA4 (and probably subsequent productions)
+
+        primary_mc_track = blob["McTracks"][p]
+
+        s = 5
+
+        secondary_mc_track = blob["McTracks"][s]
+
+        secondary_type = secondary_mc_track.pdgid
+
+        leptonic=2
+        if (secondary_type==11 or secondary_type==13 or secondary_type==15):
+            leptonic=random.randint(0, 1)
+
+        # some track mc truth info
+        particle_type = primary_mc_track.pdgid  # sometimes type, sometimes pdgid
+        energy = primary_mc_track.energy
+        dir_x, dir_y, dir_z = (
+            primary_mc_track.dir_x,
+            primary_mc_track.dir_y,
+            primary_mc_track.dir_z,
+        )
+        time_interaction = (
+            primary_mc_track.time
+        )  # actually always 0 for primary neutrino, measured in MC time
+        vertex_pos_x, vertex_pos_y, vertex_pos_z = (
+            primary_mc_track.pos_x,
+            primary_mc_track.pos_y,
+            primary_mc_track.pos_z,
+        )
+
+        # for (muon) NC interactions, the visible energy is different
+        if np.abs(particle_type) == 14 and is_cc == 3:
+            visible_energy = energy * bjorkeny
+        else:
+            visible_energy = energy
+
+        # for tau CC it is not clear what the second interaction is; 1 for shower, 2 for track, 3 for nothing
+        tau_topology = 3
+        if np.abs(particle_type) == 16:
+            if 13 in np.abs(blob["McTracks"].pdgid):
+                tau_topology = 2
+            else:
+                tau_topology = 1
+
+        # add also the nhits info
+        n_hits = len(blob["Hits"])
+        n_trig_hits = np.count_nonzero(blob["Hits"]["triggered"])
+
+        track = {
+            "event_id": event_id,
+            "particle_type": particle_type,
+            "energy": energy,
+            "visible_energy": visible_energy,
+            "is_cc": is_cc,
+            "bjorkeny": bjorkeny,
+            "dir_x": dir_x,
+            "dir_y": dir_y,
+            "dir_z": dir_z,
+            "time_interaction": time_interaction,
+            "run_id": run_id,
+            "vertex_pos_x": vertex_pos_x,
+            "vertex_pos_y": vertex_pos_y,
+            "vertex_pos_z": vertex_pos_z,
+            "n_hits": n_hits,
+            "n_trig_hits": n_trig_hits,
+            "weight_w1": weight_w1,
+            "weight_w2": weight_w2,
+            "weight_w3": weight_w3,
+            "n_gen": n_gen,
+            "part_number": part_number,
+            "tau_topology": tau_topology,
+            "prod_identifier": prod_identifier,
+            "is_leptonic": leptonic,
+        }
+
+        # get all the std reco info
+        if has_std_reco:
+
+            std_reco_info = get_std_reco(blob, rec_types, rec_parameters_names)
+
+            track.update(std_reco_info)
+
+        return track
+
+    return mc_info_extr
 
 # function used by Stefan to identify which muons leave how many mc hits in the (active) detector.
 def get_mchits_per_muon(blob, inactive_du=None):
