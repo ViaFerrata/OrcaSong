@@ -421,8 +421,17 @@ class EventSkipper(kp.Module):
             f"Skipped {self._skipped}/{tot_events} events "
             f"({self._skipped/tot_events:.4%})."
         )
+        
+    def event_skipper():
+        secondary_mc_track = blob["McTracks"][s]
+        secondary_type = secondary_mc_track.pdgid
+        is_leptonic = False
+        
+        if (secondary_type==11 or secondary_type==13 or secondary_type==15):
+            is_leptonic = True
 
-
+        return is_leptonic
+            
 class DetApplier(kp.Module):
     """
     Apply detector information to the event data from a detx file, e.g.
