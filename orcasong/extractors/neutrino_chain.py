@@ -503,10 +503,18 @@ def get_neutrino_mc_info_extr_glashow(input_file,prod_identifier=999):
 
         secondary_type = secondary_mc_track.pdgid
 
+        decay_mode=0
         leptonic=0
+        
         if (secondary_type==11 or secondary_type==13 or secondary_type==15):
             leptonic=1
-
+            if (secondary_type==11):
+                decay_mode = 1
+            elif (secondary_type==13):
+                decay_mode = 2
+            elif (secondary_type==15):
+                decay_mode = 3
+                
         # some track mc truth info
         particle_type = primary_mc_track.pdgid  # sometimes type, sometimes pdgid
         energy = primary_mc_track.energy
@@ -567,6 +575,7 @@ def get_neutrino_mc_info_extr_glashow(input_file,prod_identifier=999):
             "tau_topology": tau_topology,
             "prod_identifier": prod_identifier,
             "is_leptonic": leptonic,
+            "decay_mode": decay_mode,
         }
 
         # get all the std reco info
@@ -669,9 +678,17 @@ def get_neutrino_mc_info_extr_glashow_test(input_file,prod_identifier=999):
         secondary_type = secondary_mc_track.pdgid
 
         leptonic=2
+        decay_mode = 0
+        
         if (secondary_type==11 or secondary_type==13 or secondary_type==15):
             leptonic=random.randint(0, 1)
-
+            if (secondary_type==11):
+                decay_mode = 1
+            elif (secondary_type==13):
+                decay_mode = 2
+            elif (secondary_type==15):
+                decay_mode = 3
+        
         # some track mc truth info
         particle_type = primary_mc_track.pdgid  # sometimes type, sometimes pdgid
         energy = primary_mc_track.energy
@@ -732,6 +749,7 @@ def get_neutrino_mc_info_extr_glashow_test(input_file,prod_identifier=999):
             "tau_topology": tau_topology,
             "prod_identifier": prod_identifier,
             "is_leptonic": leptonic,
+            "decay_mode": decay_mode,
         }
 
         # get all the std reco info
