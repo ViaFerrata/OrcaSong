@@ -148,7 +148,8 @@ class FileConcatenator:
                     # if chunk is an integer, its the first dimension and same
                     #  chunks for all datasets
                     chunks = (chunks,) + folder_data.shape[1:]
-                if (isinstance(chunks, int) and chunks > dset_shape[0]) or chunks[0] > dset_shape[0]:
+                print(chunks, dset_shape)
+                if (chunks is not None) and ((isinstance(chunks, int) and chunks > dset_shape[0]) or chunks[0] > dset_shape[0]):
                     warnings.warn(
                         f"Specified chunkshape {chunks} is larger than dataset! "
                         f"Setting chunksize to {dset_shape} instead."
