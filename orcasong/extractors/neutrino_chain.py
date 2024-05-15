@@ -330,6 +330,8 @@ def get_neutrino_mc_info_extr(input_file,prod_identifier=999):
         event_info = blob["EventInfo"]
         event_id = event_info.event_id[0]
         run_id = event_info.run_id[0]
+        frame_index = event_info.frame_index[0]
+        trigger_counter = event_info.trigger_counter[0]
 
         # weights for neutrino analysis
         weight_w1 = event_info.weight_w1[0]
@@ -391,6 +393,8 @@ def get_neutrino_mc_info_extr(input_file,prod_identifier=999):
             "dir_z": dir_z,
             "time_interaction": time_interaction,
             "run_id": run_id,
+            "frame_index": frame_index,
+            "trigger_counter": trigger_counter,
             "vertex_pos_x": vertex_pos_x,
             "vertex_pos_y": vertex_pos_y,
             "vertex_pos_z": vertex_pos_z,
