@@ -99,6 +99,7 @@ def get_rec_types_in_file(file):
 
     # check which ones are in there
     rec_types_in_file = []
+    rec_parameters_names = []
     for rec_type in rec_type_names:
         if rec_type in reco_objects_in_file:
             rec_types_in_file.append(rec_type)
