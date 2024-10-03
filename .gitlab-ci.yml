@@ -32,13 +32,16 @@ cache:
   make install-dev
 
 test:
-    image: docker.km3net.de/base/python:3.6
-    stage: test
-    script:
-        - *virtualenv_definition
-        - pip list
-        - make test
-
+  image: docker.km3net.de/base/python:$PYTHON_VERSION
+  stage: test
+  script:
+    - *virtualenv_definition
+    - pip list
+    - make test
+  parallel:
+    matrix:
+      - PYTHON_VERSION: "3.6"
+      - PYTHON_VERSION: "3.7"
 
 coverage:
     image: docker.km3net.de/base/python:3.6
